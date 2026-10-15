@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}I tuoi gruppi — SiamoQuiti{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="section-title">
+    Ciao {{ user.name }}
+    <a href="/groups/new" class="btn sm">Nuovo gruppo</a>
+  </div>
+
+  {% if net_total > 0 %}
+    <p class="small">Complessivamente ti devono <strong class="pos">{{ net_total | eur }}</strong>.</p>
+  {% elif net_total < 0 %}
+    <p class="small">Complessivamente devi <strong class="neg">{{ (-net_total) | eur }}</strong>.</p>
+  {% else %}
+    <p class="small muted">Sei in pari su tutti i gruppi.</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <div class="section-title">I tuoi gruppi</div>
+  {% if groups %}
+    <div class="grid cols-2">
+      {% for g in groups %}
+        <a href="/groups/{{ g.id }}" class="card" style="display:block;color:inherit">
+          <div style="font-weight:700;font-size:1.05rem">{{ g.name }}</div>
+          <div class="muted small" style="margin-top:4px">
+            {{ g.members|length }} membri ·
+            {% if g.kind == 'trip' %}viaggio{% elif g.kind == 'home' %}casa{% elif g.kind == 'event' %}evento{% else %}altro{% endif %}
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty">
+      <p>Nessun gruppo ancora.</p>
+      <p class="small">Crea un gruppo per iniziare a dividere le spese con i tuoi amici.</p>
+      <a href="/groups/new" class="btn" style="margin-top:10px">Crea il primo gruppo</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

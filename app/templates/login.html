@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Accedi — SiamoQuiti{% endblock %}
+{% block content %}
+<div class="card" style="max-width:420px;margin:40px auto">
+  <div class="section-title">Accedi</div>
+  {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+  <form method="post" action="/login">
+    <label>Email</label>
+    <input type="email" name="email" required autofocus>
+    <label>Password</label>
+    <input type="password" name="password" required>
+    <div style="margin-top:18px">
+      <button class="btn block" type="submit">Entra</button>
+    </div>
+  </form>
+  <p class="muted small" style="margin-top:16px;text-align:center">
+    Non hai un account? <a href="/register">Registrati</a>
+  </p>
+</div>
+{% endblock %}

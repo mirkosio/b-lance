@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block title %}{{ group.name }} — SiamoQuiti{% endblock %}
+{% block content %}
+<div class="card">
+  <div class="section-title">
+    {{ group.name }}
+    <span class="chip">{{ group.base_currency }}</span>
+  </div>
+  <div class="summary">
+    <div class="stat">
+      <div class="num">{{ view.total_expenses_display() }}</div>
+      <div class="lbl">Totale speso</div>
+    </div>
+    <div class="stat">
+      <div class="num">{{ view.members|length }}</div>
+      <div class="lbl">Membri</div>
+    </div>
+    <div class="stat">
+      <div class="num">{{ view.transfers|length }}</div>
+      <div class="lbl">Bonifici per chiudere</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid cols-2">
+  <!-- Saldi -->
+  <div class="card">
+    <div class="section-title">Saldi</div>
+    {% for m in view.members %}
+      <div class="balance-row">
+        <div class="person">
+          <span class="avatar" style="background:{{ m.color }}">{{ m.name[0]|upper }}</span>
+          <span>{{ m.name }}</span>
+        </div>
+        <span class="{% if m.net_minor > 0 %}pos{% elif m.net_minor < 0 %}neg{% endif %}" style="font-weight:700">
+          {{ m.display() }}
+        </span>
+      </div>
+    {% endfor %}
+    <p class="muted small" style="margin-top:12px">
+      <span class="pos">+ verde</span> = ti devono ·
+      <span class="neg">- rosso</span> = devi ·
+      0 = quiti
+    </p>
+  </div>
+
+  <!-- Chi paga chi -->
+  <div class="card">
+    <div class="section-title">Chi paga chi</div>
+    {% if view.transfers %}
+      {% for t in view.transfers %}
+        <div class="transfer">
+          <span>{{ view.member_name(t.payer_id) }}</span>
+          <span class="arrow">→</span>
+          <span>{{ view.member_name(t.payee_id) }}</span>
+          <span style="margin-left:auto;font-weight:700">{{ t.amount_minor | eur }}</span>
+        </div>
+      {% endfor %}
+      <p class="muted small" style="margin-top:10px">
+        Con questi {{ view.transfers|length }} bonifici siete tutti quiti.
+      </p>
+    {% else %}
+      <div class="empty">Nessun debito in sospeso. Siete quiti.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Invito -->
+<div class="card">
+  <div class="section-title">Invita nel gruppo</div>
+  <p class="muted small">Condividi questo codice o link. Chi lo apre si unisce al gruppo.</p>
+  <div class="invite-box">
+    {{ request.url_for('join_by_code', code=group.invite_code) }}
+  </div>
+  <div class="row" style="margin-top:12px">
+    <button class="btn ghost" onclick="copyInvite()">Copia link</button>
+    <form method="post" action="/groups/{{ group.id }}/invite" style="margin:0;flex:1">
+      <button class="btn ghost block" type="submit">Genera nuovo codice</button>
+    </form>
+  </div>
+</div>
+
+<!-- Aggiungi spesa -->
+<div class="card">
+  <div class="section-title">Aggiungi spesa</div>
+  <form method="post" action="/groups/{{ group.id }}/expenses" id="expense-form">
+    <label>Descrizione</label>
+    <input type="text" name="description" required placeholder="Es. Cena, benzina, biglietti">
+
+    <div class="row">
+      <div>
+        <label>Importo ({{ group.base_currency }})</label>
+        <input type="text" name="amount" required inputmode="decimal" placeholder="0,00">
+      </div>
+      <div>
+        <label>Chi ha pagato</label>
+        <select name="paid_by" required>
+          {% for m in view.members %}
+            <option value="{{ m.user_id }}" {% if m.user_id == user.id %}selected{% endif %}>{{ m.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <label>Chi divide</label>
+    <div class="people-picker" id="people-picker">
+      {% for m in view.members %}
+        <label class="pp on" data-uid="{{ m.user_id }}">
+          <input type="checkbox" name="members" value="{{ m.user_id }}" checked>
+          <span class="avatar" style="background:{{ m.color }};width:22px;height:22px;font-size:0.7rem">{{ m.name[0]|upper }}</span>
+          {{ m.name }}
+        </label>
+      {% endfor %}
+    </div>
+
+    <label>Come dividiamo</label>
+    <div class="seg" id="split-seg">
+      {% for method in split_methods %}
+        <span>
+          <input type="radio" name="split_method" value="{{ method.value }}" id="m-{{ method.value }}"
+                 {% if method.value == 'even' %}checked{% endif %}>
+          <label class="chip-radio" for="m-{{ method.value }}">
+            {% if method.value == 'even' %}Equa{% elif method.value == 'exact' %}Importi esatti{% else %}Percentuale{% endif %}
+          </label>
+        </span>
+      {% endfor %}
+    </div>
+
+    <div style="margin-top:18px">
+      <button class="btn block" type="submit">Aggiungi spesa</button>
+    </div>
+  </form>
+</div>
+
+<!-- Spese -->
+<div class="card">
+  <div class="section-title">Spese recenti</div>
+  {% if expenses %}
+    {% for e in expenses %}
+      <div class="expense-item">
+        <div>
+          <div class="desc">{{ e.description }}</div>
+          <div class="meta">{{ e.payer_name }} ha pagato · {{ e.created_at.strftime('%d/%m') }}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-weight:700">{{ e.amount_minor | eur }}</span>
+          <form method="post" action="/groups/{{ group.id }}/expenses/{{ e.id }}/void" style="margin:0"
+                onsubmit="return confirm('Annullare questa spesa?')">
+            <button class="btn sm ghost" type="submit">Annulla</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty">Nessuna spesa. Aggiungi la prima qui sopra.</div>
+  {% endif %}
+</div>
+
+<!-- Pagamenti -->
+<div class="card">
+  <div class="section-title">Registra pagamento</div>
+  <p class="muted small">Un membro paga un altro (anche solo parte del debito).</p>
+  <form method="post" action="/groups/{{ group.id }}/payments">
+    <div class="row">
+      <div>
+        <label>Da</label>
+        <select name="from_user" required>
+          {% for m in view.members %}<option value="{{ m.user_id }}">{{ m.name }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>A</label>
+        <select name="to_user" required>
+          {% for m in view.members %}<option value="{{ m.user_id }}">{{ m.name }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Importo</label>
+        <input type="text" name="amount" required inputmode="decimal" placeholder="0,00">
+      </div>
+      <div>
+        <label>Nota (opzionale)</label>
+        <input type="text" name="note" placeholder="Es. bonifico, contanti">
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <button class="btn block ghost" type="submit">Registra pagamento</button>
+    </div>
+  </form>
+
+  {% if payments %}
+    <div style="margin-top:20px">
+      {% for p in payments %}
+        <div class="expense-item">
+          <div>
+            <div class="desc">{{ p.from_name }} → {{ p.to_name }}</div>
+            <div class="meta">{{ p.created_at.strftime('%d/%m') }}{% if p.note %} · {{ p.note }}{% endif %}</div>
+          </div>
+          <span style="font-weight:700">{{ p.amount_minor | eur }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+
+<script>
+// Toggle attivo/passivo dei partecipanti.
+document.querySelectorAll('#people-picker .pp').forEach(function (label) {
+  label.addEventListener('click', function () {
+    setTimeout(function () {
+      label.classList.toggle('on', label.querySelector('input').checked);
+    }, 0);
+  });
+});
+
+function copyInvite() {
+  navigator.clipboard.writeText({{ request.url_for('join_by_code', code=group.invite_code) | string | tojson }})
+    .then(function () { alert('Link copiato!'); });
+}
+</script>
+{% endblock %}

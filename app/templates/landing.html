@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="hero">
+  <h1>Dividi le spese.<br><em>Siamo quiti.</em></h1>
+  <p>Weekend, gite, cene con gli amici. Aggiungi chi ha pagato, dividi, e vedi esattamente chi deve cosa. Niente discussioni, niente fogli Excel.</p>
+  <a href="/register" class="btn">Inizia gratis</a>
+  <a href="/login" class="btn ghost">Ho già un account</a>
+</div>
+
+<div class="grid cols-3">
+  <div class="card">
+    <div class="section-title">Preciso al centesimo</div>
+    <p class="muted small">Niente conti che non tornano. Gli importi sono gestiti come interi, zero arrotondamenti casuali.</p>
+  </div>
+  <div class="card">
+    <div class="section-title">Pagamento parziale</div>
+    <p class="muted small">"Ha saldato 20 su 47,50". Registra i pagamenti a rate, non devi aspettare di chiudere in un colpo.</p>
+  </div>
+  <div class="card">
+    <div class="section-title">Numero minimo di bonifici</div>
+    <p class="muted small">Ti diciamo chi paga chi con il numero più basso di trasferimenti possibili. Niente rete di debiti.</p>
+  </div>
+</div>
+{% endblock %}

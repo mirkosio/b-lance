@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Registrati — SiamoQuiti{% endblock %}
+{% block content %}
+<div class="card" style="max-width:420px;margin:40px auto">
+  <div class="section-title">Crea account</div>
+  {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+  <form method="post" action="/register">
+    <label>Nome</label>
+    <input type="text" name="name" required autofocus placeholder="Come ti chiami?">
+    <label>Email</label>
+    <input type="email" name="email" required placeholder="tu@email.com">
+    <label>Password</label>
+    <input type="password" name="password" required minlength="6" placeholder="Almeno 6 caratteri">
+    <div style="margin-top:18px">
+      <button class="btn block" type="submit">Crea account</button>
+    </div>
+  </form>
+  <p class="muted small" style="margin-top:16px;text-align:center">
+    Hai già un account? <a href="/login">Accedi</a>
+  </p>
+</div>
+{% endblock %}
