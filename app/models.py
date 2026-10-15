@@ -92,9 +92,12 @@ class Expense(Base):
     paid_by: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     description: Mapped[str] = mapped_column(String(200))
     category: Mapped[str] = mapped_column(String(40), default="other")
-    # Importo in centesimi, nella valuta originale della spesa.
+    # Importo in unità minori, nella valuta originale della spesa.
     amount_minor: Mapped[int] = mapped_column(Integer)
     currency: Mapped[str] = mapped_column(String(3), default="EUR")
+    # Importo GIÀ convertito in valuta base del gruppo, calcolato una volta
+    # al registro. Così i saldi non dipendono da ricalcoli runtime (drift zero).
+    base_amount_minor: Mapped[int] = mapped_column(Integer, default=0)
     # Tasso di cambio al momento del registro (valuta -> base_currency).
     # 1.0 se valuta == base. Serve a non ricalcolare lo storico.
     fx_rate: Mapped[str] = mapped_column(String(30), default="1.0")

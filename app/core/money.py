@@ -22,15 +22,19 @@ class MoneyError(ValueError):
     """Errore di conversione o validazione di un importo."""
 
 
-def to_minor(amount: Number) -> int:
-    """Converte un importo "umano" (es. 12.50) in centesimi interi.
+def to_minor(amount: Number, exponent: int = 2) -> int:
+    """Converte un importo "umano" (es. 12.50) in unità MINORI intere.
+
+    exponent = cifre decimali della valuta (EUR=2 -> centesimi,
+    JPY=0 -> yen, KWD=3 -> millesimi). Default 2 per backward-compat.
 
     Accetta stringhe (12.50, "12,50"), Decimal, int e float.
-    I float sono tollerati ma deprecati: passa stringhe dove puoi.
-    Arrotonda mezzo centesimo verso l'alto (ROUND_HALF_UP), come la cassa.
+    Arrotonda il rimanente verso l'alto (ROUND_HALF_UP), come la cassa.
     """
     if isinstance(amount, bool):
         raise MoneyError("bool non è un importo valido")
+    if exponent < 0 or exponent > 4:
+        raise MoneyError(f"exponent non valido: {exponent}")
     try:
         dec = Decimal(str(amount).strip().replace(",", "."))
     except (InvalidOperation, ValueError) as exc:
@@ -39,22 +43,42 @@ def to_minor(amount: Number) -> int:
         raise MoneyError(f"importo non finito: {amount!r}")
     if dec < 0:
         raise MoneyError(f"importo negativo non ammesso qui: {amount!r}")
-    cents = (dec * 100).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
-    return int(cents)
+    factor = 10**exponent
+    units = (dec * factor).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    return int(units)
 
 
-def to_major(minor: int) -> Decimal:
-    """Riporta i centesimi a Decimal in unità principale (1250 -> 12.50)."""
+def to_major(minor: int, exponent: int = 2) -> Decimal:
+    """Riporta le unità minori a Decimal in unità maggiore.
+
+    1250 (exp 2) -> 12.50 ; 1250 (exp 0) -> 1250.
+    """
     _check_minor(minor)
-    return (Decimal(minor) / 100).quantize(CENT)
+    if exponent < 0 or exponent > 4:
+        raise MoneyError(f"exponent non valido: {exponent}")
+    quant = Decimal(1).scaleb(-exponent)  # 10^-exponent
+    return (Decimal(minor) / (10**exponent)).quantize(quant)
 
 
 def format_eur(minor: int, symbol: bool = True) -> int | str:
-    """Formatta i centesimi per l'utente. 1250 -> "€12.50" (o 12.50)."""
-    value = to_major(minor)
-    text = f"{value:.2f}"
+    """DEPRECATO: usa format_amount(minor, code). Tiene € per compat."""
+    return format_amount(minor, "EUR", symbol=symbol)
+
+
+def format_amount(minor: int, code: str = "EUR", symbol: bool = True) -> str:
+    """Formatta le unità minori secondo la valuta data.
+
+    Risolve exponent e simbolo dal codice valuta.
+    1250 EUR -> "€12.50" ; 1250 JPY -> "¥1250" ; 1250 KWD -> "KD1.250".
+    """
+    from .currencies import get_currency
+
+    cur = get_currency(code)
+    value = to_major(minor, cur.exponent)
+    # Zero decimali: niente parte decimale.
+    text = f"{value:.{cur.exponent}f}" if cur.exponent > 0 else f"{value:.0f}"
     if symbol:
-        return f"€{text}"
+        return f"{cur.symbol}{text}"
     return text
 
 
@@ -65,21 +89,25 @@ def _check_minor(minor: int) -> None:
         raise MoneyError(f"centesimi negativi non ammessi: {minor}")
 
 
-def parse_user_amount(raw: str) -> int:
+def parse_user_amount(raw: str, exponent: int = 2) -> int:
     """Parsing di ciò che scrive l'utente nel form. Normalizza e valida.
 
-    Gestisce "12", "12,5", "12.50", " 12,50 ", "€12,50".
+    Gestisce "12", "12,5", "12.50", " 12,50 ", "€12,50", "¥1250".
+    exponent = cifre decimali della valuta (default 2 = centesimi).
     Rilancia MoneyError se non è un importo positivo valido.
     """
     if raw is None:
         raise MoneyError("importo mancante")
-    cleaned = str(raw).strip().replace("€", "").replace(" ", "")
+    cleaned = str(raw).strip()
+    # Tolgo simboli di valuta comuni e spazi.
+    for sym in ("€", "$", "¥", "£", "₹", "฿", "₩", "₫", "₱", "R$", "S$", "HK$", "Cr", " "):
+        cleaned = cleaned.replace(sym, "")
     if not cleaned:
         raise MoneyError("importo vuoto")
     # Se ci sono più di un separatore decimale, è un casino: rifiuta.
     if cleaned.count(",") > 1 or cleaned.count(".") > 1:
         raise MoneyError(f"formato importo ambiguo: {raw!r}")
-    return to_minor(cleaned)
+    return to_minor(cleaned, exponent=exponent)
 
 
 def convert_minor(amount_minor: int, rate: Decimal) -> int:

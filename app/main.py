@@ -1,4 +1,4 @@
-"""Applicazione SiamoQuiti — FastAPI.
+"""Applicazione B-Lance — FastAPI.
 
 App per dividere le spese con amici: weekend, gite, cene.
 Punti di forza rispetto ai competitor:
@@ -12,18 +12,15 @@ from __future__ import annotations
 
 import secrets
 from contextlib import asynccontextmanager
-from datetime import date
-from decimal import Decimal
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Request, Response
+from fastapi import Depends, FastAPI, Form, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from . import models
 from .auth import (
     create_session_token,
     get_current_user,
@@ -31,7 +28,8 @@ from .auth import (
     hash_password,
     verify_password,
 )
-from .core.money import MoneyError, format_eur, parse_user_amount, to_major
+from .core.currencies import is_valid_currency, sorted_currencies
+from .core.money import MoneyError, format_amount, parse_user_amount
 from .core.splitting import SplitMethod, compute_shares
 from .database import get_db, init_db
 from .models import Expense, Group, GroupMember, Payment, Share, User
@@ -46,17 +44,19 @@ async def lifespan(app: FastAPI):
 
 
 BASE_DIR = Path(__file__).resolve().parent
-app = FastAPI(title="SiamoQuiti", lifespan=lifespan)
+app = FastAPI(title="B-Lance", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
-SESSION_COOKIE = "sq_session"
+SESSION_COOKIE = "bl_session"
 
 
 # ---------------------------------------------------------------- filtri Jinja
 def _jinja_filters() -> None:
-    templates.env.filters["eur"] = lambda minor: format_eur(int(minor))
-    templates.env.filters["euro_major"] = lambda minor: f"{to_major(int(minor)):.2f}"
+    # Formattazione generica (default EUR).
+    templates.env.filters["money"] = lambda minor, code="EUR": format_amount(int(minor), code)
+    templates.env.filters["eur"] = lambda minor: format_amount(int(minor), "EUR")
+    templates.env.filters["euro_major"] = lambda minor: f"{int(minor) / 100:.2f}"
 
 
 _jinja_filters()
@@ -101,7 +101,7 @@ def _get_group_for_user(db: Session, group_id: int, user: User) -> Group:
 # ---------------------------------------------------------------- pagine pubbliche
 @app.get("/health")
 def health() -> dict:
-    return {"status": "ok", "app": "siamoquiti"}
+    return {"status": "ok", "app": "b-lance"}
 
 
 @app.get("/")
@@ -117,18 +117,20 @@ def home(request: Request, user: User | None = Depends(current_user), db: Sessio
         .options(selectinload(Group.members).selectinload(GroupMember.user))
     ).all()
 
-    # Saldo aggregato: quanto gli devono complessivamente i suoi gruppi.
-    net_total = 0
+    # Saldo aggregato PER VALUTA: non sommo mai EUR con JPY.
+    # Ritorna {currency: net_minor} così il template mostra ogni valuta.
+    net_by_currency: dict[str, int] = {}
     for g in groups:
         view = compute_balances(db, g)
         for m in view.members:
             if m.user_id == user.id:
-                net_total += m.net_minor
+                code = g.base_currency
+                net_by_currency[code] = net_by_currency.get(code, 0) + m.net_minor
 
     return templates.TemplateResponse(
         request,
         "dashboard.html",
-        {"request": request, "user": user, "groups": groups, "net_total": net_total},
+        {"request": request, "user": user, "groups": groups, "net_by_currency": net_by_currency},
     )
 
 
@@ -215,7 +217,9 @@ def logout():
 @app.get("/groups/new")
 def new_group_form(request: Request, user: User = Depends(require_user)):
     return templates.TemplateResponse(
-        request, "group_new.html", {"request": request, "user": user}
+        request,
+        "group_new.html",
+        {"request": request, "user": user, "currencies": sorted_currencies()},
     )
 
 
@@ -228,10 +232,13 @@ def create_group(
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
+    code = (base_currency or "EUR").strip().upper()
+    if not is_valid_currency(code):
+        raise HTTPException(status_code=400, detail=f"Valuta non valida: {code}")
     group = Group(
         name=name.strip(),
         kind=kind.strip() or "other",
-        base_currency=base_currency.strip().upper()[:3],
+        base_currency=code,
         invite_code=_make_invite_code(),
         created_by=user.id,
     )
@@ -283,6 +290,7 @@ def group_detail(
             "expenses": expenses,
             "payments": payments,
             "split_methods": list(SplitMethod),
+            "currencies": sorted_currencies(),
         },
     )
 
@@ -323,7 +331,7 @@ def join_by_code(
 
 # ---------------------------------------------------------------- spese
 @app.post("/groups/{group_id}/expenses")
-def add_expense(
+async def add_expense(
     request: Request,
     group_id: int,
     description: str = Form(...),
@@ -331,12 +339,20 @@ def add_expense(
     paid_by: int = Form(...),
     split_method: str = Form("even"),
     members: list[int] = Form(...),
+    currency: str = Form(""),
+    fx_rate: str = Form(""),
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
     group = _get_group_for_user(db, group_id, user)
     try:
-        amount_minor = parse_user_amount(amount)
+        # Valuta della spesa: default = valuta base del gruppo.
+        exp_code = (currency or group.base_currency).strip().upper()
+        from .core.currencies import get_currency
+
+        exp_cur = get_currency(exp_code)  # solleva se sconosciuta
+
+        amount_minor = parse_user_amount(amount, exponent=exp_cur.exponent)
         if amount_minor <= 0:
             raise MoneyError("l'importo deve essere maggiore di zero")
         method = SplitMethod(split_method)
@@ -345,7 +361,7 @@ def add_expense(
         if not member_ids:
             raise MoneyError("seleziona almeno una persona")
 
-        # Verifico che i partecipanti siano tutti membri del gruppo.
+        # Verifico che i partecipanti SIANO tutti membri del gruppo.
         valid_ids = set(
             db.scalars(
                 select(GroupMember.user_id).where(GroupMember.group_id == group.id)
@@ -353,16 +369,55 @@ def add_expense(
         )
         if not set(member_ids).issubset(valid_ids):
             raise MoneyError("partecipanti non validi")
+        # FIX sicurezza: anche chi PAGA deve essere un membro.
+        if paid_by not in valid_ids:
+            raise MoneyError("chi ha pagato non è un membro del gruppo")
 
-        shares = compute_shares(amount_minor, method, member_ids)
+        # Conversione in valuta base (se diversa) con tasso al registro.
+        from .core.exchange import convert, get_rate
+
+        if exp_code == group.base_currency:
+            base_amount_minor = amount_minor
+            rate_str = "1.0"
+        else:
+            manual = fx_rate.strip() if fx_rate and fx_rate.strip() else None
+            # Calcolo il tasso effettivo minor->minor per lo snapshot.
+            rate = get_rate(exp_code, group.base_currency, manual=manual)
+            base_amount_minor = convert(
+                amount_minor, exp_code, group.base_currency, manual=manual
+            )
+            rate_str = str(rate)
+
+        # Quote: per even si divide la base; per exact/percent servono i campi.
+        if method == SplitMethod.EVEN:
+            shares = compute_shares(base_amount_minor, method, member_ids)
+        else:
+            # Raccolgo i campi dinamici dal form (exact_<uid> / pct_<uid>).
+            form = await request.form()
+            if method == SplitMethod.EXACT:
+                raw: dict[int, int] = {}
+                for uid in member_ids:
+                    val = form.get(f"exact_{uid}", "0")
+                    raw[uid] = parse_user_amount(val, exponent=exp_cur.exponent)
+                shares = compute_shares(base_amount_minor, method, member_ids, exact_shares=raw)
+            else:  # PERCENT
+                from decimal import Decimal
+
+                pcts: dict[int, Decimal] = {}
+                for uid in member_ids:
+                    val = form.get(f"pct_{uid}", "0")
+                    pcts[uid] = Decimal(str(val).replace(",", "."))
+                shares = compute_shares(base_amount_minor, method, member_ids, percentages=pcts)
 
         expense = Expense(
             group_id=group.id,
             paid_by=paid_by,
             description=description.strip(),
             amount_minor=amount_minor,
-            currency=group.base_currency,
+            currency=exp_code,
+            base_amount_minor=base_amount_minor,
             base_currency=group.base_currency,
+            fx_rate=rate_str,
             split_method=method.value,
             created_by=user.id,
         )
@@ -410,11 +465,19 @@ def add_payment(
     """Registra un pagamento (anche parziale) fra due membri."""
     group = _get_group_for_user(db, group_id, user)
     try:
-        amount_minor = parse_user_amount(amount)
+        amount_minor = parse_user_amount(amount, exponent=2)
         if amount_minor <= 0:
             raise MoneyError("l'importo deve essere maggiore di zero")
         if from_user == to_user:
             raise MoneyError("scegli due persone diverse")
+        # FIX sicurezza: entrambi devono essere membri del gruppo.
+        valid_ids = set(
+            db.scalars(
+                select(GroupMember.user_id).where(GroupMember.group_id == group.id)
+            ).all()
+        )
+        if from_user not in valid_ids or to_user not in valid_ids:
+            raise MoneyError("uno o entrambi i membri non fanno parte del gruppo")
         payment = Payment(
             group_id=group.id,
             from_user=from_user,

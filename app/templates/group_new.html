@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Nuovo gruppo — SiamoQuiti{% endblock %}
+{% block title %}Nuovo gruppo — B-Lance{% endblock %}
 {% block content %}
 <div class="card" style="max-width:460px;margin:30px auto">
   <div class="section-title">Nuovo gruppo</div>
@@ -13,12 +13,13 @@
       <option value="home">Casa / roommate</option>
       <option value="event">Evento</option>
     </select>
-    <label>Valuta</label>
+    <label>Valuta del gruppo</label>
     <select name="base_currency">
-      <option value="EUR">Euro (€)</option>
-      <option value="CHF">Franco svizzero</option>
-      <option value="GBP">Sterlina</option>
-      <option value="USD">Dollaro</option>
+      {% for c in currencies %}
+        <option value="{{ c.code }}" {% if c.code == 'EUR' %}selected{% endif %}>
+          {{ c.code }} — {{ c.name }}
+        </option>
+      {% endfor %}
     </select>
     <div style="margin-top:20px">
       <button class="btn block" type="submit">Crea gruppo</button>

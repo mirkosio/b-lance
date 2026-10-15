@@ -2,13 +2,25 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}SiamoQuiti{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>{% block title %}B-Lance{% endblock %}</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="B-Lance">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="64x64" href="/static/icons/favicon-64.png">
+  <meta name="description" content="Dividi le spese con amici: weekend, gite, vacanze. Preciso al centesimo.">
+
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
   <nav class="nav">
-    <a href="/" class="brand">Siamo<span>Quiti</span></a>
+    <a href="/" class="brand">B-<span>Lance</span></a>
     <div class="right">
       {% if user %}
         <a href="/groups/new" class="btn sm">Nuovo gruppo</a>
@@ -26,6 +38,17 @@
     {% block content %}{% endblock %}
   </main>
 
-  <footer>SiamoQuiti — dividiamo, regoliamo, siamo quiti.</footer>
+  <footer>B-Lance — dividiamo, regoliamo, bilanci in equilibrio.</footer>
+
+  <script>
+    // Registra il service worker per l'installazione come app (PWA).
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('/static/sw.js').catch(function (err) {
+          console.warn('Service worker non registrato:', err);
+        });
+      });
+    }
+  </script>
 </body>
 </html>

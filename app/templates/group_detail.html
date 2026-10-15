@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ group.name }} — SiamoQuiti{% endblock %}
+{% block title %}{{ group.name }} — B-Lance{% endblock %}
 {% block content %}
 <div class="card">
   <div class="section-title">
@@ -33,7 +33,7 @@
           <span>{{ m.name }}</span>
         </div>
         <span class="{% if m.net_minor > 0 %}pos{% elif m.net_minor < 0 %}neg{% endif %}" style="font-weight:700">
-          {{ m.display() }}
+          {{ m.display(group.base_currency) }}
         </span>
       </div>
     {% endfor %}
@@ -53,7 +53,7 @@
           <span>{{ view.member_name(t.payer_id) }}</span>
           <span class="arrow">→</span>
           <span>{{ view.member_name(t.payee_id) }}</span>
-          <span style="margin-left:auto;font-weight:700">{{ t.amount_minor | eur }}</span>
+          <span style="margin-left:auto;font-weight:700">{{ t.amount_minor | money(group.base_currency) }}</span>
         </div>
       {% endfor %}
       <p class="muted small" style="margin-top:10px">
@@ -89,9 +89,31 @@
 
     <div class="row">
       <div>
-        <label>Importo ({{ group.base_currency }})</label>
-        <input type="text" name="amount" required inputmode="decimal" placeholder="0,00">
+        <label>Importo</label>
+        <input type="text" name="amount" id="exp-amount" required inputmode="decimal" placeholder="0,00">
       </div>
+      <div>
+        <label>Valuta</label>
+        <select name="currency" id="exp-currency">
+          {% for c in currencies %}
+            <option value="{{ c.code }}" {% if c.code == group.base_currency %}selected{% endif %}>
+              {{ c.code }} — {{ c.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- Tasso di cambio: appare solo se la valuta != base del gruppo -->
+    <div id="fx-row" style="display:none">
+      <label>Tasso di cambio (1 {{ group.base_currency }} = ? della valuta della spesa)</label>
+      <input type="text" name="fx_rate" id="exp-fx" inputmode="decimal" placeholder="Es. 36.5">
+      <p class="muted small" style="margin:6px 0 0">
+        Lascia vuoto se la valuta è fra quelle note (calcolato automaticamente).
+      </p>
+    </div>
+
+    <div class="row">
       <div>
         <label>Chi ha pagato</label>
         <select name="paid_by" required>
@@ -126,6 +148,9 @@
       {% endfor %}
     </div>
 
+    <!-- Input dinamici per split esatto / percentuale -->
+    <div id="split-inputs" style="display:none;margin-top:10px"></div>
+
     <div style="margin-top:18px">
       <button class="btn block" type="submit">Aggiungi spesa</button>
     </div>
@@ -143,7 +168,7 @@
           <div class="meta">{{ e.payer_name }} ha pagato · {{ e.created_at.strftime('%d/%m') }}</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-weight:700">{{ e.amount_minor | eur }}</span>
+          <span style="font-weight:700">{{ e.amount_minor | money(e.currency) }}</span>
           <form method="post" action="/groups/{{ group.id }}/expenses/{{ e.id }}/void" style="margin:0"
                 onsubmit="return confirm('Annullare questa spesa?')">
             <button class="btn sm ghost" type="submit">Annulla</button>
@@ -198,7 +223,7 @@
             <div class="desc">{{ p.from_name }} → {{ p.to_name }}</div>
             <div class="meta">{{ p.created_at.strftime('%d/%m') }}{% if p.note %} · {{ p.note }}{% endif %}</div>
           </div>
-          <span style="font-weight:700">{{ p.amount_minor | eur }}</span>
+          <span style="font-weight:700">{{ p.amount_minor | money(group.base_currency) }}</span>
         </div>
       {% endfor %}
     </div>
@@ -206,14 +231,77 @@
 </div>
 
 <script>
-// Toggle attivo/passivo dei partecipanti.
+// --- Toggle partecipanti (classe "on") ---
 document.querySelectorAll('#people-picker .pp').forEach(function (label) {
   label.addEventListener('click', function () {
     setTimeout(function () {
       label.classList.toggle('on', label.querySelector('input').checked);
+      rebuildSplitInputs();
     }, 0);
   });
 });
+
+// --- Mostra/nascondi tasso di cambio in base alla valuta ---
+var baseCurrency = {{ group.base_currency | tojson }};
+var currencySel = document.getElementById('exp-currency');
+var fxRow = document.getElementById('fx-row');
+
+function toggleFx() {
+  var cur = currencySel.value;
+  fxRow.style.display = (cur === baseCurrency) ? 'none' : 'block';
+}
+currencySel.addEventListener('change', toggleFx);
+toggleFx();
+
+// --- Input dinamici per split esatto / percentuale ---
+var splitSeg = document.getElementById('split-seg');
+var splitInputs = document.getElementById('split-inputs');
+var membersData = {{ view.members | map(attribute='name') | list | tojson }};
+var memberIds = {{ view.members | map(attribute='user_id') | list | tojson }};
+
+function currentMethod() {
+  var checked = splitSeg.querySelector('input:checked');
+  return checked ? checked.value : 'even';
+}
+
+function checkedMemberIds() {
+  return Array.prototype.slice
+    .call(document.querySelectorAll('#people-picker input[name="members"]:checked'))
+    .map(function (i) { return i.value; });
+}
+
+function rebuildSplitInputs() {
+  var method = currentMethod();
+  if (method === 'even') {
+    splitInputs.style.display = 'none';
+    splitInputs.innerHTML = '';
+    return;
+  }
+  var ids = checkedMemberIds();
+  var label = method === 'exact'
+    ? 'Importo di ognuno (somma deve fare il totale)'
+    : 'Percentuale di ognuno (deve fare 100%)';
+  var unit = method === 'exact' ? '' : '%';
+  var namePrefix = method === 'exact' ? 'exact_' : 'pct_';
+
+  var html = '<p class="muted small" style="margin:0 0 6px">' + label + '</p>';
+  ids.forEach(function (uid) {
+    var idx = memberIds.indexOf(parseInt(uid, 10));
+    var name = idx >= 0 ? membersData[idx] : uid;
+    html +=
+      '<div class="row" style="margin-bottom:6px;align-items:center">' +
+      '<span style="flex:1">' + name + '</span>' +
+      '<input style="flex:1" type="text" inputmode="decimal" ' +
+      'name="' + namePrefix + uid + '" placeholder="0' + (method === 'exact' ? ',00' : '') + '">' +
+      '<span class="muted small" style="width:24px">' + unit + '</span>' +
+      '</div>';
+  });
+  splitInputs.innerHTML = html;
+  splitInputs.style.display = 'block';
+}
+
+splitSeg.addEventListener('change', rebuildSplitInputs);
+rebuildSplitInputs();
 
 function copyInvite() {
   navigator.clipboard.writeText({{ request.url_for('join_by_code', code=group.invite_code) | string | tojson }})

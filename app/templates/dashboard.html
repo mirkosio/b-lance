@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}I tuoi gruppi — SiamoQuiti{% endblock %}
+{% block title %}I tuoi gruppi — B-Lance{% endblock %}
 {% block content %}
 <div class="card">
   <div class="section-title">
@@ -7,12 +7,21 @@
     <a href="/groups/new" class="btn sm">Nuovo gruppo</a>
   </div>
 
-  {% if net_total > 0 %}
-    <p class="small">Complessivamente ti devono <strong class="pos">{{ net_total | eur }}</strong>.</p>
-  {% elif net_total < 0 %}
-    <p class="small">Complessivamente devi <strong class="neg">{{ (-net_total) | eur }}</strong>.</p>
+  {% if net_by_currency %}
+    <p class="small">
+      Complessivamente:
+      {% for code, net in net_by_currency.items() %}
+        {% if net > 0 %}
+          ti devono <strong class="pos">{{ net | money(code) }}</strong>
+        {% elif net < 0 %}
+          devi <strong class="neg">{{ (-net) | money(code) }}</strong>
+        {% else %}
+          sei in pari con <strong>{{ net | money(code) }}</strong>
+        {% endif %}{% if not loop.last %} ·{% endif %}
+      {% endfor %}
+    </p>
   {% else %}
-    <p class="small muted">Sei in pari su tutti i gruppi.</p>
+    <p class="small muted">Nessun saldo attivo. Crea un gruppo per iniziare.</p>
   {% endif %}
 </div>
 

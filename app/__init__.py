@@ -1,1 +1,1 @@
-"""Pacchetto SiamoQuiti."""
+"""Pacchetto B-Lance."""

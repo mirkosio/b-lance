@@ -59,6 +59,10 @@ a:hover { text-decoration: underline; }
 }
 .card + .card { margin-top: 16px; }
 
+/* Dentro una griglia le card sono affiancate: il margin-top di sopra
+   le sfalserebbe (la prima sembrerebbe "marcata"). Le annulliamo. */
+.grid .card + .card { margin-top: 0; }
+
 .hero {
   text-align: center;
   padding: 60px 20px 30px;

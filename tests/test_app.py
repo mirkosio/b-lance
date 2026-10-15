@@ -197,7 +197,7 @@ def test_void_expense_reverses_balance(client: TestClient) -> None:
     client.post(f"/groups/{group_id}/expenses/{expense_id}/void")
 
     page = client.get(f"/groups/{group_id}").text
-    # Ora siamo quiti.
+    # Ora bilanci in equilibrio.
     assert "+€10.00" not in page
     assert "Nessun debito" in page
 

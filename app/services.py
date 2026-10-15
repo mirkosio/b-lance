@@ -49,14 +49,16 @@ class MemberBalance:
     def is_settled(self) -> bool:
         return self.net_minor == 0
 
-    def display(self) -> str:
-        """Formato leggibile con segno: +12.50 / -3.40 / 0.00."""
-        value = to_major(abs(self.net_minor))
+    def display(self, code: str = "EUR") -> str:
+        """Formato leggibile con segno nella valuta data: +12.50 / -3.40 / 0.00."""
+        from .core.money import format_amount
+
+        value = format_amount(abs(self.net_minor), code, symbol=True)
         if self.net_minor > 0:
-            return f"+€{value:.2f}"
+            return f"+{value}"
         if self.net_minor < 0:
-            return f"-€{value:.2f}"
-        return f"€{value:.2f}"
+            return f"-{value}"
+        return value
 
 
 @dataclass
@@ -77,7 +79,9 @@ class GroupView:
         return sum(m.paid_minor for m in self.members)
 
     def total_expenses_display(self) -> str:
-        return format_eur(self.total_expenses_minor())
+        from .core.money import format_amount
+
+        return format_amount(self.total_expenses_minor(), self.group.base_currency)
 
 
 def compute_balances(db: Session, group: Group) -> GroupView:
@@ -108,14 +112,13 @@ def compute_balances(db: Session, group: Group) -> GroupView:
     owed: dict[int, int] = {}
 
     for exp in expenses:
-        # Tasso di cambio della spesa -> valuta base del gruppo.
-        rate = Decimal(exp.fx_rate) if exp.currency != group.base_currency else Decimal("1")
-        if exp.currency != group.base_currency:
-            # Le quote sono già salvate in valuta base, ma paid_by è in valuta
-            # originale: converto l'importo pagato per il bilancio complessivo.
-            paid_amount = convert_minor(exp.amount_minor, rate)
-        else:
-            paid_amount = exp.amount_minor
+        # base_amount_minor è già in valuta base, convertito al registro.
+        # Zero ricalcoli runtime -> niente drift fra saldi e storico.
+        paid_amount = (
+            exp.base_amount_minor
+            if exp.base_amount_minor
+            else convert_to_base_if_needed(exp, group)
+        )
         paid[exp.paid_by] = paid.get(exp.paid_by, 0) + paid_amount
         for share in exp.shares:
             owed[share.user_id] = owed.get(share.user_id, 0) + share.amount_minor
@@ -151,6 +154,19 @@ def compute_balances(db: Session, group: Group) -> GroupView:
     balances_map = {m.user_id: m.net_minor for m in view.members}
     view.transfers = settle_all(balances_map)
     return view
+
+
+def convert_to_base_if_needed(exp: Expense, group: Group) -> int:
+    """Fallback per spese vecchie senza base_amount_minor precalcolato.
+
+    Converte amount_minor (valuta spesa) in valuta base usando il tasso
+    salvato al registro. Se la valuta è la base, ritorna l'importo così com'è.
+    """
+    if exp.currency == group.base_currency:
+        return exp.amount_minor
+    from .core.money import convert_minor
+
+    return convert_minor(exp.amount_minor, Decimal(exp.fx_rate))
 
 
 def balances_for_users(

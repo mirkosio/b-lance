@@ -17,7 +17,7 @@ from .models import User
 
 # In produzione va da env var. Qui un default per sviluppo.
 SECRET_KEY = "dev-secret-change-me-in-prod"
-_SESSION_SALT = "siamoquiti-session"
+_SESSION_SALT = "b-lance-session"
 _serializer = URLSafeSerializer(SECRET_KEY, salt=_SESSION_SALT)
 
 

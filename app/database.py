@@ -8,7 +8,7 @@ from collections.abc import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./siamoquiti.db")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./b-lance.db")
 
 # check_same_thread=False serve per SQLite con FastAPI multi-thread.
 connect_args = (
