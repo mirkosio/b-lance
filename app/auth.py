@@ -8,6 +8,9 @@ Scelte "azienda":
 
 from __future__ import annotations
 
+import os
+import secrets as _secrets
+
 import bcrypt
 from itsdangerous import BadSignature, SignatureExpired, URLSafeSerializer
 from sqlalchemy import select
@@ -15,8 +18,10 @@ from sqlalchemy.orm import Session
 
 from .models import User
 
-# In produzione va da env var. Qui un default per sviluppo.
-SECRET_KEY = "dev-secret-change-me-in-prod"
+# SECRET_KEY da env var in produzione (Render/Neon). Se manca, ne genera una
+# random SOLO per sviluppo — in produzione va SEMPRE impostata, altrimenti
+# le sessioni si invalidano a ogni riavvio.
+SECRET_KEY = os.getenv("SECRET_KEY") or _secrets.token_hex(32)
 _SESSION_SALT = "b-lance-session"
 _serializer = URLSafeSerializer(SECRET_KEY, salt=_SESSION_SALT)
 

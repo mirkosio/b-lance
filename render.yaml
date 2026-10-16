@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: b-lance
+    runtime: python
+    freePlan: true
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false # lo incolli tu nel dashboard (stringa Neon)
+      - key: SECRET_KEY
+        generateValue: true # lo genera Render, non serve scriverlo
