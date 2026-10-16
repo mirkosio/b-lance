@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 {% block title %}Modifica {{ group.name }} — B-Lance{% endblock %}
 {% block content %}
-<div class="card" style="max-width:460px;margin:30px auto">
-  <div class="section-title">Modifica gruppo</div>
+<div class="pagehead">
+  <h1>Modifica gruppo</h1>
+  <p>{{ group.name }}</p>
+</div>
+
+<div class="card" style="max-width:470px">
   <form method="post" action="/groups/{{ group.id }}/edit">
     <label>Nome</label>
     <input type="text" name="name" required maxlength="160" value="{{ group.name }}">
@@ -43,8 +47,10 @@
   </form>
 
   {% if is_owner %}
-    <hr style="margin:24px 0;border:0;border-top:1px solid var(--line,#e5e7eb)">
-    <div class="section-title">Zona pericolosa</div>
+    <hr>
+    <div class="section-title" style="color:var(--neg)">
+      <span>Zona pericolosa</span>
+    </div>
     <p class="muted small">
       Elimina il gruppo per tutti: spese, pagamenti e saldi spariscono
       definitivamente.

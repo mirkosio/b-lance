@@ -7,7 +7,7 @@
 
   <!-- PWA -->
   <link rel="manifest" href="/static/manifest.webmanifest">
-  <meta name="theme-color" content="#6366f1">
+  <meta name="theme-color" content="#0b1220">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,45 +16,166 @@
   <link rel="icon" type="image/png" sizes="64x64" href="/static/icons/favicon-64.png">
   <meta name="description" content="Dividi le spese con amici: weekend, gite, vacanze. Preciso al centesimo.">
 
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
-  <nav class="nav">
-    <a href="/" class="brand">B-<span>Lance</span></a>
-    <div class="right">
-      {% if user %}
-        <a href="/groups/new" class="btn sm">Nuovo gruppo</a>
-        <form method="post" action="/logout" style="margin:0">
-          <button class="btn sm ghost" type="submit">Esci</button>
-        </form>
-      {% else %}
-        <a href="/login" class="btn sm ghost">Accedi</a>
-        <a href="/register" class="btn sm">Registrati</a>
-      {% endif %}
+
+<!-- Sprite di icone: disegnate a mano, stile outline, nessuna emoji -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-scale" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 4v15"/><path d="M5 7h14"/><path d="M8 21h8"/>
+      <path d="M5 7 2.6 12.8a2.9 2.9 0 0 0 4.8 0Z" fill="currentColor" fill-opacity=".25"/>
+      <path d="M19 7l-2.4 5.8a2.9 2.9 0 0 0 4.8 0Z" fill="currentColor" fill-opacity=".25"/>
+    </symbol>
+    <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m3 10.5 9-7.5 9 7.5"/><path d="M5.5 9.5V20h13V9.5"/><path d="M9.5 20v-6h5v6"/>
+    </symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+      <path d="M12 5v14M5 12h14"/>
+    </symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 4h4.5A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5H14"/><path d="M10 8l-4 4 4 4"/><path d="M6 12h10"/>
+    </symbol>
+    <symbol id="i-login" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H10"/><path d="M14 8l4 4-4 4"/><path d="M18 12H8"/>
+    </symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m9 6 6 6-6 6"/>
+    </symbol>
+    <symbol id="i-plane" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.5 13.5 3 11l1.5-2 7.5 1 4.6-5.2a1.6 1.6 0 0 1 2.4 2.1L14 11l1 7.5-2 1.5-2.5-7.5Z"/>
+    </symbol>
+    <symbol id="i-house" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 20V9.5L12 4l8 5.5V20"/><path d="M9.5 20v-5h5v5"/>
+    </symbol>
+    <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="5.5" width="16" height="14.5" rx="2.5"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/>
+    </symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="6" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18" cy="12" r="1.8"/>
+    </symbol>
+    <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H17v3"/><rect x="4" y="7.5" width="16.5" height="12" rx="2.5"/><circle cx="16" cy="13.5" r="1.4" fill="currentColor" stroke="none"/>
+    </symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 8h13l-3-3M20 16H7l3 3"/>
+    </symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c-4.5 5-4.5 12 0 17 4.5-5 4.5-12 0-17Z"/>
+    </symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M13 3 5 13.5h5.5L10 21l8.5-11H13Z" fill="currentColor" fill-opacity=".2"/>
+    </symbol>
+    <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5c.7-3.2 3-5 5.5-5s4.8 1.8 5.5 5"/><path d="M15.5 6.2a3.2 3.2 0 0 1 0 5.6M17.2 14.9c2 .7 3.3 2.4 3.8 4.6"/>
+    </symbol>
+  </defs>
+</svg>
+
+{% if user %}
+<!-- Sidebar (desktop) -->
+<aside class="sidebar">
+  <a href="/" class="brand">
+    <span class="mark"><svg width="20" height="20" style="color:#fff"><use href="#i-scale"></use></svg></span>
+    B-<em>Lance</em>
+  </a>
+  <a class="side-link {% if request.url.path == '/' %}active{% endif %}" href="/">
+    <svg width="20" height="20"><use href="#i-home"></use></svg> Home
+  </a>
+  <a class="side-link cta" href="/groups/new">
+    <svg width="20" height="20"><use href="#i-plus"></use></svg> Nuovo gruppo
+  </a>
+  <div class="side-user">
+    <span class="avatar" style="background:{{ user.color }}">{{ user.name[0]|upper }}</span>
+    <div style="min-width:0">
+      <b>{{ user.name }}</b>
+      <span>account attivo</span>
     </div>
-  </nav>
+    <form method="post" action="/logout" style="margin:0 0 0 auto">
+      <button class="btn sm ghost" type="submit" aria-label="Esci">
+        <svg width="16" height="16"><use href="#i-logout"></use></svg>
+      </button>
+    </form>
+  </div>
+</aside>
 
-  <main class="wrap">
-    {% block content %}{% endblock %}
-  </main>
+<!-- Topbar (mobile) -->
+<header class="topbar">
+  <a href="/" class="brand">
+    <span class="mark"><svg width="18" height="18" style="color:#fff"><use href="#i-scale"></use></svg></span>
+    B-<em>Lance</em>
+  </a>
+  <span class="avatar" style="background:{{ user.color }}" title="{{ user.name }}">{{ user.name[0]|upper }}</span>
+</header>
+{% else %}
+<header class="topbar">
+  <a href="/" class="brand">
+    <span class="mark"><svg width="18" height="18" style="color:#fff"><use href="#i-scale"></use></svg></span>
+    B-<em>Lance</em>
+  </a>
+  <span style="display:flex;gap:8px">
+    <a class="btn sm ghost" href="/login">Accedi</a>
+    <a class="btn sm" href="/register">Registrati</a>
+  </span>
+</header>
+{% endif %}
 
-  <footer>B-Lance — dividiamo, regoliamo, bilanci in equilibrio.</footer>
+<main class="wrap">
+  {% block content %}{% endblock %}
+</main>
 
-  <script>
-    // Registra il service worker per l'installazione come app (PWA).
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/static/sw.js')
-          .then(function (reg) {
-            // Controlla subito se è uscita una versione nuova del worker:
-            // così gli aggiornamenti al sito arrivano senza aspettare.
-            reg.update();
-          })
-          .catch(function (err) {
-            console.warn('Service worker non registrato:', err);
-          });
-      });
-    }
-  </script>
+<footer>B-Lance — dividiamo, regoliamo, bilanci in equilibrio.</footer>
+
+{% if user %}
+<!-- Bottom nav (mobile) -->
+<nav class="bottomnav" aria-label="Navigazione principale">
+  <a class="bn-item {% if request.url.path == '/' %}active{% endif %}" href="/">
+    <svg width="22" height="22"><use href="#i-home"></use></svg> Home
+  </a>
+  <a class="bn-item center" href="/groups/new">
+    <span class="bubble"><svg width="22" height="22"><use href="#i-plus"></use></svg></span>
+    Nuovo
+  </a>
+  <form method="post" action="/logout" style="margin:0;flex:1;display:flex">
+    <button class="bn-item" type="submit">
+      <svg width="22" height="22"><use href="#i-logout"></use></svg> Esci
+    </button>
+  </form>
+</nav>
+{% else %}
+<nav class="bottomnav" aria-label="Navigazione principale">
+  <a class="bn-item {% if request.url.path == '/' %}active{% endif %}" href="/">
+    <svg width="22" height="22"><use href="#i-home"></use></svg> Home
+  </a>
+  <a class="bn-item" href="/login">
+    <svg width="22" height="22"><use href="#i-login"></use></svg> Accedi
+  </a>
+  <a class="bn-item center" href="/register">
+    <span class="bubble"><svg width="22" height="22"><use href="#i-plus"></use></svg></span>
+    Registrati
+  </a>
+</nav>
+{% endif %}
+
+<script>
+  // Registra il service worker per l'installazione come app (PWA).
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/static/sw.js')
+        .then(function (reg) {
+          // Controlla subito se è uscita una versione nuova del worker:
+          // così gli aggiornamenti al sito arrivano senza aspettare.
+          reg.update();
+        })
+        .catch(function (err) {
+          console.warn('Service worker non registrato:', err);
+        });
+    });
+  }
+</script>
 </body>
 </html>

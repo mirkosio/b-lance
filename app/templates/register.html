@@ -1,8 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Registrati — B-Lance{% endblock %}
 {% block content %}
-<div class="card" style="max-width:420px;margin:40px auto">
-  <div class="section-title">Crea account</div>
+<div class="card" style="max-width:430px;margin:26px auto">
+  <div style="text-align:center;margin-bottom:8px">
+    <span class="mark" style="display:inline-grid;place-items:center;width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--primary-deep));box-shadow:0 8px 22px rgba(37,99,235,.45)">
+      <svg width="26" height="26" style="color:#fff"><use href="#i-scale"></use></svg>
+    </span>
+  </div>
+  <div class="section-title" style="justify-content:center">Crea account</div>
   {% if error %}<div class="alert">{{ error }}</div>{% endif %}
   <form method="post" action="/register">
     <input type="hidden" name="next" value="{{ next|default('') }}">
@@ -13,7 +18,9 @@
     <label>Password</label>
     <input type="password" name="password" required minlength="6" placeholder="Almeno 6 caratteri">
     <div style="margin-top:18px">
-      <button class="btn block" type="submit">Crea account</button>
+      <button class="btn block" type="submit">
+        <svg width="17" height="17"><use href="#i-bolt"></use></svg> Crea account
+      </button>
     </div>
   </form>
   <p class="muted small" style="margin-top:16px;text-align:center">

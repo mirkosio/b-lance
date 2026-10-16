@@ -1,17 +1,24 @@
 {% extends "base.html" %}
 {% block title %}Accedi — B-Lance{% endblock %}
 {% block content %}
-<div class="card" style="max-width:420px;margin:40px auto">
-  <div class="section-title">Accedi</div>
+<div class="card" style="max-width:430px;margin:26px auto">
+  <div style="text-align:center;margin-bottom:8px">
+    <span class="mark" style="display:inline-grid;place-items:center;width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--primary-deep));box-shadow:0 8px 22px rgba(37,99,235,.45)">
+      <svg width="26" height="26" style="color:#fff"><use href="#i-scale"></use></svg>
+    </span>
+  </div>
+  <div class="section-title" style="justify-content:center">Accedi</div>
   {% if error %}<div class="alert">{{ error }}</div>{% endif %}
   <form method="post" action="/login">
     <input type="hidden" name="next" value="{{ next|default('') }}">
     <label>Email</label>
-    <input type="email" name="email" required autofocus>
+    <input type="email" name="email" required autofocus placeholder="tu@email.com">
     <label>Password</label>
-    <input type="password" name="password" required>
+    <input type="password" name="password" required placeholder="La tua password">
     <div style="margin-top:18px">
-      <button class="btn block" type="submit">Entra</button>
+      <button class="btn block" type="submit">
+        <svg width="17" height="17"><use href="#i-login"></use></svg> Entra
+      </button>
     </div>
   </form>
   <p class="muted small" style="margin-top:16px;text-align:center">

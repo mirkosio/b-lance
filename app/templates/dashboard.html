@@ -1,49 +1,84 @@
 {% extends "base.html" %}
 {% block title %}I tuoi gruppi — B-Lance{% endblock %}
 {% block content %}
+<div class="pagehead">
+  <h1>Ciao {{ user.name }}</h1>
+  <p>Ecco a che punto sono i tuoi conti.</p>
+</div>
+
 <div class="card">
   <div class="section-title">
-    Ciao {{ user.name }}
-    <a href="/groups/new" class="btn sm">Nuovo gruppo</a>
+    <span><svg width="18" height="18" style="vertical-align:-3px;color:#8ab0ff"><use href="#i-wallet"></use></svg>
+      I tuoi saldi</span>
+    <a href="/groups/new" class="btn sm"><svg width="15" height="15"><use href="#i-plus"></use></svg> Nuovo gruppo</a>
   </div>
 
   {% if net_by_currency %}
-    <p class="small">
-      Complessivamente:
+    <div class="netchips">
       {% for code, net in net_by_currency.items() %}
         {% if net > 0 %}
-          ti devono <strong class="pos">{{ net | money(code) }}</strong>
+          <span class="netchip pos"><span class="dot"></span>ti devono <strong class="pos">{{ net | money(code) }}</strong></span>
         {% elif net < 0 %}
-          devi <strong class="neg">{{ (-net) | money(code) }}</strong>
+          <span class="netchip neg"><span class="dot"></span>devi <strong class="neg">{{ (-net) | money(code) }}</strong></span>
         {% else %}
-          sei in pari con <strong>{{ net | money(code) }}</strong>
-        {% endif %}{% if not loop.last %} ·{% endif %}
+          <span class="netchip"><span class="dot"></span>in pari con <strong>{{ net | money(code) }}</strong></span>
+        {% endif %}
       {% endfor %}
-    </p>
+    </div>
   {% else %}
-    <p class="small muted">Nessun saldo attivo. Crea un gruppo per iniziare.</p>
+    <p class="small muted" style="margin:0">Nessun saldo attivo. Crea un gruppo per iniziare.</p>
   {% endif %}
 </div>
 
 <div class="card">
-  <div class="section-title">I tuoi gruppi</div>
+  <div class="section-title">
+    <span><svg width="18" height="18" style="vertical-align:-3px;color:#8ab0ff"><use href="#i-users"></use></svg>
+      I tuoi gruppi</span>
+    <span class="chip blue">{{ groups|length }}</span>
+  </div>
+
   {% if groups %}
     <div class="grid cols-2">
       {% for g in groups %}
-        <a href="/groups/{{ g.id }}" class="card" style="display:block;color:inherit">
-          <div style="font-weight:700;font-size:1.05rem">{{ g.name }}</div>
-          <div class="muted small" style="margin-top:4px">
-            {{ g.members|length }} membri ·
-            {% if g.kind == 'trip' %}viaggio{% elif g.kind == 'home' %}casa{% elif g.kind == 'event' %}evento{% else %}altro{% endif %}
+        <a href="/groups/{{ g.id }}" class="groupcard">
+          <span class="gicon {% if g.kind == 'home' %}green{% elif g.kind == 'event' %}gold{% elif g.kind != 'trip' %}slate{% endif %}">
+            {% if g.kind == 'trip' %}
+              <svg width="22" height="22"><use href="#i-plane"></use></svg>
+            {% elif g.kind == 'home' %}
+              <svg width="22" height="22"><use href="#i-house"></use></svg>
+            {% elif g.kind == 'event' %}
+              <svg width="22" height="22"><use href="#i-calendar"></use></svg>
+            {% else %}
+              <svg width="22" height="22"><use href="#i-dots"></use></svg>
+            {% endif %}
+          </span>
+          <div style="min-width:0">
+            <b>{{ g.name }}</b>
+            <div class="meta">
+              <span class="chip">{{ g.base_currency }}</span>
+              {{ g.members|length }} membri ·
+              {% if g.kind == 'trip' %}viaggio{% elif g.kind == 'home' %}casa{% elif g.kind == 'event' %}evento{% else %}altro{% endif %}
+            </div>
           </div>
+          <span class="go"><svg width="20" height="20"><use href="#i-chevron"></use></svg></span>
         </a>
       {% endfor %}
     </div>
   {% else %}
     <div class="empty">
-      <p>Nessun gruppo ancora.</p>
+      <svg class="art" width="120" height="84" viewBox="0 0 120 84" aria-hidden="true">
+        <rect x="14" y="26" width="92" height="48" rx="12" fill="rgba(255,255,255,.05)" stroke="rgba(255,255,255,.16)" stroke-width="2"/>
+        <path d="M14 40h92" stroke="rgba(255,255,255,.16)" stroke-width="2"/>
+        <circle cx="86" cy="56" r="7" fill="none" stroke="#3b82f6" stroke-width="2.5"/>
+        <path d="M40 26 48 12h24l8 14" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="98" cy="20" r="9" fill="#f59e0b" opacity=".85"/>
+        <text x="98" y="25" text-anchor="middle" font-family="Manrope, sans-serif" font-size="12" font-weight="800" fill="#78350f">€</text>
+      </svg>
+      <p style="color:var(--text);font-weight:700">Nessun gruppo ancora</p>
       <p class="small">Crea un gruppo per iniziare a dividere le spese con i tuoi amici.</p>
-      <a href="/groups/new" class="btn" style="margin-top:10px">Crea il primo gruppo</a>
+      <a href="/groups/new" class="btn" style="margin-top:12px">
+        <svg width="17" height="17"><use href="#i-plus"></use></svg> Crea il primo gruppo
+      </a>
     </div>
   {% endif %}
 </div>

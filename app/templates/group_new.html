@@ -1,11 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Nuovo gruppo — B-Lance{% endblock %}
 {% block content %}
-<div class="card" style="max-width:460px;margin:30px auto">
-  <div class="section-title">Nuovo gruppo</div>
+<div class="pagehead">
+  <h1>Nuovo gruppo</h1>
+  <p>Un gruppo per ogni vacanza, casa o cena.</p>
+</div>
+
+<div class="card" style="max-width:470px">
   <form method="post" action="/groups/new">
     <label>Nome</label>
     <input type="text" name="name" required autofocus placeholder="Es. Weekend a Rimini">
+
     <label>Tipo</label>
     <select name="kind">
       <option value="other">Altro</option>
@@ -13,6 +18,7 @@
       <option value="home">Casa / roommate</option>
       <option value="event">Evento</option>
     </select>
+
     <label>Valuta del gruppo</label>
     <select name="base_currency">
       {% for c in currencies %}
@@ -21,8 +27,14 @@
         </option>
       {% endfor %}
     </select>
+    <p class="muted small" style="margin:6px 0 0">
+      I saldi di tutto il gruppo restano in questa valuta.
+    </p>
+
     <div style="margin-top:20px">
-      <button class="btn block" type="submit">Crea gruppo</button>
+      <button class="btn block" type="submit">
+        <svg width="17" height="17"><use href="#i-plus"></use></svg> Crea gruppo
+      </button>
     </div>
   </form>
 </div>
