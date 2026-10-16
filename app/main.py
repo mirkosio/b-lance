@@ -10,6 +10,7 @@ Punti di forza rispetto ai competitor:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import secrets
 from contextlib import asynccontextmanager
@@ -21,6 +22,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
+from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 from sqlalchemy.orm import Session, selectinload
 
 from .auth import (
@@ -60,6 +63,54 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 SESSION_COOKIE = "bl_session"
 logger = logging.getLogger("b-lance")
+
+
+class DBColdStartRetry:
+    """Riprova una volta se il database si sta svegliando.
+
+    Neon gratuito si sospende dopo qualche minuto: la prima richiesta può
+    fallire con errore di connessione e mandare un 500 al browser. Aspetto
+    1,5s e riprovo una volta sola — a quel punto il DB è sveglio.
+
+    Regole: solo GET (mai ritentare una mutazione) e solo se il server non
+    ha ancora iniziato a rispondere. Middleware ASGI puro: richiamare l'app
+    è lecito, mentre con il doppio call_next di BaseHTTP si finisce in
+    anyio.EndOfStream.
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http" or scope["method"] != "GET":
+            await self.app(scope, receive, send)
+            return
+
+        started = False
+
+        async def send_wrapper(message):
+            nonlocal started
+            if message["type"] == "http.response.start":
+                started = True
+            await send(message)
+
+        for attempt in (1, 2):
+            try:
+                await self.app(scope, receive, send_wrapper)
+                return
+            except (OperationalError, PoolTimeoutError) as exc:
+                if attempt == 2 or started:
+                    raise
+                logger.warning(
+                    "DB non pronto su %s %s, riprovo: %s",
+                    scope["method"],
+                    scope["path"],
+                    exc,
+                )
+                await asyncio.sleep(1.5)
+
+
+app.add_middleware(DBColdStartRetry)
 
 
 @app.middleware("http")
@@ -623,6 +674,23 @@ def remove_member(
         )
     if target.id == actor.id:
         raise HTTPException(status_code=400, detail="Non puoi rimuovere te stesso")
+
+    # Un saldo aperto non sparisce con la rimozione: i soldi resterebbero
+    # sospesi e il gruppo non tornerebbe più in pari (prima: 500 totale).
+    view = compute_balances(db, group)
+    target_net = next(
+        (m.net_minor for m in view.members if m.user_id == target_user_id), 0
+    )
+    if target_net != 0:
+        from .core.money import format_amount
+
+        name = target.user.name
+        amount = format_amount(abs(target_net), group.base_currency)
+        if target_net > 0:
+            detail = f"{name} è ancora in credito di {amount}: salda prima di toglierlo dal gruppo"
+        else:
+            detail = f"{name} deve ancora {amount}: salda prima di toglierlo dal gruppo"
+        raise HTTPException(status_code=400, detail=detail)
 
     db.delete(target)
     db.commit()

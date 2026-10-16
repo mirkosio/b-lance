@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 import os
+import time
 from collections.abc import Generator
 
 from sqlalchemy import create_engine
@@ -105,9 +107,26 @@ def _migrate() -> None:
             )
 
 
-def init_db() -> None:
-    """Crea le tabelle se non esistono e applica le migrazioni minori."""
+def init_db(retries: int = 5, delay: float = 2.0) -> None:
+    """Crea le tabelle e applica le migrazioni MINORI.
+
+    Il database gratuito (Neon) si sospende dopo l'inattività: al risveglio
+    la prima connessione può fallire. Senza retry l'app uscirebbe all'avvio
+    e Render risponderebbe con errore a ogni richiesta finché non si sveglia.
+    """
     from . import models  # noqa: F401
 
-    Base.metadata.create_all(bind=engine)
-    _migrate()
+    last_exc: Exception | None = None
+    for attempt in range(1, retries + 1):
+        try:
+            Base.metadata.create_all(bind=engine)
+            _migrate()
+            return
+        except Exception as exc:  # db non ancora pronto: aspetto e riprovo
+            last_exc = exc
+            if attempt < retries:
+                logging.getLogger("b-lance").warning(
+                    "DB non pronto (tentativo %d/%d): %s", attempt, retries, exc
+                )
+                time.sleep(delay)
+    raise last_exc  # type: ignore[misc]

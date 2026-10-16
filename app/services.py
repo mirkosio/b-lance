@@ -21,6 +21,7 @@ Tutto in centesimi della VALUTA BASE del gruppo.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from decimal import Decimal
 
@@ -30,6 +31,8 @@ from sqlalchemy.orm import Session, selectinload
 from .core.money import convert_minor, format_eur, to_major
 from .core.settlement import Transfer, settle_all
 from .models import Expense, Group, GroupMember, Payment, Share, User
+
+logger = logging.getLogger("b-lance")
 
 
 @dataclass
@@ -47,6 +50,9 @@ class MemberBalance:
     # Ruolo e permessi nel gruppo (servono all'interfaccia per i controlli).
     role: str = "member"
     perms: str = ""
+    # False = non è più un membro ma ha ancora soldi in gioco (spese/pagamenti
+    # registrati mentre era dentro). Il saldo resta suo: non sparisce.
+    active: bool = True
 
     @property
     def perm_set(self) -> frozenset[str]:
@@ -84,6 +90,10 @@ class GroupView:
             if m.user_id == user_id:
                 return m.name
         return f"#{user_id}"
+
+    def active_count(self) -> int:
+        """Quanti sono ancora membri veri (esclude chi è stato rimosso)."""
+        return sum(1 for m in self.members if m.active)
 
     def total_expenses_minor(self) -> int:
         return sum(m.paid_minor for m in self.members)
@@ -159,12 +169,43 @@ def compute_balances(db: Session, group: Group) -> GroupView:
             )
         )
 
+    # Chi non è più membro ma ha ancora soldi in gioco: i soldi NON spariscono
+    # quando uno lascia il gruppo. Se lo escludessi la somma dei saldi non
+    # tornerebbe a zero e il settlement esploderebbe (prima: 500 su tutta la
+    # pagina del gruppo e sulla dashboard).
+    active_ids = {m.user_id for m in members}
+    orphan_ids = sorted((set(paid) | set(owed) | set(net)) - active_ids)
+    if orphan_ids:
+        users = {
+            u.id: u
+            for u in db.scalars(select(User).where(User.id.in_(orphan_ids))).all()
+        }
+        for uid in orphan_ids:
+            u = users.get(uid)
+            view.members.append(
+                MemberBalance(
+                    user_id=uid,
+                    name=u.name if u else f"#{uid}",
+                    color=u.color if u else "#94a3b8",
+                    net_minor=net.get(uid, paid.get(uid, 0) - owed.get(uid, 0)),
+                    paid_minor=paid.get(uid, 0),
+                    owed_minor=owed.get(uid, 0),
+                    active=False,
+                )
+            )
+
     # Ordino per saldo decrescente (chi è in credito prima) per display pulito.
     view.members.sort(key=lambda b: (-b.net_minor, b.name))
 
     # Chi paga chi: solo se qualcuno è in debito.
     balances_map = {m.user_id: m.net_minor for m in view.members}
-    view.transfers = settle_all(balances_map)
+    try:
+        view.transfers = settle_all(balances_map)
+    except Exception:  # storico imperfetto: mostro i saldi senza bonifici
+        logger.warning(
+            "settlement impossibile per il gruppo %s (saldi=%s)", group.id, balances_map
+        )
+        view.transfers = []
     return view
 
 
@@ -176,9 +217,22 @@ def convert_to_base_if_needed(exp: Expense, group: Group) -> int:
     """
     if exp.currency == group.base_currency:
         return exp.amount_minor
+    if not exp.fx_rate:
+        # Riga storica senza tasso salvato: converto male piuttosto che far
+        # esplodere la pagina dei saldi con un 500.
+        logger.warning("spesa %s senza fx_rate: uso l'importo cosi'", exp.id)
+        return exp.amount_minor
     from .core.money import convert_minor
 
-    return convert_minor(exp.amount_minor, Decimal(exp.fx_rate))
+    try:
+        return convert_minor(exp.amount_minor, Decimal(exp.fx_rate))
+    except (ValueError, ArithmeticError, TypeError):
+        logger.warning(
+            "spesa %s con fx_rate inutilizzabile (%r): uso l'importo cosi'",
+            exp.id,
+            exp.fx_rate,
+        )
+        return exp.amount_minor
 
 
 def balances_for_users(

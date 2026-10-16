@@ -14,7 +14,7 @@
       <div class="lbl">Totale speso</div>
     </div>
     <div class="stat">
-      <div class="num">{{ view.members|length }}</div>
+      <div class="num">{{ view.active_count() }}</div>
       <div class="lbl">Membri</div>
     </div>
     <div class="stat">
@@ -33,6 +33,7 @@
         <div class="person">
           <span class="avatar" style="background:{{ m.color }}">{{ m.name[0]|upper }}</span>
           <span>{{ m.name }}</span>
+          {% if not m.active %}<span class="chip">non più membro</span>{% endif %}
         </div>
         <span class="{% if m.net_minor > 0 %}pos{% elif m.net_minor < 0 %}neg{% endif %}" style="font-weight:700">
           {{ m.display(group.base_currency) }}
@@ -70,7 +71,7 @@
 <!-- Membri e permessi -->
 <div class="card">
   <div class="section-title">
-    <span>Membri ({{ view.members|length }})</span>
+    <span>Membri ({{ view.active_count() }})</span>
     {% if 'members_manage' in perms %}
       <span class="chip">gestisci i permessi</span>
     {% endif %}
@@ -81,10 +82,13 @@
       <div class="person">
         <span class="avatar" style="background:{{ m.color }}">{{ m.name[0]|upper }}</span>
         <span>{{ m.name }}{% if m.user_id == user.id %} <span class="muted small">(tu)</span>{% endif %}</span>
-        {% if m.role == 'owner' %}<span class="chip">Creatore</span>
+        {% if not m.active %}<span class="chip">Ex membro</span>
+        {% elif m.role == 'owner' %}<span class="chip">Creatore</span>
         {% elif m.role == 'admin' %}<span class="chip">Admin</span>{% endif %}
       </div>
-      {% if m.role == 'owner' %}
+      {% if not m.active %}
+        <span class="muted small">non fa più parte del gruppo</span>
+      {% elif m.role == 'owner' %}
         <span class="muted small">tutti i permessi</span>
       {% elif 'members_manage' in perms and m.user_id != user.id %}
         <details>
@@ -179,7 +183,7 @@
       <div>
         <label>Chi ha pagato</label>
         <select name="paid_by" required>
-          {% for m in view.members %}
+          {% for m in view.members if m.active %}
             <option value="{{ m.user_id }}" {% if m.user_id == user.id %}selected{% endif %}>{{ m.name }}</option>
           {% endfor %}
         </select>
@@ -188,7 +192,7 @@
 
     <label>Chi divide</label>
     <div class="people-picker" id="people-picker">
-      {% for m in view.members %}
+      {% for m in view.members if m.active %}
         <label class="pp on" data-uid="{{ m.user_id }}">
           <input type="checkbox" name="members" value="{{ m.user_id }}" checked>
           <span class="avatar" style="background:{{ m.color }};width:22px;height:22px;font-size:0.7rem">{{ m.name[0]|upper }}</span>
@@ -254,13 +258,13 @@
       <div>
         <label>Da</label>
         <select name="from_user" required>
-          {% for m in view.members %}<option value="{{ m.user_id }}">{{ m.name }}</option>{% endfor %}
+          {% for m in view.members if m.active %}<option value="{{ m.user_id }}">{{ m.name }}</option>{% endfor %}
         </select>
       </div>
       <div>
         <label>A</label>
         <select name="to_user" required>
-          {% for m in view.members %}<option value="{{ m.user_id }}">{{ m.name }}</option>{% endfor %}
+          {% for m in view.members if m.active %}<option value="{{ m.user_id }}">{{ m.name }}</option>{% endfor %}
         </select>
       </div>
     </div>
@@ -328,8 +332,8 @@ toggleFx();
 // --- Input dinamici per split esatto / percentuale ---
 var splitSeg = document.getElementById('split-seg');
 var splitInputs = document.getElementById('split-inputs');
-var membersData = {{ view.members | map(attribute='name') | list | tojson }};
-var memberIds = {{ view.members | map(attribute='user_id') | list | tojson }};
+var membersData = {{ view.members | selectattr('active') | map(attribute='name') | list | tojson }};
+var memberIds = {{ view.members | selectattr('active') | map(attribute='user_id') | list | tojson }};
 
 function currentMethod() {
   var checked = splitSeg.querySelector('input:checked');
