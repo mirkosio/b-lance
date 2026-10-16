@@ -10,12 +10,13 @@ Punti di forza rispetto ai competitor:
 
 from __future__ import annotations
 
+import logging
 import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Request
-from fastapi.responses import RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
@@ -57,6 +58,45 @@ app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 SESSION_COOKIE = "bl_session"
+logger = logging.getLogger("b-lance")
+
+
+@app.middleware("http")
+async def service_worker_no_cache(request: Request, call_next):
+    """sw.js MAI dalla cache del browser: altrimenti la PWA resta bloccata
+    sulla versione vecchia (HTML nuovo + CSS vecchio = layout distrutto)."""
+    response = await call_next(request)
+    if request.url.path == "/static/sw.js":
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
+    return response
+
+# Pagina di errore "umana": niente "Internal Server Error" a freddo.
+# Il traceback completo finisce comunque nei log di Render.
+ERROR_PAGE = """<!doctype html>
+<html lang="it"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Errore — B-Lance</title>
+<style>
+ body{background:#0b0f17;color:#e8edf7;font-family:system-ui,sans-serif;
+      display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+ .box{text-align:center;max-width:420px;padding:24px}
+ h1{font-size:1.4rem;margin:0 0 10px}
+ p{color:#93a0b5;line-height:1.5;font-size:.95rem}
+ a{display:inline-block;margin-top:18px;padding:10px 18px;border-radius:10px;
+   background:#6366f1;color:#fff;text-decoration:none}
+</style></head>
+<body><div class="box">
+ <h1>Qualcosa è andato storto</h1>
+ <p>Errore momentaneo: riprova tra qualche secondo. I saldi non sono persi.</p>
+ <a href="/">Torna alla home</a>
+</div></body></html>"""
+
+
+@app.exception_handler(Exception)
+async def unhandled_error(request: Request, exc: Exception) -> HTMLResponse:
+    """500 con pagina leggibile + traceback nei log di Render."""
+    logger.exception("Errore non gestito su %s %s", request.method, request.url.path)
+    return HTMLResponse(ERROR_PAGE, status_code=500)
 
 
 # ---------------------------------------------------------------- filtri Jinja

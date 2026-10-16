@@ -1,30 +1,21 @@
 /* B-Lance service worker.
  *
- * Strategia "network first per le pagine, cache first per gli asset".
- * - Asset statici (css/js/icone): cache-first -> carica subito, offline ok.
- * - Paghine/JSON: network-first -> sempre dati freschi; se offline vai
- *   alla cache e infine a una pagina di fallback.
- * - Le POST non si cachano mai.
+ * Strategia: NETWORK FIRST per tutto (pagine E asset), cache come fallback.
+ *
+ * Perché non "cache-first" sugli asset: con HTML aggiornato e CSS vecchio in
+ * cache il layout veniva fracassato dopo ogni deploy ("sminchiato"). Ora HTML
+ * e CSS arrivano sempre insieme dalla rete; la cache serve solo se sei offline.
+ *
+ * - GET: prova la rete, salva in cache, se la rete fallisce usa la cache.
+ * - POST e mutate: mai toccate (niente cache di form).
  */
 
-const VERSION = "blance-v1";
-const STATIC_CACHE = `${VERSION}-static`;
+const VERSION = "blance-v2";
 const PAGE_CACHE = `${VERSION}-pages`;
 
-const PRECACHE = [
-  "/static/app.css",
-  "/static/manifest.webmanifest",
-  "/static/icons/icon-192.png",
-  "/static/icons/icon-512.png",
-];
-
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches
-      .open(STATIC_CACHE)
-      .then((cache) => cache.addAll(PRECACHE))
-      .then(() => self.skipWaiting())
-  );
+  // Salta subito la vecchia versione: niente due SW in convivenza.
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener("activate", (event) => {
@@ -32,11 +23,7 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(
-          keys
-            .filter((k) => !k.startsWith(VERSION))
-            .map((k) => caches.delete(k))
-        )
+        Promise.all(keys.filter((k) => !k.startsWith(VERSION)).map((k) => caches.delete(k)))
       )
       .then(() => self.clients.claim())
   );
@@ -45,38 +32,14 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const req = event.request;
 
-  // Mai cachare le mutazioni.
+  // Mai gestire (e mai cachare) le mutazioni.
   if (req.method !== "GET") return;
 
-  const url = new URL(req.url);
-  const isStatic =
-    url.pathname.startsWith("/static/") ||
-    url.pathname.endsWith(".css") ||
-    url.pathname.endsWith(".js") ||
-    url.pathname.endsWith(".png") ||
-    url.pathname.endsWith(".webmanifest");
+  // Solo le richieste al nostro dominio: gli esterni (font, analytics) passano.
+  if (new URL(req.url).origin !== self.location.origin) return;
 
-  if (isStatic) {
-    event.respondWith(cacheFirst(req));
-  } else if (url.origin === self.location.origin) {
-    event.respondWith(networkFirst(req));
-  }
+  event.respondWith(networkFirst(req));
 });
-
-async function cacheFirst(req) {
-  const cached = await caches.match(req);
-  if (cached) return cached;
-  try {
-    const res = await fetch(req);
-    if (res && res.ok) {
-      const cache = await caches.open(STATIC_CACHE);
-      cache.put(req, res.clone());
-    }
-    return res;
-  } catch (err) {
-    return caches.match("/static/app.css");
-  }
-}
 
 async function networkFirst(req) {
   try {

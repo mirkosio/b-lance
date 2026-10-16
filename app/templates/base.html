@@ -44,9 +44,15 @@
     // Registra il service worker per l'installazione come app (PWA).
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('/static/sw.js').catch(function (err) {
-          console.warn('Service worker non registrato:', err);
-        });
+        navigator.serviceWorker.register('/static/sw.js')
+          .then(function (reg) {
+            // Controlla subito se è uscita una versione nuova del worker:
+            // così gli aggiornamenti al sito arrivano senza aspettare.
+            reg.update();
+          })
+          .catch(function (err) {
+            console.warn('Service worker non registrato:', err);
+          });
       });
     }
   </script>
