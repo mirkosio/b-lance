@@ -5,6 +5,7 @@
   <div class="section-title">Crea account</div>
   {% if error %}<div class="alert">{{ error }}</div>{% endif %}
   <form method="post" action="/register">
+    <input type="hidden" name="next" value="{{ next|default('') }}">
     <label>Nome</label>
     <input type="text" name="name" required autofocus placeholder="Come ti chiami?">
     <label>Email</label>
@@ -16,7 +17,7 @@
     </div>
   </form>
   <p class="muted small" style="margin-top:16px;text-align:center">
-    Hai già un account? <a href="/login">Accedi</a>
+    Hai già un account? <a href="/login?next={{ next|default('')|urlencode }}">Accedi</a>
   </p>
 </div>
 {% endblock %}

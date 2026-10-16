@@ -14,8 +14,9 @@ import logging
 import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
+from urllib.parse import quote
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Request
+from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -117,10 +118,28 @@ def current_user(request: Request, db: Session = Depends(get_db)) -> User | None
     return get_current_user(db, token)
 
 
-def require_user(user: User | None = Depends(current_user)) -> User:
-    """Come current_user ma fallisce con redirect se non loggato."""
+def _safe_next(target: str | None) -> str:
+    """Dove tornare dopo login/registrazione: solo pagine interne.
+
+    Blocca l'open redirect: niente https://esterno, //dominio o backslash.
+    """
+    t = (target or "").strip()
+    if t.startswith("/") and not t.startswith("//") and ":" not in t and "\\" not in t:
+        return t
+    return "/"
+
+
+def require_user(
+    request: Request, user: User | None = Depends(current_user)
+) -> User:
+    """Come current_user ma con redirect: dopo il login torni dove eri.
+
+    Fondamentale per gli inviti: chi apre il link non loggato finisce su
+    /login?next=/join/CODE e dopo essersi registrato entra DAVVERO nel gruppo.
+    """
     if user is None:
-        raise HTTPException(status_code=303, headers={"Location": "/login"})
+        dest = quote(request.url.path, safe="/")
+        raise HTTPException(status_code=303, headers={"Location": f"/login?next={dest}"})
     return user
 
 
@@ -224,10 +243,16 @@ def home(request: Request, user: User | None = Depends(current_user), db: Sessio
 
 # ---------------------------------------------------------------- auth
 @app.get("/register")
-def register_form(request: Request, user: User | None = Depends(current_user)):
+def register_form(
+    request: Request,
+    user: User | None = Depends(current_user),
+    next_url: str = Query("", alias="next"),
+):
     if user:
-        return RedirectResponse("/", status_code=303)
-    return templates.TemplateResponse(request, "register.html", {"request": request})
+        return RedirectResponse(_safe_next(next_url), status_code=303)
+    return templates.TemplateResponse(
+        request, "register.html", {"request": request, "next": next_url}
+    )
 
 
 @app.post("/register")
@@ -236,6 +261,7 @@ def register(
     name: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
+    next_url: str = Form("", alias="next"),
     db: Session = Depends(get_db),
 ):
     email = email.strip().lower()
@@ -243,14 +269,22 @@ def register(
         return templates.TemplateResponse(
             request,
             "register.html",
-            {"request": request, "error": "La password deve avere almeno 6 caratteri."},
+            {
+                "request": request,
+                "error": "La password deve avere almeno 6 caratteri.",
+                "next": next_url,
+            },
             status_code=400,
         )
     if get_user_by_email(db, email):
         return templates.TemplateResponse(
             request,
             "register.html",
-            {"request": request, "error": "Esiste già un account con questa email."},
+            {
+                "request": request,
+                "error": "Esiste già un account con questa email.",
+                "next": next_url,
+            },
             status_code=400,
         )
     palette = ["#6366f1", "#ec4899", "#f59e0b", "#10b981", "#0ea5e9", "#8b5cf6"]
@@ -262,16 +296,23 @@ def register(
     )
     db.add(user)
     db.commit()
-    resp = RedirectResponse("/", status_code=303)
+    # Torna dove stava l'utente (es. il link di invito al gruppo).
+    resp = RedirectResponse(_safe_next(next_url), status_code=303)
     resp.set_cookie(SESSION_COOKIE, create_session_token(user.id), httponly=True, samesite="lax")
     return resp
 
 
 @app.get("/login")
-def login_form(request: Request, user: User | None = Depends(current_user)):
+def login_form(
+    request: Request,
+    user: User | None = Depends(current_user),
+    next_url: str = Query("", alias="next"),
+):
     if user:
-        return RedirectResponse("/", status_code=303)
-    return templates.TemplateResponse(request, "login.html", {"request": request})
+        return RedirectResponse(_safe_next(next_url), status_code=303)
+    return templates.TemplateResponse(
+        request, "login.html", {"request": request, "next": next_url}
+    )
 
 
 @app.post("/login")
@@ -279,6 +320,7 @@ def login(
     request: Request,
     email: str = Form(...),
     password: str = Form(...),
+    next_url: str = Form("", alias="next"),
     db: Session = Depends(get_db),
 ):
     user = get_user_by_email(db, email)
@@ -286,10 +328,15 @@ def login(
         return templates.TemplateResponse(
             request,
             "login.html",
-            {"request": request, "error": "Email o password errati."},
+            {
+                "request": request,
+                "error": "Email o password errati.",
+                "next": next_url,
+            },
             status_code=400,
         )
-    resp = RedirectResponse("/", status_code=303)
+    # Torna dove stava l'utente (es. il link di invito al gruppo).
+    resp = RedirectResponse(_safe_next(next_url), status_code=303)
     resp.set_cookie(SESSION_COOKIE, create_session_token(user.id), httponly=True, samesite="lax")
     return resp
 
