@@ -1,0 +1,16 @@
+{
+  "name": "b-lance",
+  "version": "1.0.0",
+  "description": "B-Lance — dividi le spese con amici. Node wrapper per il backend Python.",
+  "type": "module",
+  "scripts": {
+    "start": "node scripts/server.js start",
+    "stop": "node scripts/server.js stop",
+    "restart": "node scripts/server.js restart",
+    "status": "node scripts/server.js status",
+    "dev": "node scripts/server.js dev",
+    "test": "python3 -m pytest tests/ -q",
+    "setup": "python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"
+  },
+  "license": "MIT"
+}

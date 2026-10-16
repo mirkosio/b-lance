@@ -24,3 +24,6 @@ env/
 .coverage
 htmlcov/
 .hypothesis/
+.server.pid
+.server.log
+node_modules/
