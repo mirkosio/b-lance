@@ -9,7 +9,8 @@
     "restart": "node scripts/server.js restart",
     "status": "node scripts/server.js status",
     "dev": "node scripts/server.js dev",
-    "test": "python3 -m pytest tests/ -q",
+    "test": ".venv/bin/python -m pytest tests/ -q",
+    "deploy": "git push origin main && node scripts/deploy.js",
     "setup": "python3 -m venv .venv && .venv/bin/pip install -r requirements.txt"
   },
   "license": "MIT"

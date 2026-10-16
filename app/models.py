@@ -77,7 +77,12 @@ class GroupMember(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    # "owner" = creatore (tutto, non revocabile), "admin" = tutti i permessi,
+    # "member" = permessi granulari da perms.
     role: Mapped[str] = mapped_column(String(16), default="member")
+    # Permessi granulari, virgola separata. Vedi main.PERMISSIONS.
+    # Esempio: "expense_manage,group_edit". Vuoto = nessun permesso extra.
+    perms: Mapped[str] = mapped_column(String(200), default="", server_default="")
     joined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     group: Mapped[Group] = relationship(back_populates="members")

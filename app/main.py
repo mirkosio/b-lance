@@ -33,6 +33,14 @@ from .core.money import MoneyError, format_amount, parse_user_amount
 from .core.splitting import SplitMethod, compute_shares
 from .database import get_db, init_db
 from .models import Expense, Group, GroupMember, Payment, Share, User
+from .permissions import (
+    ALL_PERMS,
+    EDITABLE_ROLES,
+    PERMISSIONS,
+    can,
+    clamped_perms,
+    effective_perms,
+)
 from .services import compute_balances
 
 
@@ -96,6 +104,46 @@ def _get_group_for_user(db: Session, group_id: int, user: User) -> Group:
         # Non riveliamo l'esistenza di gruppi a cui non partecipi.
         raise HTTPException(status_code=404, detail="Gruppo non trovato")
     return group
+
+
+def _member_row(db: Session, group_id: int, user: User) -> GroupMember:
+    """Membership dell'utente nel gruppo (già verificata come membro)."""
+    member = db.scalar(
+        select(GroupMember).where(
+            GroupMember.group_id == group_id, GroupMember.user_id == user.id
+        )
+    )
+    if member is None:
+        raise HTTPException(status_code=404, detail="Gruppo non trovato")
+    return member
+
+
+def _has_history(db: Session, group_id: int) -> bool:
+    """True se il gruppo ha già spese o pagamenti registrati."""
+    has_expense = db.scalar(
+        select(Expense.id).where(Expense.group_id == group_id).limit(1)
+    )
+    has_payment = db.scalar(
+        select(Payment.id).where(Payment.group_id == group_id).limit(1)
+    )
+    return has_expense is not None or has_payment is not None
+
+
+def _require_perm(
+    db: Session, group_id: int, user: User, perm: str
+) -> tuple[Group, GroupMember]:
+    """Gruppo + membership, solo se l'utente ha quel permesso.
+
+    404 se non è membro (non si rivela il gruppo), 403 se manca il permesso.
+    """
+    group = _get_group_for_user(db, group_id, user)
+    member = _member_row(db, group_id, user)
+    if not can(member.role, member.perms, perm):
+        raise HTTPException(
+            status_code=403,
+            detail="Non hai il permesso per fare questa operazione",
+        )
+    return group, member
 
 
 # ---------------------------------------------------------------- pagine pubbliche
@@ -257,6 +305,7 @@ def group_detail(
     db: Session = Depends(get_db),
 ):
     group = _get_group_for_user(db, group_id, user)
+    member = _member_row(db, group_id, user)
     view = compute_balances(db, group)
 
     expenses = db.scalars(
@@ -291,6 +340,10 @@ def group_detail(
             "payments": payments,
             "split_methods": list(SplitMethod),
             "currencies": sorted_currencies(),
+            # Permessi di CHI STA GUARDANDO la pagina (per mostrare/nascondere).
+            "perms": effective_perms(member.role, member.perms),
+            "perm_defs": PERMISSIONS,
+            "is_owner": member.role == "owner",
         },
     )
 
@@ -301,7 +354,8 @@ def regenerate_invite(
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
-    group = _get_group_for_user(db, group_id, user)
+    """Rigenera il codice invito: serve il permesso di gestire i membri."""
+    group, _ = _require_perm(db, group_id, user, "members_manage")
     group.invite_code = _make_invite_code()
     db.commit()
     return RedirectResponse(f"/groups/{group.id}", status_code=303)
@@ -326,6 +380,189 @@ def join_by_code(
     if existing is None:
         db.add(GroupMember(group_id=group.id, user_id=user.id, role="member"))
         db.commit()
+    return RedirectResponse(f"/groups/{group.id}", status_code=303)
+
+
+# ---------------------------------------------------------------- gestione gruppo
+@app.get("/groups/{group_id}/edit")
+def edit_group_form(
+    request: Request,
+    group_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Form di modifica del gruppo (solo con permesso group_edit)."""
+    group, member = _require_perm(db, group_id, user, "group_edit")
+    return templates.TemplateResponse(
+        request,
+        "group_edit.html",
+        {
+            "request": request,
+            "user": user,
+            "group": group,
+            "currencies": sorted_currencies(),
+            "locked": _has_history(db, group.id),
+            "is_owner": member.role == "owner",
+        },
+    )
+
+
+@app.post("/groups/{group_id}/edit")
+def edit_group_save(
+    group_id: int,
+    name: str = Form(...),
+    kind: str = Form("other"),
+    base_currency: str = Form("EUR"),
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Salva le modifiche al gruppo (solo con permesso group_edit)."""
+    group, _ = _require_perm(db, group_id, user, "group_edit")
+
+    clean = name.strip()
+    if not clean:
+        raise HTTPException(status_code=400, detail="Il nome non può essere vuoto")
+    if len(clean) > 160:
+        raise HTTPException(status_code=400, detail="Nome troppo lungo (max 160)")
+
+    code = (base_currency or group.base_currency).strip().upper()
+    if not is_valid_currency(code):
+        raise HTTPException(status_code=400, detail=f"Valuta non valida: {code}")
+    if code != group.base_currency:
+        # Cambiare valuta con lo storico dentro corromperebbe i saldi:
+        # le spese e i pagamenti sono già nella vecchia valuta base.
+        if _has_history(db, group.id):
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    "Non puoi cambiare la valuta: ci sono già spese o "
+                    "pagamenti nel gruppo."
+                ),
+            )
+        group.base_currency = code
+
+    group.name = clean
+    group.kind = (kind.strip() or "other")[:32]
+    db.commit()
+    return RedirectResponse(f"/groups/{group.id}", status_code=303)
+
+
+@app.post("/groups/{group_id}/delete")
+def delete_group(
+    group_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Elimina il gruppo: solo il creatore, con la cascata su tutto lo storico."""
+    group = _get_group_for_user(db, group_id, user)
+    member = _member_row(db, group_id, user)
+    if member.role != "owner":
+        raise HTTPException(
+            status_code=403, detail="Solo il creatore del gruppo può eliminarlo"
+        )
+    db.delete(group)  # cascata ORM: membri, quote, spese, pagamenti
+    db.commit()
+    return RedirectResponse("/", status_code=303)
+
+
+# ---------------------------------------------------------------- membri e permessi
+def _get_target_member(
+    db: Session, group: Group, target_user_id: int
+) -> GroupMember:
+    target = db.scalar(
+        select(GroupMember).where(
+            GroupMember.group_id == group.id,
+            GroupMember.user_id == target_user_id,
+        )
+    )
+    if target is None:
+        raise HTTPException(status_code=404, detail="Membro non trovato")
+    return target
+
+
+@app.post("/groups/{group_id}/members/{target_user_id}")
+async def update_member(
+    group_id: int,
+    target_user_id: int,
+    request: Request,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Cambia ruolo e permessi di un membro (serve members_manage)."""
+    group, actor = _require_perm(db, group_id, user, "members_manage")
+    target = _get_target_member(db, group, target_user_id)
+
+    if target.id == actor.id:
+        raise HTTPException(status_code=400, detail="Non puoi modificare te stesso")
+    if target.role == "owner":
+        raise HTTPException(
+            status_code=400, detail="Il creatore del gruppo non si tocca"
+        )
+
+    form = await request.form()
+    role = str(form.get("role", "member")).strip()
+    if role not in EDITABLE_ROLES:
+        raise HTTPException(status_code=400, detail="Ruolo non valido")
+
+    grantable = effective_perms(actor.role, actor.perms)
+    if role == "admin" and grantable != ALL_PERMS:
+        # Regola: non puoi creare un admin più potente di te.
+        raise HTTPException(
+            status_code=403,
+            detail="Solo il creatore o un admin può promuovere un admin",
+        )
+
+    target.role = role
+    # Taglia i permessi a quelli che ha chi li concede.
+    target.perms = clamped_perms(actor.role, actor.perms, form.getlist("perm"))
+    db.commit()
+    return RedirectResponse(f"/groups/{group.id}", status_code=303)
+
+
+@app.post("/groups/{group_id}/members/{target_user_id}/remove")
+def remove_member(
+    group_id: int,
+    target_user_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Toglie un membro dal gruppo (serve members_manage)."""
+    group, actor = _require_perm(db, group_id, user, "members_manage")
+    target = _get_target_member(db, group, target_user_id)
+
+    if target.role == "owner":
+        raise HTTPException(
+            status_code=400, detail="Il creatore del gruppo non si tocca"
+        )
+    if target.id == actor.id:
+        raise HTTPException(status_code=400, detail="Non puoi rimuovere te stesso")
+
+    db.delete(target)
+    db.commit()
+    return RedirectResponse(f"/groups/{group.id}", status_code=303)
+
+
+@app.post("/groups/{group_id}/payments/{payment_id}/delete")
+def delete_payment(
+    group_id: int,
+    payment_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Elimina un pagamento: solo se sei coinvolto o hai payment_manage."""
+    group = _get_group_for_user(db, group_id, user)
+    payment = db.get(Payment, payment_id)
+    if payment is None or payment.group_id != group.id:
+        raise HTTPException(status_code=404)
+    member = _member_row(db, group_id, user)
+    involved = payment.from_user == user.id or payment.to_user == user.id
+    if not involved and not can(member.role, member.perms, "payment_manage"):
+        raise HTTPException(
+            status_code=403,
+            detail="Puoi eliminare solo i pagamenti in cui sei coinvolto",
+        )
+    db.delete(payment)
+    db.commit()
     return RedirectResponse(f"/groups/{group.id}", status_code=303)
 
 
@@ -438,11 +675,22 @@ def void_expense(
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
-    """Annulla una spesa (non la cancella: storico immutabile)."""
+    """Annulla una spesa (non la cancella: storico immutabile).
+
+    Regola: annulli la TUA spesa, oppure qualsiasi se hai expense_manage.
+    """
     group = _get_group_for_user(db, group_id, user)
     expense = db.get(Expense, expense_id)
     if expense is None or expense.group_id != group.id:
         raise HTTPException(status_code=404)
+    member = _member_row(db, group_id, user)
+    if expense.created_by != user.id and not can(
+        member.role, member.perms, "expense_manage"
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Puoi annullare solo le spese che hai inserito tu",
+        )
     from .models import utcnow
 
     expense.voided_at = utcnow()

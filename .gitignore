@@ -27,3 +27,4 @@ htmlcov/
 .server.pid
 .server.log
 node_modules/
+.deploy-hook

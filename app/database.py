@@ -85,8 +85,29 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
+def _migrate() -> None:
+    """Migrazione leggera per colonne aggiunte dopo il primo deploy.
+
+    create_all() NON modifica tabelle esistenti: su Render/Neon le tabelle ci
+    sono gia', quindi le colonne nuove vanno aggiunte a mano. Idempotente:
+    a ogni avvio controlla e aggiunge solo se manca.
+    """
+    from sqlalchemy import inspect, text
+
+    columns = {c["name"] for c in inspect(engine).get_columns("group_members")}
+    if "perms" not in columns:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "ALTER TABLE group_members "
+                    "ADD COLUMN perms VARCHAR(200) NOT NULL DEFAULT ''"
+                )
+            )
+
+
 def init_db() -> None:
-    """Crea le tabelle se non esistono."""
+    """Crea le tabelle se non esistono e applica le migrazioni minori."""
     from . import models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+    _migrate()

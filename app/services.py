@@ -44,6 +44,16 @@ class MemberBalance:
     # Quanto ha pagato per il gruppo e quanto era tenuto a pagare.
     paid_minor: int = 0
     owed_minor: int = 0
+    # Ruolo e permessi nel gruppo (servono all'interfaccia per i controlli).
+    role: str = "member"
+    perms: str = ""
+
+    @property
+    def perm_set(self) -> frozenset[str]:
+        """Permessi effettivi: owner/admin = tutti."""
+        from .permissions import effective_perms
+
+        return effective_perms(self.role, self.perms)
 
     @property
     def is_settled(self) -> bool:
@@ -144,6 +154,8 @@ def compute_balances(db: Session, group: Group) -> GroupView:
                 net_minor=net.get(uid, 0),
                 paid_minor=paid.get(uid, 0),
                 owed_minor=owed.get(uid, 0),
+                role=m.role,
+                perms=m.perms or "",
             )
         )
 

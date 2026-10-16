@@ -3,8 +3,10 @@
 {% block content %}
 <div class="card">
   <div class="section-title">
-    {{ group.name }}
-    <span class="chip">{{ group.base_currency }}</span>
+    <span>{{ group.name }} <span class="chip">{{ group.base_currency }}</span></span>
+    {% if 'group_edit' in perms %}
+      <a class="btn sm ghost" href="/groups/{{ group.id }}/edit">Modifica</a>
+    {% endif %}
   </div>
   <div class="summary">
     <div class="stat">
@@ -65,6 +67,64 @@
   </div>
 </div>
 
+<!-- Membri e permessi -->
+<div class="card">
+  <div class="section-title">
+    <span>Membri ({{ view.members|length }})</span>
+    {% if 'members_manage' in perms %}
+      <span class="chip">gestisci i permessi</span>
+    {% endif %}
+  </div>
+
+  {% for m in view.members %}
+    <div class="balance-row">
+      <div class="person">
+        <span class="avatar" style="background:{{ m.color }}">{{ m.name[0]|upper }}</span>
+        <span>{{ m.name }}{% if m.user_id == user.id %} <span class="muted small">(tu)</span>{% endif %}</span>
+        {% if m.role == 'owner' %}<span class="chip">Creatore</span>
+        {% elif m.role == 'admin' %}<span class="chip">Admin</span>{% endif %}
+      </div>
+      {% if m.role == 'owner' %}
+        <span class="muted small">tutti i permessi</span>
+      {% elif 'members_manage' in perms and m.user_id != user.id %}
+        <details>
+          <summary class="muted small" style="cursor:pointer">Permessi</summary>
+          <div style="margin-top:12px;max-width:420px">
+            <form method="post" action="/groups/{{ group.id }}/members/{{ m.user_id }}">
+              <label>Ruolo</label>
+              <select name="role">
+                <option value="member" {% if m.role == 'member' %}selected{% endif %}>Membro</option>
+                {% if perms|length == perm_defs|length %}
+                  <option value="admin" {% if m.role == 'admin' %}selected{% endif %}>Admin (tutti i permessi)</option>
+                {% endif %}
+              </select>
+
+              {% for key, label in perm_defs.items() %}
+                <label style="display:flex;gap:8px;align-items:center;margin:8px 0;font-weight:500;color:var(--text)">
+                  <input type="checkbox" name="perm" value="{{ key }}"
+                         {% if key in m.perm_set %}checked{% endif %} style="width:auto">
+                  {{ label }}
+                </label>
+              {% endfor %}
+
+              <div class="row" style="margin-top:12px">
+                <button class="btn sm" type="submit">Salva permessi</button>
+              </div>
+            </form>
+            <form method="post" action="/groups/{{ group.id }}/members/{{ m.user_id }}/remove"
+                  style="margin-top:8px"
+                  onsubmit="return confirm('Togliere {{ m.name }} dal gruppo?')">
+              <button class="btn sm ghost block" type="submit">Togli dal gruppo</button>
+            </form>
+          </div>
+        </details>
+      {% else %}
+        <span class="muted small">membro</span>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+
 <!-- Invito -->
 <div class="card">
   <div class="section-title">Invita nel gruppo</div>
@@ -74,9 +134,11 @@
   </div>
   <div class="row" style="margin-top:12px">
     <button class="btn ghost" onclick="copyInvite()">Copia link</button>
-    <form method="post" action="/groups/{{ group.id }}/invite" style="margin:0;flex:1">
-      <button class="btn ghost block" type="submit">Genera nuovo codice</button>
-    </form>
+    {% if 'members_manage' in perms %}
+      <form method="post" action="/groups/{{ group.id }}/invite" style="margin:0;flex:1">
+        <button class="btn ghost block" type="submit">Genera nuovo codice</button>
+      </form>
+    {% endif %}
   </div>
 </div>
 
@@ -169,10 +231,12 @@
         </div>
         <div style="display:flex;align-items:center;gap:12px">
           <span style="font-weight:700">{{ e.amount_minor | money(e.currency) }}</span>
-          <form method="post" action="/groups/{{ group.id }}/expenses/{{ e.id }}/void" style="margin:0"
-                onsubmit="return confirm('Annullare questa spesa?')">
-            <button class="btn sm ghost" type="submit">Annulla</button>
-          </form>
+          {% if e.created_by == user.id or 'expense_manage' in perms %}
+            <form method="post" action="/groups/{{ group.id }}/expenses/{{ e.id }}/void" style="margin:0"
+                  onsubmit="return confirm('Annullare questa spesa?')">
+              <button class="btn sm ghost" type="submit">Annulla</button>
+            </form>
+          {% endif %}
         </div>
       </div>
     {% endfor %}
@@ -223,7 +287,15 @@
             <div class="desc">{{ p.from_name }} → {{ p.to_name }}</div>
             <div class="meta">{{ p.created_at.strftime('%d/%m') }}{% if p.note %} · {{ p.note }}{% endif %}</div>
           </div>
+        <div style="display:flex;align-items:center;gap:12px">
           <span style="font-weight:700">{{ p.amount_minor | money(group.base_currency) }}</span>
+          {% if p.from_user == user.id or p.to_user == user.id or 'payment_manage' in perms %}
+            <form method="post" action="/groups/{{ group.id }}/payments/{{ p.id }}/delete" style="margin:0"
+                  onsubmit="return confirm('Eliminare questo pagamento?')">
+              <button class="btn sm ghost" type="submit">Elimina</button>
+            </form>
+          {% endif %}
+        </div>
         </div>
       {% endfor %}
     </div>
