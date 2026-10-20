@@ -293,8 +293,12 @@ button.side-link:hover { background: var(--bg-soft); }
 .bn-item.center:active { transform: none; }
 .bn-item.center:active .bubble { transform: scale(0.94); }
 
-/* Colonna di contenuto: centrata nella zona residua a destra della sidebar */
+/* Colonna di contenuto: centrata nella zona residua a destra della sidebar.
+   gap unico = ritmo di spaziatura identico su TUTTE le pagine. */
 main.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   max-width: none;
   margin: 0 auto;
   padding: 18px 16px calc(96px + env(safe-area-inset-bottom));
@@ -314,6 +318,7 @@ footer {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 16px;
     margin-left: 252px;
     padding: 36px 40px 48px;
   }
@@ -332,7 +337,8 @@ footer {
   padding: 22px;
   box-shadow: var(--shadow);
 }
-.card + .card { margin-top: 16px; }
+/* La spaziatura tra le caselle è SEMPRE il gap di main.wrap: niente
+   margini extra che rendono alcune vicine e altre lontane. */
 
 .section-title {
   display: flex;
@@ -514,7 +520,6 @@ select option { background: #fff; color: var(--text); }
     radial-gradient(420px 260px at -6% 112%, rgba(168, 130, 60, 0.09), transparent 70%),
     var(--card);
   box-shadow: var(--shadow);
-  margin-bottom: 18px;
 }
 .hero h1 {
   margin: 0 0 12px;
@@ -576,7 +581,7 @@ select option { background: #fff; color: var(--text); }
 .feature p { margin: 0; color: var(--muted); font-size: 0.9rem; }
 
 /* ------------------------------------------------------------- dashboard */
-.pagehead { margin: 4px 2px 18px; }
+.pagehead { margin: 0 2px; }
 .pagehead h1 {
   margin: 0;
   font-family: var(--font-display);

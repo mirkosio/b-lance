@@ -10,7 +10,7 @@
  * - POST e mutate: mai toccate (niente cache di form).
  */
 
-const VERSION = "blance-v2";
+const VERSION = "blance-v3";
 const PAGE_CACHE = `${VERSION}-pages`;
 
 self.addEventListener("install", (event) => {
@@ -56,7 +56,7 @@ async function networkFirst(req) {
     const landing = await caches.match("/");
     if (landing) return landing;
     return new Response(
-      "<!doctype html><meta charset=utf-8><body style='background:#0b0f17;color:#e8edf7;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center'><div><h1>Sei offline</h1><p>B-Lance ha bisogno di connessione per i saldi. Riprova.</p></div></body>",
+      "<!doctype html><meta charset=utf-8><body style='background:#f5f4ef;color:#242b27;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center'><div><h1>Sei offline</h1><p>B-Lance ha bisogno di connessione per i saldi. Riprova.</p></div></body>",
       { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }
     );
   }

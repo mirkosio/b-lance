@@ -199,6 +199,27 @@ async def unhandled_error(request: Request, exc: Exception) -> HTMLResponse:
     return HTMLResponse(ERROR_PAGE, status_code=500)
 
 
+@app.get("/.well-known/assetlinks.json", response_class=JSONResponse)
+async def assetlinks():
+    """Digital Asset Links: collega l'APK firmato al dominio.
+
+    Senza questo file Chrome mostrerebbe la barra "sito non verificato"
+    dentro l'app installata.
+    """
+    return [
+        {
+            "relation": ["delegate_permission/common.handle_all_urls"],
+            "target": {
+                "namespace": "android_app",
+                "package_name": "com.blance.app",
+                "sha256_cert_fingerprints": [
+                    "7E:33:1F:4A:25:8D:DF:B0:B7:46:E9:6D:A7:B6:C0:E1:34:B0:78:FA:36:85:5F:A9:7C:65:55:1E:98:C4:4E:12"
+                ],
+            },
+        }
+    ]
+
+
 # ---------------------------------------------------------------- filtri Jinja
 def _jinja_filters() -> None:
     # Formattazione generica (default EUR).
