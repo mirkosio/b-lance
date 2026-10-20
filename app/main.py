@@ -211,9 +211,10 @@ async def assetlinks():
             "relation": ["delegate_permission/common.handle_all_urls"],
             "target": {
                 "namespace": "android_app",
-                "package_name": "com.blance.app",
+                "package_name": "com.onrender.b_lance.twa",
                 "sha256_cert_fingerprints": [
-                    "7E:33:1F:4A:25:8D:DF:B0:B7:46:E9:6D:A7:B6:C0:E1:34:B0:78:FA:36:85:5F:A9:7C:65:55:1E:98:C4:4E:12"
+                    # Firma reale dell'APK (keystore bubblewrap android.keystore).
+                    "90:39:8F:2C:B5:10:B8:46:90:4C:C7:2B:36:D7:8C:01:C7:FC:F2:23:BA:F8:AB:BD:B4:2F:95:08:0D:C2:C8:0A"
                 ],
             },
         }
