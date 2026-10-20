@@ -5,20 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>{% block title %}B-Lance{% endblock %}</title>
 
+  <!-- Tema: applicato prima del paint per evitare il flash bianco/nero -->
+  <script>
+    try {
+      var t = localStorage.getItem('bl-theme');
+      if (t !== 'light' && t !== 'dark') {
+        t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.dataset.theme = t;
+    } catch (e) { document.documentElement.dataset.theme = 'light'; }
+  </script>
+
   <!-- PWA -->
   <link rel="manifest" href="/static/manifest.webmanifest">
+  <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#fbfaf6">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="B-Lance">
+  <meta name="apple-mobile-web-app-title" content="b-lance">
   <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
   <link rel="icon" type="image/png" sizes="64x64" href="/static/icons/favicon-64.png">
   <meta name="description" content="Dividi le spese con amici: weekend, gite, vacanze. Preciso al centesimo.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="/static/app.css">
 </head>
 <body>
@@ -44,7 +56,7 @@
       <path d="M10 4H5.5A1.5 1.5 0 0 0 4 5.5v13A1.5 1.5 0 0 0 5.5 20H10"/><path d="M14 8l4 4-4 4"/><path d="M18 12H8"/>
     </symbol>
     <symbol id="i-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="m9 6 6 6-6 6"/>
+      <path d="m6 9 6 6 6-6"/>
     </symbol>
     <symbol id="i-plane" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M10.5 13.5 3 11l1.5-2 7.5 1 4.6-5.2a1.6 1.6 0 0 1 2.4 2.1L14 11l1 7.5-2 1.5-2.5-7.5Z"/>
@@ -73,6 +85,25 @@
     <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5c.7-3.2 3-5 5.5-5s4.8 1.8 5.5 5"/><path d="M15.5 6.2a3.2 3.2 0 0 1 0 5.6M17.2 14.9c2 .7 3.3 2.4 3.8 4.6"/>
     </symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="4.2"/>
+      <path d="M12 2.8v2M12 19.2v2M2.8 12h2M19.2 12h2M5.5 5.5l1.4 1.4M17.1 17.1l1.4 1.4M18.5 5.5l-1.4 1.4M6.9 17.1l-1.4 1.4"/>
+    </symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <path d="M6 6l12 12M18 6 6 18"/>
+    </symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5"/><circle cx="12" cy="16.3" r="1.1" fill="currentColor" stroke="none"/>
+    </symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"/><path d="m8 12.4 2.6 2.6L16.2 9.4"/>
+    </symbol>
+    <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="7.8" r="1.1" fill="currentColor" stroke="none"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -81,7 +112,7 @@
 <aside class="sidebar">
   <a href="/" class="brand">
     <span class="mark"><svg width="20" height="20" style="color:#fff"><use href="#i-scale"></use></svg></span>
-    B-<em>Lance</em>
+    b-<em>lance</em>
   </a>
   <a class="side-link {% if request.url.path == '/' %}active{% endif %}" href="/">
     <svg width="20" height="20"><use href="#i-home"></use></svg> Home
@@ -89,17 +120,24 @@
   <a class="side-link cta" href="/groups/new">
     <svg width="20" height="20"><use href="#i-plus"></use></svg> Nuovo gruppo
   </a>
-  <div class="side-user">
+  <div class="side-user" id="usermenu" role="button" tabindex="0"
+       aria-haspopup="true" aria-expanded="false">
     <span class="avatar" style="background:{{ user.color }}">{{ user.name[0]|upper }}</span>
     <div style="min-width:0">
       <b>{{ user.name }}</b>
       <span>account attivo</span>
     </div>
-    <form method="post" action="/logout" style="margin:0 0 0 auto">
-      <button class="btn sm ghost" type="submit" aria-label="Esci">
-        <svg width="16" height="16"><use href="#i-logout"></use></svg>
+    <svg class="chev" width="18" height="18"><use href="#i-chevron"></use></svg>
+    <div class="menu-pop" id="userpop">
+      <button type="button" data-theme-toggle>
+        <svg width="18" height="18"><use href="#i-moon"></use></svg> Tema chiaro / scuro
       </button>
-    </form>
+      <form method="post" action="/logout" style="margin:0">
+        <button type="submit">
+          <svg width="18" height="18"><use href="#i-logout"></use></svg> Esci
+        </button>
+      </form>
+    </div>
   </div>
 </aside>
 
@@ -107,17 +145,25 @@
 <header class="topbar">
   <a href="/" class="brand">
     <span class="mark"><svg width="18" height="18" style="color:#fff"><use href="#i-scale"></use></svg></span>
-    B-<em>Lance</em>
+    b-<em>lance</em>
   </a>
-  <span class="avatar" style="background:{{ user.color }}" title="{{ user.name }}">{{ user.name[0]|upper }}</span>
+  <span class="right">
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="Cambia tema">
+      <svg width="19" height="19"><use href="#i-moon"></use></svg>
+    </button>
+    <span class="avatar" style="background:{{ user.color }}" title="{{ user.name }}">{{ user.name[0]|upper }}</span>
+  </span>
 </header>
 {% else %}
 <header class="topbar">
   <a href="/" class="brand">
     <span class="mark"><svg width="18" height="18" style="color:#fff"><use href="#i-scale"></use></svg></span>
-    B-<em>Lance</em>
+    b-<em>lance</em>
   </a>
-  <span style="display:flex;gap:8px">
+  <span class="right">
+    <button class="icon-btn" type="button" data-theme-toggle aria-label="Cambia tema">
+      <svg width="19" height="19"><use href="#i-moon"></use></svg>
+    </button>
     <a class="btn sm ghost" href="/login">Accedi</a>
     <a class="btn sm" href="/register">Registrati</a>
   </span>
@@ -128,7 +174,7 @@
   {% block content %}{% endblock %}
 </main>
 
-<footer>B-Lance — dividiamo, regoliamo, bilanci in equilibrio.</footer>
+<footer>b-lance — dividiamo, regoliamo, bilanci in equilibrio.</footer>
 
 {% if user %}
 <!-- Bottom nav (mobile) -->
@@ -160,6 +206,84 @@
   </a>
 </nav>
 {% endif %}
+
+<!-- Contenitore toast: gli errori arrivano qui, non come pagina nera -->
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+
+  function setTheme(t) {
+    root.dataset.theme = t;
+    try { localStorage.setItem('bl-theme', t); } catch (e) {}
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.content = (t === 'dark') ? '#191f1b' : '#fbfaf6';
+  }
+  setTheme(root.dataset.theme === 'dark' ? 'dark' : 'light');
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-theme-toggle]');
+    if (!btn) return;
+    setTheme(root.dataset.theme === 'dark' ? 'light' : 'dark');
+  });
+
+  // Menu utente a tendina (sidebar desktop)
+  var um = document.getElementById('usermenu');
+  if (um) {
+    var pop = document.getElementById('userpop');
+    var setPop = function (open) {
+      pop.classList.toggle('open', open);
+      um.classList.toggle('open', open);
+      um.setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    um.addEventListener('click', function (e) {
+      if (e.target.closest('.menu-pop')) return; // i click dentro non lo chiudono
+      setPop(!pop.classList.contains('open'));
+    });
+    um.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPop(!pop.classList.contains('open')); }
+    });
+    document.addEventListener('click', function (e) {
+      if (!um.contains(e.target)) setPop(false);
+    });
+  }
+
+  // Toast custom: niente pagine di errore, solo un avviso che sparisce da solo
+  var box = document.getElementById('toasts');
+  window.blToast = function (msg, tipo) {
+    tipo = tipo || 'err';
+    var el = document.createElement('div');
+    el.className = 'toast ' + tipo;
+    el.setAttribute('role', tipo === 'ok' ? 'status' : 'alert');
+    var icon = tipo === 'ok' ? '#i-check' : (tipo === 'info' ? '#i-info' : '#i-alert');
+    el.innerHTML =
+      '<svg class="ticon" width="18" height="18"><use href="' + icon + '"></use></svg>' +
+      '<span class="msg"></span>' +
+      '<button class="x" type="button" aria-label="Chiudi">' +
+      '<svg width="15" height="15"><use href="#i-x"></use></svg></button>';
+    el.querySelector('.msg').textContent = msg || 'Operazione non riuscita';
+    el.querySelector('.x').addEventListener('click', function () { el.remove(); });
+    box.appendChild(el);
+    // Auto-dismiss a 5 secondi (si può chiudere subito col tasto X)
+    setTimeout(function () {
+      el.classList.add('out');
+      setTimeout(function () { el.remove(); }, 220);
+    }, 5000);
+  };
+
+  // Il server manda ?err=... / ?ok=... dopo un redirect: qui diventano toast,
+  // poi la URL viene ripulita così non restano tracce.
+  var p = new URLSearchParams(location.search);
+  var shown = 0;
+  if (p.get('err')) { blToast(p.get('err'), 'err'); shown++; }
+  if (p.get('ok')) { blToast(p.get('ok'), 'ok'); shown++; }
+  if (shown) {
+    p.delete('err'); p.delete('ok');
+    history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p.toString() : ''));
+  }
+})();
+</script>
 
 <script>
   // Registra il service worker per l'installazione come app (PWA).

@@ -15,16 +15,17 @@ import logging
 import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 from sqlalchemy.orm import Session, selectinload
+from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .auth import (
     create_session_token,
@@ -129,13 +130,14 @@ ERROR_PAGE = """<!doctype html>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Errore — B-Lance</title>
 <style>
- body{background:#0b0f17;color:#e8edf7;font-family:system-ui,sans-serif;
+ body{background:#f5f4ef;color:#242b27;font-family:Inter,system-ui,-apple-system,sans-serif;
       display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
- .box{text-align:center;max-width:420px;padding:24px}
- h1{font-size:1.4rem;margin:0 0 10px}
- p{color:#93a0b5;line-height:1.5;font-size:.95rem}
- a{display:inline-block;margin-top:18px;padding:10px 18px;border-radius:10px;
-   background:#6366f1;color:#fff;text-decoration:none}
+ .box{text-align:center;max-width:420px;padding:28px;background:#fff;border:1px solid #e5e2d8;
+      border-radius:16px;box-shadow:0 10px 26px rgba(31,41,35,.06)}
+ h1{font-size:1.35rem;margin:0 0 10px}
+ p{color:#6c776f;line-height:1.5;font-size:.95rem}
+ a{display:inline-block;margin-top:18px;padding:10px 18px;border-radius:11px;
+   background:#47684f;color:#fff;text-decoration:none;font-weight:700}
 </style></head>
 <body><div class="box">
  <h1>Qualcosa è andato storto</h1>
@@ -144,10 +146,56 @@ ERROR_PAGE = """<!doctype html>
 </div></body></html>"""
 
 
+def _back_with_err(request: Request, message: str) -> RedirectResponse:
+    """Rimanda l'utente da dove veniva, col messaggio per il toast custom."""
+    back = request.headers.get("referer", "")
+    path = urlsplit(back).path if back else "/"
+    if not path.startswith("/"):
+        path = "/"
+    sep = "&" if "?" in path else "?"
+    return RedirectResponse(f"{path}{sep}err={quote(message)}", status_code=303)
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_error(request: Request, exc: StarletteHTTPException):
+    """Niente pagine nere su bianco: nel browser l'errore torna come toast.
+
+    I test e le chiamate API (che non mandano Accept: text/html) tengono il
+    JSON classico con lo stesso codice di stato.
+    """
+    # Nota: gli headers di Starlette sono dict CASE-SENSITIVE ("Location",
+    # non "location"): cercalo in modo case-insensitive.
+    location = None
+    if exc.headers:
+        for key, value in exc.headers.items():
+            if key.lower() == "location":
+                location = value
+                break
+    if location:
+        # Redirect voluti (es. require_user -> /login): rispettali com'erano.
+        return RedirectResponse(location, status_code=exc.status_code)
+    detail = exc.detail if isinstance(exc.detail, str) else ""
+    if not detail or detail == "Not Found":
+        detail = "Pagina non trovata"
+    if "text/html" in request.headers.get("accept", ""):
+        return _back_with_err(request, detail)
+    return JSONResponse({"detail": detail}, status_code=exc.status_code)
+
+
 @app.exception_handler(Exception)
 async def unhandled_error(request: Request, exc: Exception) -> HTMLResponse:
-    """500 con pagina leggibile + traceback nei log di Render."""
+    """500: nel browser torni da dove venivi con un toast, mai testo crudo."""
     logger.exception("Errore non gestito su %s %s", request.method, request.url.path)
+    if (
+        "text/html" in request.headers.get("accept", "")
+        and request.url.path != "/"
+        and "err=" not in (request.url.query or "")
+    ):
+        # Loop-safe: se anche la home fa 500, qui non reindirizza più.
+        return _back_with_err(
+            request,
+            "Errore momentaneo: riprova tra qualche secondo. I saldi non sono persi.",
+        )
     return HTMLResponse(ERROR_PAGE, status_code=500)
 
 
@@ -157,6 +205,13 @@ def _jinja_filters() -> None:
     templates.env.filters["money"] = lambda minor, code="EUR": format_amount(int(minor), code)
     templates.env.filters["eur"] = lambda minor: format_amount(int(minor), "EUR")
     templates.env.filters["euro_major"] = lambda minor: f"{int(minor) / 100:.2f}"
+    # Valute senza tasso automatico: il form deve chiedere il tasso a mano.
+    from .core.currencies import CURRENCIES
+    from .core.exchange import RATES_VS_EUR
+
+    templates.env.globals["no_rate_codes"] = sorted(
+        c for c in CURRENCIES if c != "EUR" and c not in RATES_VS_EUR
+    )
 
 
 _jinja_filters()
@@ -793,12 +848,17 @@ async def add_expense(
                     raw[uid] = parse_user_amount(val, exponent=exp_cur.exponent)
                 shares = compute_shares(base_amount_minor, method, member_ids, exact_shares=raw)
             else:  # PERCENT
-                from decimal import Decimal
+                from decimal import Decimal, InvalidOperation
 
                 pcts: dict[int, Decimal] = {}
                 for uid in member_ids:
-                    val = form.get(f"pct_{uid}", "0")
-                    pcts[uid] = Decimal(str(val).replace(",", "."))
+                    # Campo vuoto o scritto male = 0: decide poi compute_shares
+                    # con un messaggio pulito (prima: crash 500).
+                    val = form.get(f"pct_{uid}", "0") or "0"
+                    try:
+                        pcts[uid] = Decimal(str(val).replace(",", "."))
+                    except InvalidOperation:
+                        raise MoneyError("percentuale non valida: controlla i campi")
                 shares = compute_shares(base_amount_minor, method, member_ids, percentages=pcts)
 
         expense = Expense(
@@ -818,7 +878,8 @@ async def add_expense(
         for uid, share_amount in shares.items():
             db.add(Share(expense_id=expense.id, user_id=uid, amount_minor=share_amount))
         db.commit()
-    except (MoneyError, ValueError) as exc:
+    except (MoneyError, ValueError, ArithmeticError) as exc:
+        # ExchangeError eredita da ValueError: "67 yen senza tasso" -> toast.
         raise HTTPException(status_code=400, detail=str(exc))
     return RedirectResponse(f"/groups/{group.id}", status_code=303)
 

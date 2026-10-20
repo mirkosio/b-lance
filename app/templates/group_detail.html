@@ -174,8 +174,12 @@
     <div id="fx-row" style="display:none">
       <label>Tasso di cambio (1 {{ group.base_currency }} = ? della valuta della spesa)</label>
       <input type="text" name="fx_rate" id="exp-fx" inputmode="decimal" placeholder="Es. 36.5">
-      <p class="muted small" style="margin:6px 0 0">
+      <p class="muted small" id="fx-auto" style="margin:6px 0 0">
         Lascia vuoto se la valuta è fra quelle note (calcolato automaticamente).
+      </p>
+      <p class="muted small" id="fx-hint" style="margin:6px 0 0;display:none">
+        Per questa valuta non abbiamo un tasso automatico: scrivilo qui,
+        quanti {{ group.base_currency }} vale 1 unità di questa valuta.
       </p>
     </div>
 
@@ -253,7 +257,7 @@
 <div class="card">
   <div class="section-title">Registra pagamento</div>
   <p class="muted small">Un membro paga un altro (anche solo parte del debito).</p>
-  <form method="post" action="/groups/{{ group.id }}/payments">
+  <form method="post" action="/groups/{{ group.id }}/payments" id="payment-form">
     <div class="row">
       <div>
         <label>Da</label>
@@ -321,12 +325,25 @@ document.querySelectorAll('#people-picker .pp').forEach(function (label) {
 var baseCurrency = {{ group.base_currency | tojson }};
 var currencySel = document.getElementById('exp-currency');
 var fxRow = document.getElementById('fx-row');
+var fxInput = document.getElementById('exp-fx');
+// Valute per cui NON abbiamo un tasso automatico: il form deve chiederlo.
+var noRate = {{ no_rate_codes | tojson }};
 
 function toggleFx() {
   var cur = currencySel.value;
-  fxRow.style.display = (cur === baseCurrency) ? 'none' : 'block';
+  var foreign = cur !== baseCurrency;
+  var needManual = foreign && noRate.indexOf(cur) >= 0;
+  fxRow.style.display = foreign ? 'block' : 'none';
+  document.getElementById('fx-hint').style.display = needManual ? 'block' : 'none';
+  document.getElementById('fx-auto').style.display = needManual ? 'none' : 'block';
+  return needManual;
 }
-currencySel.addEventListener('change', toggleFx);
+currencySel.addEventListener('change', function () {
+  // Cambiata valuta: un tasso vecchio non deve mai essere riapplicato
+  // di nascosto alla valuta nuova (era questo il cambio "buggato").
+  fxInput.value = '';
+  toggleFx();
+});
 toggleFx();
 
 // --- Input dinamici per split esatto / percentuale ---
@@ -379,9 +396,42 @@ function rebuildSplitInputs() {
 splitSeg.addEventListener('change', rebuildSplitInputs);
 rebuildSplitInputs();
 
+// --- Invio spesa: se manca il tasso manuale, toast + focus (niente pagina d'errore) ---
+var expForm = document.getElementById('expense-form');
+expForm.addEventListener('submit', function (e) {
+  if (toggleFx() && !fxInput.value.trim()) {
+    e.preventDefault();
+    if (window.blToast) {
+      blToast('Manca il tasso di cambio per ' + currencySel.value +
+              ': scrivilo nel campo qui sopra', 'err');
+    }
+    fxInput.focus();
+    return;
+  }
+  var btn = expForm.querySelector('button[type="submit"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Salvo…'; }
+});
+
+// --- Pagamento: mai dalla stessa persona verso se stessa ---
+var payForm = document.getElementById('payment-form');
+payForm.addEventListener('submit', function (e) {
+  var f = payForm.querySelector('[name="from_user"]');
+  var t = payForm.querySelector('[name="to_user"]');
+  if (f && t && f.value === t.value) {
+    e.preventDefault();
+    if (window.blToast) {
+      blToast('Scegli due persone diverse: non puoi registrare un pagamento ' +
+              'da e verso la stessa persona', 'err');
+    }
+  }
+});
+
 function copyInvite() {
   navigator.clipboard.writeText({{ request.url_for('join_by_code', code=group.invite_code) | string | tojson }})
-    .then(function () { alert('Link copiato!'); });
+    .then(function () {
+      if (window.blToast) blToast('Link di invito copiato', 'ok');
+      else alert('Link copiato!');
+    });
 }
 </script>
 {% endblock %}
