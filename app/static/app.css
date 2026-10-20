@@ -1,6 +1,7 @@
 /* B-Lance — design "carta calda e salvia"
    Palette umana: carta avorio, inchiostro verde, salvia offuscato (#5F8D6E)
-   come marca. Superfici piatte, ombre quasi invisibili, ZERO gradienti.
+   come marca. Superfici piatte, ombre quasi invisibili; i gradienti esistono
+   ma solo su marchio, CTA e hero (mai su dati o liste).
    Numeri tabellari ovunque. Mobile-first, safe-area incluse. */
 
 :root {
@@ -24,6 +25,9 @@
   --radius: 16px;
   --radius-sm: 11px;
   --shadow: 0 1px 2px rgba(31, 41, 35, 0.05), 0 10px 26px rgba(31, 41, 35, 0.05);
+  /* Gradienti: solo su marchio, CTA e hero. Mai sui dati, mai ovunque. */
+  --grad-brand: linear-gradient(135deg, #6b9b7c 0%, #47684f 100%);
+  --grad-btn: linear-gradient(180deg, #5c8a6b 0%, #47684f 100%);
   --font: "Manrope", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -86,7 +90,7 @@ a:hover { text-decoration: underline; }
   width: 34px;
   height: 34px;
   border-radius: 10px;
-  background: var(--primary);
+  background: var(--grad-brand);
   display: grid;
   place-items: center;
   box-shadow: 0 2px 6px rgba(71, 104, 79, 0.28);
@@ -110,7 +114,7 @@ a:hover { text-decoration: underline; }
 .side-link.active { background: var(--primary-soft); color: var(--primary-deep); }
 .side-link.active svg { color: var(--primary); }
 .side-link.cta {
-  background: var(--primary-deep);
+  background: var(--grad-btn);
   color: #fff;
   box-shadow: 0 2px 8px rgba(71, 104, 79, 0.25);
 }
@@ -194,7 +198,7 @@ button.side-link:hover { background: var(--bg-soft); }
   display: grid;
   place-items: center;
   color: #fff;
-  background: var(--primary-deep);
+  background: var(--grad-brand);
   border: 3px solid var(--bg);
   box-shadow: 0 4px 12px rgba(71, 104, 79, 0.35);
 }
@@ -309,7 +313,7 @@ select option { background: #fff; color: var(--text); }
   padding: 11px 20px;
   border: 0;
   border-radius: var(--radius-sm);
-  background: var(--primary-deep);
+  background: var(--grad-btn);
   color: #fff;
   font: inherit;
   font-weight: 700;
@@ -348,7 +352,11 @@ select option { background: #fff; color: var(--text); }
   padding: 34px 22px 30px;
   border-radius: 22px;
   border: 1px solid var(--border);
-  background: var(--card);
+  /* Un solo velo di colore, quasi invisibile: niente "effetto sci" */
+  background:
+    radial-gradient(620px 300px at 92% -12%, rgba(95, 141, 110, 0.13), transparent 70%),
+    radial-gradient(420px 260px at -6% 112%, rgba(168, 130, 60, 0.09), transparent 70%),
+    var(--card);
   box-shadow: var(--shadow);
   margin-bottom: 18px;
 }
@@ -361,6 +369,15 @@ select option { background: #fff; color: var(--text); }
   color: var(--text);
 }
 .hero h1 em { font-style: normal; color: var(--primary); }
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  /* Accento una-tantum: verde salvia che sfuma nell'oro dei soldi */
+  .hero h1 em {
+    background: linear-gradient(115deg, #3f6a52 0%, #5f8d6e 55%, #a8823c 115%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
 .hero p { color: var(--muted); max-width: 54ch; margin: 0 0 20px; }
 .hero .btnrow { display: flex; gap: 12px; flex-wrap: wrap; }
 .hero .art { display: none; }
