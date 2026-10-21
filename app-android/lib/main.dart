@@ -109,17 +109,7 @@ class _GateState extends State<_Gate> {
     );
   }
 
-  String _errorText(Object e) {
-    if (e is ApiException) return e.message;
-    final s = e.toString();
-    if (s.contains('SocketException') || s.contains('ClientException')) {
-      return 'Nessuna connessione a $_host: controlla internet e riprova.';
-    }
-    if (s.contains('TimeoutException')) {
-      return 'Il server $_host non risponde: riprova tra qualche secondo.';
-    }
-    return s.length > 160 ? '${s.substring(0, 160)}…' : s;
-  }
+  String _errorText(Object e) => describeError(e);
 
   @override
   Widget build(BuildContext context) {

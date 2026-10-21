@@ -141,6 +141,17 @@ async def vercel_function_prefix(request: Request, call_next):
         request.scope["path"] = path[len("/api/index"):]
     return await call_next(request)
 
+
+@app.middleware("http")
+async def access_log(request: Request, call_next):
+    """Log una riga su Vercel: metodo, path, status, user-agent.
+    L'UA 'Dart/...' e' l'impronta dell'app Android: cosi' si vede subito
+    se un telefono arriva davvero al server."""
+    response = await call_next(request)
+    ua = request.headers.get("user-agent", "-")
+    print(f"[req] {request.method} {request.url.path} -> {response.status_code} ua={ua}")
+    return response
+
 # Pagina di errore "umana": niente "Internal Server Error" a freddo.
 # Il traceback completo finisce comunque nei log di Render.
 ERROR_PAGE = """<!doctype html>

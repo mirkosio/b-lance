@@ -30,6 +30,26 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
+/// Messaggio leggibile per qualsiasi errore, con la coda tecnica vera
+/// invece del solito "connessione assente": serve a capire SUBITO se e'
+/// la rete, il timeout o una risposta malformata.
+String describeError(Object e) {
+  if (e is ApiException) return e.message;
+  final s = e.toString();
+  final String head;
+  if (s.contains('SocketException') || s.contains('ClientException')) {
+    head = 'Connessione fallita con il server';
+  } else if (s.contains('TimeoutException')) {
+    head = 'Timeout: nessuna risposta in 50 secondi';
+  } else if (e is FormatException || e is TypeError) {
+    head = 'Risposta inattesa dal server';
+  } else {
+    head = 'Errore imprevisto';
+  }
+  final detail = s.length > 150 ? '${s.substring(0, 150)}…' : s;
+  return '$head. $detail';
+}
+
 class Meta {
   /// Valute statice (cache in memoria dopo il primo caricamento).
   static List<CurrencyInfo> currencies = const [];

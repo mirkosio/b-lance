@@ -46,11 +46,9 @@ class _LoginScreenState extends State<LoginScreen> {
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Connessione assente: controlla la rete e riprova.')),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeError(e))));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
