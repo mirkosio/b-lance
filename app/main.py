@@ -27,6 +27,7 @@ from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 from sqlalchemy.orm import Session, selectinload
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from .api import router as api_router
 from .auth import (
     create_session_token,
     get_current_user,
@@ -113,6 +114,9 @@ class DBColdStartRetry:
 
 app.add_middleware(DBColdStartRetry)
 
+# API JSON per l'app Android nativa: stessa logica del web (app/api.py).
+app.include_router(api_router)
+
 
 @app.middleware("http")
 async def service_worker_no_cache(request: Request, call_next):
@@ -177,6 +181,9 @@ async def http_error(request: Request, exc: StarletteHTTPException):
     detail = exc.detail if isinstance(exc.detail, str) else ""
     if not detail or detail == "Not Found":
         detail = "Pagina non trovata"
+    if request.url.path.startswith("/api/"):
+        # L'app nativa riceve SEMPRE JSON, mai redirect HTML con ?err=.
+        return JSONResponse({"detail": detail}, status_code=exc.status_code)
     if "text/html" in request.headers.get("accept", ""):
         return _back_with_err(request, detail)
     return JSONResponse({"detail": detail}, status_code=exc.status_code)
@@ -186,6 +193,12 @@ async def http_error(request: Request, exc: StarletteHTTPException):
 async def unhandled_error(request: Request, exc: Exception) -> HTMLResponse:
     """500: nel browser torni da dove venivi con un toast, mai testo crudo."""
     logger.exception("Errore non gestito su %s %s", request.method, request.url.path)
+    if request.url.path.startswith("/api/"):
+        # Mai HTML all'app: solo JSON con codice di stato.
+        return JSONResponse(
+            {"detail": "Errore momentaneo: riprova tra qualche secondo."},
+            status_code=500,
+        )
     if (
         "text/html" in request.headers.get("accept", "")
         and request.url.path != "/"
