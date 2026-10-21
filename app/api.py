@@ -303,6 +303,7 @@ def api_group_detail(
             "fx_rate": e.fx_rate,
             "split_method": e.split_method,
             "paid_by": e.paid_by,
+            "created_by": e.created_by,
             "payer_name": names.get(e.paid_by, "?"),
             "created_at": e.created_at.isoformat() if e.created_at else None,
             "shares": [

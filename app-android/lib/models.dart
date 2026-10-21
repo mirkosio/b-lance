@@ -1,4 +1,5 @@
-"""Modelli JSON dell'API: gli specchi esatti delle risposte di /api/*."""
+/// Modelli JSON dell'API: gli specchi esatti delle risposte di /api/*.
+library;
 
 class User {
   const User({required this.id, required this.name, required this.email, required this.color});
@@ -116,6 +117,7 @@ class Expense {
     required this.baseAmountMinor,
     required this.baseCurrency,
     required this.paidBy,
+    required this.createdBy,
     required this.payerName,
     required this.createdAt,
     required this.splitMethod,
@@ -129,6 +131,7 @@ class Expense {
   final int baseAmountMinor;
   final String baseCurrency;
   final int paidBy;
+  final int createdBy;
   final String payerName;
   final String? createdAt;
   final String splitMethod;
@@ -142,6 +145,7 @@ class Expense {
         baseAmountMinor: (j['base_amount_minor'] as num).toInt(),
         baseCurrency: j['base_currency'] as String? ?? 'EUR',
         paidBy: j['paid_by'] as int,
+        createdBy: j['created_by'] as int? ?? j['paid_by'] as int,
         payerName: j['payer_name'] as String? ?? '?',
         createdAt: j['created_at'] as String?,
         splitMethod: j['split_method'] as String? ?? 'even',

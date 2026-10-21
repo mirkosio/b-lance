@@ -1,8 +1,8 @@
-"""Tema, formati e widget comuni dell'app.
-
-Palette allineata al sito: salvia per l'accento, carta calda chiara di
-giorno e nero-verde di notte (segue il sistema).
-"""
+/// Tema, formati e widget comuni dell'app.
+///
+/// Palette allineata al sito: salvia per l'accento, carta calda chiara di
+/// giorno e nero-verde di notte (segue il sistema).
+library;
 
 import 'dart:math';
 
@@ -167,7 +167,7 @@ class SectionCard extends StatelessWidget {
                     style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
                   ),
                 ),
-                if (trailing != null) trailing!,
+                ?trailing,
               ],
             ),
             const SizedBox(height: 12),
