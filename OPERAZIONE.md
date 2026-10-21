@@ -88,9 +88,12 @@ Mai lanciare DUE build contemporaneamente: si corrompe il NDK (successo).
 2. **404 ovvio su Vercel**: il preset FastAPI monta tutto sotto `/api/index`;
    il strip va nel middleware di `app/main.py`, non nell'entrypoint.
 3. **Telefono che non connette ma Chrome sì**: è il **DNS di sistema Android**
-   (Chrome usa un resolver interno). Rimedio: Impostazioni → Connessioni →
-   DNS privato → `one.one.one.one`. L'errore nell'app è
+   (Chrome usa un resolver interno). L'errore nell'app è
    "Failed host lookup ... No address associated with hostname".
+   L'app dal 1.0.7 ha la **riserva DoH**: se il lookup di sistema fallisce,
+   chiede gli indirizzi a Cloudflare via DNS cifrato (1.1.1.1) e connette
+   all'IP col TLS sul nome vero — stessa strategia di Chrome, il telefono
+   non può più rompere i palle col DNS.
 4. **"Email o password errati" su credenziali valide**: il database collegato a
    Vercel è un Neon *altro* da quello di Render — i dati non sono condivisi.
 
