@@ -1,0 +1,13 @@
+# Non serve al runtime: solo build/dev locali. Bundle piu piccolo = cold start piu veloce.
+app-android/
+tests/
+scripts/
+.venv/
+b-lance.db
+Dockerfile
+render.yaml
+package.json
+package-lock.json
+**/__pycache__
+**/*.pyc
+.git
