@@ -13,9 +13,15 @@ che chiama init_db() (create_all + migrazioni minori con retry): Neon anche
 lui si sveglia da solo.
 """
 
+from __future__ import annotations
+
+import json
+import os
+
 from app.main import app as _application
 
 _FUNCTION_PREFIX = "/api/index"
+_BUILD_TAG = "entry-3"
 
 
 class _StripFunctionPrefix:
@@ -27,6 +33,25 @@ class _StripFunctionPrefix:
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
             path = scope.get("path", "/")
+            # Diagnostico provvisorio: echo del path grezzo + build tag.
+            if path.endswith("__ver"):
+                body = json.dumps(
+                    {
+                        "build": _BUILD_TAG,
+                        "raw_path": path,
+                        "root_path": scope.get("root_path"),
+                        "deployment": os.getenv("VERCEL_DEPLOYMENT_ID", "?"),
+                    }
+                ).encode()
+                await send(
+                    {
+                        "type": "http.response.start",
+                        "status": 200,
+                        "headers": [(b"content-type", b"application/json")],
+                    }
+                )
+                await send({"type": "http.response.body", "body": body})
+                return
             if path.startswith(_FUNCTION_PREFIX):
                 path = path[len(_FUNCTION_PREFIX):] or "/"
                 scope["path"] = path
