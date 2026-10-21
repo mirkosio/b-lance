@@ -28,3 +28,5 @@ htmlcov/
 .server.log
 node_modules/
 .deploy-hook
+.vercel
+.env*

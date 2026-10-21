@@ -127,6 +127,20 @@ async def service_worker_no_cache(request: Request, call_next):
         response.headers["Cache-Control"] = "no-cache, must-revalidate"
     return response
 
+
+@app.middleware("http")
+async def vercel_function_prefix(request: Request, call_next):
+    """Su Vercel l'app e' montata sotto /api/index (preset FastAPI) e le
+    richieste arrivano con quel prefisso nel path: senza toglierlo ogni
+    rotta darebbe 404. In produzione normale (Render) il prefisso non
+    c'e' e questo non fa nulla."""
+    path = request.url.path
+    if path == "/api/index":
+        request.scope["path"] = "/"
+    elif path.startswith("/api/index/"):
+        request.scope["path"] = path[len("/api/index"):]
+    return await call_next(request)
+
 # Pagina di errore "umana": niente "Internal Server Error" a freddo.
 # Il traceback completo finisce comunque nei log di Render.
 ERROR_PAGE = """<!doctype html>
