@@ -39,7 +39,9 @@ String describeError(Object e) {
   if (e is ApiException) return e.message;
   final s = e.toString();
   final String head;
-  if (s.contains('SocketException') || s.contains('ClientException')) {
+  if (s.contains('Operation not permitted') || s.contains('errno = 1')) {
+    head = 'Il telefono nega la rete a questa app (permesso o firewall)';
+  } else if (s.contains('SocketException') || s.contains('ClientException')) {
     head = 'Connessione fallita con il server';
   } else if (s.contains('TimeoutException')) {
     head = 'Timeout: nessuna risposta in 50 secondi';

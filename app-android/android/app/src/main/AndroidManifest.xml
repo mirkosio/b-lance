@@ -1,4 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- OBBLIGATORIO per il rilascio: senza questa riga Android nega ogni
+         socket all'app (EPERM "Operation not permitted") e non va SU
+         NESSUNA rete. Nel template stava solo nel manifest di debug e
+         nell'APK di produzione non entrava mai. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="b-lance"
         android:name="${applicationName}"
