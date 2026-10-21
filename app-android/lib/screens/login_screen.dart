@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../api.dart';
+import '../ui.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, required this.api});
+  const LoginScreen({super.key, required this.api, this.notice});
 
   final Api api;
+
+  /// Motivo per cui si e' finiti qui (es. sessione scaduta): mostrato
+  /// in alto invece di sparire nel vuoto.
+  final String? notice;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -75,6 +80,30 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   const SizedBox(height: 28),
+                  if (!_register && widget.notice != null) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: negColor.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: negColor.withValues(alpha: 0.35)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.info_outline, size: 18, color: negColor),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              widget.notice!,
+                              style: const TextStyle(fontSize: 13, color: negColor),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   if (_register) ...[
                     TextField(
                       controller: _name,
