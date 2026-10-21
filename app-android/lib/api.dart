@@ -56,17 +56,30 @@ class Api {
   static const _tokenKey = 'bl_token';
 
   Future<void> loadToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    token = prefs.getString(_tokenKey);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      token = prefs.getString(_tokenKey);
+    } catch (_) {
+      // Storage di sistema incazzato (capita su alcuni device): l'app
+      // resta usabile, al prossimo avvio chiede di nuovo il login.
+      token = null;
+    }
   }
 
   Future<void> saveToken(String? value) async {
+    // Prima in memoria: anche se lo storage non scrive, per questa
+    // sessione il login funziona comunque.
     token = value;
-    final prefs = await SharedPreferences.getInstance();
-    if (value == null) {
-      await prefs.remove(_tokenKey);
-    } else {
-      await prefs.setString(_tokenKey, value);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (value == null) {
+        await prefs.remove(_tokenKey);
+      } else {
+        await prefs.setString(_tokenKey, value);
+      }
+    } catch (_) {
+      // Se il storage non scrive, il token vale solo per questa sessione:
+      // meglio un login ripetuto che un'app che non parte.
     }
   }
 
