@@ -43,18 +43,21 @@ class _GateState extends State<_Gate> {
   }
 
   Future<void> _boot() async {
-    await _api.loadToken();
+    // Regola: il caricaore NON si può bloccare mai. Qualsiasi fallimento
+    // (token scaduto, server non aggiornato, rete assente) cade sul login,
+    // dove l'utente vede subito il messaggio d'errore e può riprovare.
     try {
-      if (_api.token == null) throw ApiException(401, 'anonimo');
-      await _api.loadMeta();
-      final user = await _api.me();
-      if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen(api: _api, user: user)),
-      );
-      return;
-    } on ApiException catch (e) {
-      if (e.status != 401) rethrow; // errore di rete: resta qui e riprova col login
+      await _api.loadToken();
+      if (_api.token != null) {
+        await _api.loadMeta();
+        final user = await _api.me();
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => HomeScreen(api: _api, user: user)),
+        );
+        return;
+      }
+    } catch (_) {
       await _api.saveToken(null);
     }
     if (!mounted) return;

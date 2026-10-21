@@ -84,17 +84,17 @@ class Api {
     final http.Response resp;
     switch (method) {
       case 'GET':
-        resp = await http.get(uri, headers: headers).timeout(const Duration(seconds: 30));
+        resp = await http.get(uri, headers: headers).timeout(const Duration(seconds: 50));
       case 'POST':
         resp = await http
             .post(uri, headers: headers, body: jsonEncode(body ?? {}))
-            .timeout(const Duration(seconds: 30));
+            .timeout(const Duration(seconds: 50));
       case 'PATCH':
         resp = await http
             .patch(uri, headers: headers, body: jsonEncode(body ?? {}))
-            .timeout(const Duration(seconds: 30));
+            .timeout(const Duration(seconds: 50));
       case 'DELETE':
-        resp = await http.delete(uri, headers: headers).timeout(const Duration(seconds: 30));
+        resp = await http.delete(uri, headers: headers).timeout(const Duration(seconds: 50));
       default:
         throw ArgumentError(method);
     }
