@@ -155,7 +155,8 @@ class _GroupScreenState extends State<GroupScreen> {
   }
 
   Future<void> _copyInvite(GroupDetail d) async {
-    final link = 'https://b-lance.onrender.com/join/${d.inviteCode}';
+    // Il link segue il server configurato (l'API e sempre il sito stesso).
+    final link = '${widget.api.base}/join/${d.inviteCode}';
     await Clipboard.setData(ClipboardData(text: link));
     _snack('Link di invito copiato: incollalo su WhatsApp');
   }
