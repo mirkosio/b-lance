@@ -9,8 +9,10 @@
 library;
 
 import 'dart:convert';
+import 'dart:io' as io;
 
 import 'package:http/http.dart' as http;
+import 'package:http/io_client.dart' show IOClient;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models.dart';
@@ -48,6 +50,80 @@ String describeError(Object e) {
   }
   final detail = s.length > 150 ? '${s.substring(0, 150)}…' : s;
   return '$head. $detail';
+}
+
+// ------------------------------------------------------------------ dns riserva
+// Alcuni telefoni/reti non risolvono certi domini col DNS di sistema (filtro
+// rotto o dominio oscurato dalle liste anti-phishing). L'app allora chiede
+// gli indirizzi a Cloudflare via DNS cifrato (DoH), come fa Chrome col suo
+// Secure DNS, e connette direttamente all'IP col TLS sul nome vero.
+
+List<io.InternetAddress>? _dohCache;
+DateTime? _dohCacheAt;
+String? _dohCacheHost;
+
+bool _isDnsFailure(Object e) {
+  final s = e.toString();
+  return s.contains('Failed host lookup') ||
+      s.contains('No address associated') ||
+      s.contains('EAI_NONAME');
+}
+
+Future<List<io.InternetAddress>> _dohResolve(String host) async {
+  final fresh = _dohCacheHost == host &&
+      _dohCache != null &&
+      _dohCacheAt != null &&
+      DateTime.now().difference(_dohCacheAt!) < const Duration(minutes: 10);
+  if (fresh) return _dohCache!;
+  final client = io.HttpClient();
+  try {
+    final req = await client
+        .getUrl(Uri.parse('https://1.1.1.1/dns-query?name=$host&type=A'))
+        .timeout(const Duration(seconds: 10));
+    req.headers.set('accept', 'application/dns-json');
+    final resp = await req.close().timeout(const Duration(seconds: 10));
+    final body = await resp.transform(utf8.decoder).join();
+    final json = jsonDecode(body) as Map<String, dynamic>;
+    final answers = (json['Answer'] as List?) ?? const [];
+    final addrs = <io.InternetAddress>[];
+    for (final a in answers) {
+      final data = (a as Map)['data'] as String?;
+      final ip = data == null ? null : io.InternetAddress.tryParse(data);
+      if (ip != null && ip.type == io.InternetAddressType.IPv4) addrs.add(ip);
+    }
+    if (addrs.isEmpty) {
+      throw const io.SocketException('DoH: nessun indirizzo per il server');
+    }
+    _dohCache = addrs;
+    _dohCacheAt = DateTime.now();
+    _dohCacheHost = host;
+    return addrs;
+  } finally {
+    client.close(force: true);
+  }
+}
+
+/// Client che parla coi risultati del DoH: niente lookup di sistema, TCP
+/// all'IP + TLS con SNI e verifica sul nome vero del server.
+http.Client _dohClient(String host, List<io.InternetAddress> addrs) {
+  final inner = io.HttpClient();
+  inner.connectionFactory = (uri, proxyHost, proxyPort) {
+    final Future<io.Socket> task = () async {
+      Object? last;
+      for (final ip in addrs) {
+        try {
+          final plain =
+              await io.Socket.connect(ip, uri.port, timeout: const Duration(seconds: 15));
+          return await io.SecureSocket.secure(plain, host: host);
+        } catch (e) {
+          last = e;
+        }
+      }
+      throw io.SocketException('DoH: nessun indirizzo raggiungibile per $host ($last)');
+    }();
+    return Future.value(io.ConnectionTask.fromSocket(task, () {}));
+  };
+  return IOClient(inner);
 }
 
 class Meta {
@@ -114,38 +190,57 @@ class Api {
   Future<dynamic> _req(String method, String path, {Object? body}) async {
     final uri = Uri.parse('$base$path');
     final headers = await _headers();
-    final http.Response resp;
-    switch (method) {
-      case 'GET':
-        resp = await http.get(uri, headers: headers).timeout(const Duration(seconds: 50));
-      case 'POST':
-        resp = await http
-            .post(uri, headers: headers, body: jsonEncode(body ?? {}))
-            .timeout(const Duration(seconds: 50));
-      case 'PATCH':
-        resp = await http
-            .patch(uri, headers: headers, body: jsonEncode(body ?? {}))
-            .timeout(const Duration(seconds: 50));
-      case 'DELETE':
-        resp = await http.delete(uri, headers: headers).timeout(const Duration(seconds: 50));
-      default:
-        throw ArgumentError(method);
+    int status;
+    List<int> bytes;
+    try {
+      (status, bytes) = await _send(method, uri, headers, body);
+    } on Exception catch (e) {
+      if (!_isDnsFailure(e)) rethrow;
+      // Il resolver di sistema del telefono non risolve il server:
+      // riprovo con il DNS cifrato di riserva.
+      final fallback = _dohClient(uri.host, await _dohResolve(uri.host));
+      try {
+        (status, bytes) = await _send(method, uri, headers, body, client: fallback);
+      } finally {
+        fallback.close();
+      }
     }
 
-    if (resp.statusCode >= 400) {
-      String detail = 'Errore ${resp.statusCode}';
+    if (status >= 400) {
+      String detail = 'Errore $status';
       try {
-        final decoded = jsonDecode(utf8.decode(resp.bodyBytes));
+        final decoded = jsonDecode(utf8.decode(bytes));
         if (decoded is Map && decoded['detail'] is String) {
           detail = decoded['detail'] as String;
         }
       } catch (_) {
         // corpo non JSON: tengo il messaggio generico
       }
-      throw ApiException(resp.statusCode, detail);
+      throw ApiException(status, detail);
     }
-    if (resp.body.isEmpty) return null;
-    return jsonDecode(utf8.decode(resp.bodyBytes));
+    if (bytes.isEmpty) return null;
+    return jsonDecode(utf8.decode(bytes));
+  }
+
+  Future<(int, List<int>)> _send(
+    String method,
+    Uri uri,
+    Map<String, String> headers,
+    Object? body, {
+    http.Client? client,
+  }) async {
+    final own = client == null;
+    final c = client ?? http.Client();
+    try {
+      final req = http.Request(method, uri)..headers.addAll(headers);
+      if (method != 'GET') req.body = jsonEncode(body ?? {});
+      final streamed = await c.send(req).timeout(const Duration(seconds: 50));
+      final resp =
+          await http.Response.fromStream(streamed).timeout(const Duration(seconds: 50));
+      return (resp.statusCode, resp.bodyBytes);
+    } finally {
+      if (own) c.close();
+    }
   }
 
   // ---------------------------------------------------------------- auth
