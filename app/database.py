@@ -106,6 +106,16 @@ def _migrate() -> None:
                 )
             )
 
+    user_columns = {c["name"] for c in inspect(engine).get_columns("users")}
+    if "session_version" not in user_columns:
+        with engine.begin() as conn:
+            conn.execute(
+                text(
+                    "ALTER TABLE users "
+                    "ADD COLUMN session_version INTEGER NOT NULL DEFAULT 0"
+                )
+            )
+
 
 def init_db(retries: int = 5, delay: float = 2.0) -> None:
     """Crea le tabelle e applica le migrazioni MINORI.

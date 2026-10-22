@@ -49,6 +49,13 @@ from .permissions import (
     effective_perms,
 )
 from .services import compute_balances
+from .throttle import (
+    clear_login_failures,
+    guard_login,
+    guard_register,
+    record_login_failure,
+    record_register,
+)
 
 
 @asynccontextmanager
@@ -430,6 +437,7 @@ def register(
     next_url: str = Form("", alias="next"),
     db: Session = Depends(get_db),
 ):
+    guard_register(db, request)
     email = email.strip().lower()
     if len(password) < 6:
         return templates.TemplateResponse(
@@ -462,9 +470,15 @@ def register(
     )
     db.add(user)
     db.commit()
+    record_register(db, request)
     # Torna dove stava l'utente (es. il link di invito al gruppo).
     resp = RedirectResponse(_safe_next(next_url), status_code=303)
-    resp.set_cookie(SESSION_COOKIE, create_session_token(user.id), httponly=True, samesite="lax")
+    resp.set_cookie(
+        SESSION_COOKIE,
+        create_session_token(user.id, user.session_version),
+        httponly=True,
+        samesite="lax",
+    )
     return resp
 
 
@@ -489,8 +503,10 @@ def login(
     next_url: str = Form("", alias="next"),
     db: Session = Depends(get_db),
 ):
+    guard_login(db, request, email)
     user = get_user_by_email(db, email)
     if not user or not verify_password(password, user.password_hash):
+        record_login_failure(db, request, email)
         return templates.TemplateResponse(
             request,
             "login.html",
@@ -501,9 +517,15 @@ def login(
             },
             status_code=400,
         )
+    clear_login_failures(db, email)
     # Torna dove stava l'utente (es. il link di invito al gruppo).
     resp = RedirectResponse(_safe_next(next_url), status_code=303)
-    resp.set_cookie(SESSION_COOKIE, create_session_token(user.id), httponly=True, samesite="lax")
+    resp.set_cookie(
+        SESSION_COOKIE,
+        create_session_token(user.id, user.session_version),
+        httponly=True,
+        samesite="lax",
+    )
     return resp
 
 

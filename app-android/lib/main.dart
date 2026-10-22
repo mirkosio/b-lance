@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import 'api.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'theme_controller.dart';
 import 'ui.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Non bloccante: se lo storage e' lento l'app parte comunque col tema
+  // di sistema e si aggiorna appena la preferenza e' letta.
+  loadThemeMode();
   runApp(const BlanceApp());
 }
 
@@ -14,13 +19,16 @@ class BlanceApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'b-lance',
-      debugShowCheckedModeBanner: false,
-      theme: lightTheme(),
-      darkTheme: darkTheme(),
-      themeMode: ThemeMode.system,
-      home: const _Gate(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeMode,
+      builder: (_, mode, _) => MaterialApp(
+        title: 'b-lance',
+        debugShowCheckedModeBanner: false,
+        theme: lightTheme(),
+        darkTheme: darkTheme(),
+        themeMode: mode,
+        home: const _Gate(),
+      ),
     );
   }
 }
@@ -88,6 +96,19 @@ class _GateState extends State<_Gate> {
         await _api.saveToken(null);
       } catch (_) {
         // preferisco comunque proseguire
+      }
+      if (e is ApiException && e.status == 401) {
+        // Sessione revocata o scaduta: direttamente al login, con il motivo.
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => LoginScreen(
+              api: _api,
+              notice: 'La sessione è scaduta: entra di nuovo.',
+            ),
+          ),
+        );
+        return;
       }
       if (mounted) setState(() => _error = e);
     }

@@ -214,3 +214,23 @@ class NetChip extends StatelessWidget {
     );
   }
 }
+
+/// Versione mostrata nel menu (supporto: "che versione hai?").
+const kAppVersion = '1.0.9';
+
+/// Data ISO del server -> "22/10/2026, 18:42" in ora locale.
+String formatDateTime(String? iso) {
+  if (iso == null) return '';
+  final dt = DateTime.tryParse(iso)?.toLocal();
+  if (dt == null) return '';
+  String two(int v) => v.toString().padLeft(2, '0');
+  return '${two(dt.day)}/${two(dt.month)}/${dt.year}, ${two(dt.hour)}:${two(dt.minute)}';
+}
+
+/// Etichetta umana del metodo di divisione.
+String splitMethodLabel(String method) => switch (method) {
+      'even' => 'Divisa in parti uguali',
+      'exact' => 'Importi fissi',
+      'percent' => 'Percentuali',
+      _ => method,
+    };

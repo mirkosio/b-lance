@@ -32,12 +32,19 @@ from .auth import (
 )
 from .core.currencies import CURRENCIES, get_currency, is_valid_currency, sorted_currencies
 from .core.exchange import RATES_VS_EUR, convert, get_rate
-from .core.money import MoneyError, parse_user_amount
+from .core.money import MoneyError, format_amount, parse_user_amount
 from .core.splitting import SplitMethod, compute_shares
 from .database import get_db
 from .models import Expense, Group, GroupMember, Payment, Share, User, utcnow
-from .permissions import can, effective_perms
+from .permissions import ALL_PERMS, EDITABLE_ROLES, can, clamped_perms, effective_perms
 from .services import compute_balances
+from .throttle import (
+    clear_login_failures,
+    guard_login,
+    guard_register,
+    record_login_failure,
+    record_register,
+)
 
 router = APIRouter(prefix="/api")
 
@@ -182,9 +189,15 @@ class JoinIn(BaseModel):
     code: str
 
 
+class MemberPatchIn(BaseModel):
+    role: str | None = None
+    perms: list[str] | None = None
+
+
 # ---------------------------------------------------------------- auth
 @router.post("/register")
-def api_register(data: RegisterIn, db: Session = Depends(get_db)):
+def api_register(data: RegisterIn, request: Request, db: Session = Depends(get_db)):
+    guard_register(db, request)
     email = data.email.strip().lower()
     if len(data.password) < 6:
         raise HTTPException(400, detail="La password deve avere almeno 6 caratteri.")
@@ -201,15 +214,42 @@ def api_register(data: RegisterIn, db: Session = Depends(get_db)):
     )
     db.add(user)
     db.commit()
-    return {"token": create_session_token(user.id), "user": _user_json(user)}
+    record_register(db, request)
+    return {
+        "token": create_session_token(user.id, user.session_version),
+        "user": _user_json(user),
+    }
 
 
 @router.post("/login")
-def api_login(data: LoginIn, db: Session = Depends(get_db)):
+def api_login(data: LoginIn, request: Request, db: Session = Depends(get_db)):
+    guard_login(db, request, data.email)
     user = get_user_by_email(db, data.email)
     if not user or not verify_password(data.password, user.password_hash):
+        record_login_failure(db, request, data.email)
         raise HTTPException(401, detail="Email o password errati.")
-    return {"token": create_session_token(user.id), "user": _user_json(user)}
+    clear_login_failures(db, data.email)
+    return {
+        "token": create_session_token(user.id, user.session_version),
+        "user": _user_json(user),
+    }
+
+
+@router.post("/logout-all")
+def api_logout_all(
+    user: User = Depends(require_api_user), db: Session = Depends(get_db)
+):
+    """Revoca tutti i token dell'utente, compreso quello attuale.
+
+    Restituisce un token nuovo così il dispositivo che ha fatto la richiesta
+    resta collegato: gli altri vengono buttati fuori.
+    """
+    user.session_version += 1
+    db.commit()
+    return {
+        "ok": True,
+        "token": create_session_token(user.id, user.session_version),
+    }
 
 
 @router.get("/me")
@@ -288,7 +328,7 @@ def api_group_detail(
     expenses = db.scalars(
         select(Expense)
         .options(selectinload(Expense.shares))
-        .where(Expense.group_id == group.id, Expense.voided_at.is_(None))
+        .where(Expense.group_id == group.id)
         .order_by(Expense.created_at.desc())
     ).all()
     expenses_json = [
@@ -306,6 +346,7 @@ def api_group_detail(
             "created_by": e.created_by,
             "payer_name": names.get(e.paid_by, "?"),
             "created_at": e.created_at.isoformat() if e.created_at else None,
+            "voided_at": e.voided_at.isoformat() if e.voided_at else None,
             "shares": [
                 {"user_id": s.user_id, "amount_minor": s.amount_minor} for s in e.shares
             ],
@@ -465,6 +506,111 @@ def api_invite_preview(code: str, db: Session = Depends(get_db)):
         "base_currency": group.base_currency,
         "member_count": n,
     }
+
+
+# ---------------------------------------------------------------- membri e permessi
+def _target_member(db: Session, group: Group, target_user_id: int) -> GroupMember:
+    target = db.scalar(
+        select(GroupMember).where(
+            GroupMember.group_id == group.id,
+            GroupMember.user_id == target_user_id,
+        )
+    )
+    if target is None:
+        raise HTTPException(status_code=404, detail="Membro non trovato")
+    return target
+
+
+@router.patch("/groups/{group_id}/members/{target_user_id}")
+def api_update_member(
+    group_id: int,
+    target_user_id: int,
+    data: MemberPatchIn,
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    """Cambia ruolo e permessi di un membro (serve members_manage).
+
+    Stesse regole del sito: il creatore non si tocca, non ci si modifica da
+    soli, e nessuno può dare permessi che non ha.
+    """
+    group, actor = _require_perm(db, group_id, user, "members_manage")
+    target = _target_member(db, group, target_user_id)
+
+    if target.id == actor.id:
+        raise HTTPException(400, detail="Non puoi modificare te stesso")
+    if target.role == "owner":
+        raise HTTPException(400, detail="Il creatore del gruppo non si tocca")
+
+    role = (data.role or target.role).strip()
+    if role not in EDITABLE_ROLES:
+        raise HTTPException(400, detail="Ruolo non valido")
+
+    grantable = effective_perms(actor.role, actor.perms)
+    if role == "admin" and grantable != ALL_PERMS:
+        raise HTTPException(
+            403, detail="Solo il creatore o un admin può promuovere un admin"
+        )
+
+    wanted = (
+        data.perms
+        if data.perms is not None
+        else [p for p in (target.perms or "").split(",") if p]
+    )
+    target.role = role
+    target.perms = clamped_perms(actor.role, actor.perms, wanted)
+    db.commit()
+    return {
+        "ok": True,
+        "member": {
+            "user_id": target.user_id,
+            "role": target.role,
+            "perms": sorted(effective_perms(target.role, target.perms)),
+        },
+    }
+
+
+@router.delete("/groups/{group_id}/members/{target_user_id}")
+def api_remove_member(
+    group_id: int,
+    target_user_id: int,
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    """Toglie un membro dal gruppo (serve members_manage).
+
+    Non si rimuove chi ha un saldo aperto: i soldi resterebbero sospesi.
+    """
+    group, actor = _require_perm(db, group_id, user, "members_manage")
+    target = _target_member(db, group, target_user_id)
+
+    if target.role == "owner":
+        raise HTTPException(400, detail="Il creatore del gruppo non si tocca")
+    if target.id == actor.id:
+        raise HTTPException(400, detail="Non puoi rimuovere te stesso")
+
+    view = compute_balances(db, group)
+    target_net = next(
+        (m.net_minor for m in view.members if m.user_id == target_user_id), 0
+    )
+    if target_net != 0:
+        name = target.user.name
+        amount = format_amount(abs(target_net), group.base_currency)
+        if target_net > 0:
+            detail = (
+                f"{name} è ancora in credito di {amount}: "
+                "salda prima di toglierlo dal gruppo"
+            )
+        else:
+            detail = (
+                f"{name} deve ancora {amount}: "
+                "salda prima di toglierlo dal gruppo"
+            )
+        raise HTTPException(400, detail=detail)
+
+    db.delete(target)
+    db.commit()
+    return {"ok": True}
 
 
 # ---------------------------------------------------------------- spese

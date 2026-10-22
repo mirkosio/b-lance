@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../models.dart';
+import '../widgets/currency_picker.dart';
 
 /// Foglio "Nuova spesa": stesso flusso del sito, stessi controlli del server.
 Future<void> showExpenseSheet(
@@ -127,7 +128,6 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
   @override
   Widget build(BuildContext context) {
     final base = widget.detail.baseCurrency;
-    final currencies = Meta.currencies.where((c) => true).toList();
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: SingleChildScrollView(
@@ -168,14 +168,26 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                 const SizedBox(width: 10),
                 SizedBox(
                   width: 130,
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _currency,
-                    decoration: const InputDecoration(labelText: 'Valuta'),
-                    items: [
-                      for (final c in currencies)
-                        DropdownMenuItem(value: c.code, child: Text(c.code)),
-                    ],
-                    onChanged: (v) => setState(() => _currency = v ?? base),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () async {
+                      final code = await showCurrencyPicker(
+                        context,
+                        currencies: Meta.currencies,
+                        selected: _currency,
+                        title: 'Valuta della spesa',
+                      );
+                      if (code != null && mounted) {
+                        setState(() => _currency = code);
+                      }
+                    },
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Valuta',
+                        suffixIcon: Icon(Icons.unfold_more, size: 18),
+                      ),
+                      child: Text(_currency),
+                    ),
                   ),
                 ),
               ],
@@ -190,7 +202,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                   hintText: '1 $_currency = ? $base',
                   helperText: _needManualRate
                       ? '$_currency non ha un tasso automatico: scrivilo tu.'
-                      : 'Predefinito: tasso di oggi.',
+                      : 'Predefinito: tasso automatico del server (puoi correggerlo).',
                 ),
               ),
             ],
@@ -218,7 +230,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
             const SizedBox(height: 10),
             Text(
               _method == 'even'
-                  ? 'Tutti a botte cinque eri: il server divide al centesimo.'
+                  ? 'Tutti pagano la stessa quota: il server divide al centesimo.'
                   : '$_methodLabel per persona: compila i campi qui sotto.',
               style: TextStyle(
                 fontSize: 12.5,

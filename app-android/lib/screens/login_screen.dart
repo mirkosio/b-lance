@@ -20,9 +20,15 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _register = false;
   bool _busy = false;
+  bool _obscure = true;
   final _name = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
+
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
 
   @override
   void dispose() {
@@ -33,22 +39,35 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _submit() async {
+    final name = _name.text.trim();
+    final email = _email.text.trim();
+    final password = _password.text;
+    if (_register && name.isEmpty) {
+      _snack('Scrivi il tuo nome');
+      return;
+    }
+    if (!RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)) {
+      _snack('Email non valida: controlla di averla scritta bene');
+      return;
+    }
+    if (_register && password.length < 6) {
+      _snack('La password deve avere almeno 6 caratteri');
+      return;
+    }
     setState(() => _busy = true);
     try {
       final user = _register
-          ? await widget.api.register(_name.text, _email.text, _password.text)
-          : await widget.api.login(_email.text, _password.text);
+          ? await widget.api.register(name, email, password)
+          : await widget.api.login(email, password);
       await widget.api.loadMeta();
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => HomeScreen(api: widget.api, user: user)),
       );
     } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      _snack(e.message);
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeError(e))));
+      _snack(describeError(e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -119,11 +138,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _password,
-                    obscureText: true,
+                    obscureText: _obscure,
                     onSubmitted: (_) => _submit(),
                     decoration: InputDecoration(
                       labelText: 'Password',
                       helperText: _register ? 'Minimo 6 caratteri.' : null,
+                      suffixIcon: IconButton(
+                        tooltip: _obscure ? 'Mostra password' : 'Nascondi password',
+                        icon: Icon(
+                          _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                          size: 20,
+                        ),
+                        onPressed: () => setState(() => _obscure = !_obscure),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 22),

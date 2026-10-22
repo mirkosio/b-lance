@@ -40,6 +40,9 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     # Color per riconoscere i membri nei grafici/saldi.
     color: Mapped[str] = mapped_column(String(9), default="#6366f1")
+    # Versione della sessione: "esci da tutti i dispositivi" la incrementa
+    # e tutti i token emessi prima diventano invalidi.
+    session_version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     memberships: Mapped[list[GroupMember]] = relationship(back_populates="user")
@@ -153,3 +156,19 @@ class Payment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     group: Mapped[Group] = relationship(back_populates="payments")
+
+
+class LoginAttempt(Base):
+    """Tentativo di accesso registrato per il limite anti brute force.
+
+    Sta su DB (non in memoria) perché su Vercel le istanze sono effimere e
+    multiple: il conteggio deve valere per tutte.
+    """
+
+    __tablename__ = "login_attempts"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    key: Mapped[str] = mapped_column(String(200), index=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, index=True
+    )

@@ -75,9 +75,23 @@ Mai lanciare DUE build contemporaneamente: si corrompe il NDK (successo).
 ## Test
 
 ```bash
-.venv/bin/python -m pytest tests/ -q          # suite locale (100 test)
-.venv/bin/python /tmp/opencode/e2e_prod.py     # E2E contro produzione
+.venv/bin/python -m pytest tests/ -q           # suite locale (107 test)
+.venv/bin/python /tmp/opencode/e2e_phase1.py   # E2E Fase 1 contro produzione
 ```
+
+## Sicurezza sessioni e accessi (dalla 1.0.9)
+
+- I token scadono dopo **30 giorni** (`SESSION_MAX_AGE_DAYS`, default 30).
+  Contengono la `session_version` dell'utente: `POST /api/logout-all` la
+  incrementa e **tutti i token emessi prima diventano invalidi**.
+- Login: max **8 errori per email** e **40 per IP** in 15 minuti.
+  Registrazioni: max **20 per IP** in un'ora. I conteggi stanno nella tabella
+  `login_attempts` (DB), non in memoria: valgono su tutte le istanze Vercel.
+  Si disattiva con `RATE_LIMIT=0` (solo sviluppo).
+- Migrazione automatica: `init_db()` aggiunge `users.session_version` se manca.
+- **Effetto del primo deploy:** i token del formato vecchio non valgono più.
+  Tutti rifanno il login una volta (l'app va direttamente alla schermata
+  di accesso, senza schermata d'errore).
 
 ## Guasti già incontrati (non rifarli)
 

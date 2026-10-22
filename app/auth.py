@@ -12,7 +12,7 @@ import os
 import secrets as _secrets
 
 import bcrypt
-from itsdangerous import BadSignature, SignatureExpired, URLSafeSerializer
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -23,7 +23,9 @@ from .models import User
 # le sessioni si invalidano a ogni riavvio.
 SECRET_KEY = os.getenv("SECRET_KEY") or _secrets.token_hex(32)
 _SESSION_SALT = "b-lance-session"
-_serializer = URLSafeSerializer(SECRET_KEY, salt=_SESSION_SALT)
+# Le sessioni scadono: un token rubato non vale per sempre.
+SESSION_MAX_AGE = int(os.getenv("SESSION_MAX_AGE_DAYS", "30")) * 24 * 60 * 60
+_serializer = URLSafeTimedSerializer(SECRET_KEY, salt=_SESSION_SALT)
 
 
 def hash_password(password: str) -> str:
@@ -39,28 +41,47 @@ def verify_password(password: str, hashed: str) -> bool:
         return False
 
 
-def create_session_token(user_id: int) -> str:
-    """Crea il cookie di sessione per un utente."""
-    return _serializer.dumps({"uid": user_id})
+def create_session_token(user_id: int, session_version: int = 0) -> str:
+    """Crea il cookie di sessione per un utente.
+
+    Include la versione di sessione: se l'utente fa "esci da tutti i
+    dispositivi", i token vecchi non corrispondono più e vengono rifiutati.
+    """
+    return _serializer.dumps({"uid": user_id, "v": session_version})
 
 
-def read_session_token(token: str) -> int | None:
-    """Legge l'uid da un cookie di sessione. Ritorna None se non valido."""
+def read_session_token(token: str) -> tuple[int, int] | None:
+    """Legge (uid, versione) dal token. None se scaduto o non valido.
+
+    Il token porta il timestamp: max_age lo fa scadere da solo. I token del
+    formato vecchio (senza timestamp) risultano invalidi: tutti rifanno il
+    login una volta dopo l'aggiornamento.
+    """
     if not token:
         return None
     try:
-        data = _serializer.loads(token)
+        data = _serializer.loads(token, max_age=SESSION_MAX_AGE)
     except (BadSignature, SignatureExpired):
         return None
-    return data.get("uid")
+    uid = data.get("uid")
+    if not isinstance(uid, int):
+        return None
+    return uid, int(data.get("v", 0))
 
 
 def get_current_user(db: Session, token: str | None) -> User | None:
-    """Ricava l'utente dalla sessione, o None se non loggato."""
-    uid = read_session_token(token or "")
-    if uid is None:
+    """Ricava l'utente dalla sessione, o None se non loggato.
+
+    Un token con versione diversa da quella dell'utente è stato revocato.
+    """
+    parsed = read_session_token(token or "")
+    if parsed is None:
         return None
-    return db.get(User, uid)
+    uid, version = parsed
+    user = db.get(User, uid)
+    if user is None or user.session_version != version:
+        return None
+    return user
 
 
 def get_user_by_email(db: Session, email: str) -> User | None:

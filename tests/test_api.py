@@ -145,13 +145,16 @@ def test_flusso_gruppo_completo(client: TestClient):
     nets = {m["user_id"]: m["net_minor"] for m in detail["members"]}
     assert nets[u_a["id"]] == 1500
 
-    # Annulla la spesa: tutti in pari.
+    # Annulla la spesa: tutti in pari, ma la spesa resta nello storico
+    # con il marcatore "annullata" (non sparisce: e' un registro).
     expense_id = detail["expenses"][0]["id"]
     r = client.delete(f"/api/groups/{gid}/expenses/{expense_id}", headers=_auth(t_a))
     assert r.status_code == 200
     detail = client.get(f"/api/groups/{gid}", headers=_auth(t_a)).json()
     assert all(m["net_minor"] == 0 for m in detail["members"])
-    assert detail["expenses"] == []
+    assert len(detail["expenses"]) == 1
+    assert detail["expenses"][0]["id"] == expense_id
+    assert detail["expenses"][0]["voided_at"] is not None
 
 
 def test_dashboard_gruppi(client: TestClient):

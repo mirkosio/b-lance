@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../api.dart';
 import '../models.dart';
+import '../sheets/detail_sheets.dart';
 import '../sheets/expense_sheet.dart';
 import '../sheets/payment_sheet.dart';
 import '../ui.dart';
@@ -48,60 +49,6 @@ class _GroupScreenState extends State<GroupScreen> {
   }
 
   // ---------------------------------------------------------------- azioni
-  Future<void> _voidExpense(GroupDetail d, Expense e) async {
-    final me = d.members.firstWhere((m) => m.isMe, orElse: () => d.members.first);
-    final allowed = e.createdBy == me.userId || me.canExpenseManage;
-    if (!allowed) {
-      _snack('Puoi annullare solo le spese che hai inserito tu');
-      return;
-    }
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Annullare "${e.description}"?'),
-        content: const Text('La spesa resta nello storico, ma non conta più nei saldi.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Indietro')),
-          FilledButton(
-            style: FilledButton.styleFrom(minimumSize: const Size(100, 44)),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Annulla spesa'),
-          ),
-        ],
-      ),
-    );
-    if (ok == true) {
-      await _run(() => widget.api.voidExpense(widget.groupId, e.id), ok: 'Spesa annullata');
-    }
-  }
-
-  Future<void> _deletePayment(GroupDetail d, Payment p) async {
-    final me = d.members.firstWhere((m) => m.isMe, orElse: () => d.members.first);
-    final involved = p.fromUser == me.userId || p.toUser == me.userId;
-    if (!involved && !me.canPaymentManage) {
-      _snack('Puoi eliminare solo i pagamenti in cui sei coinvolto');
-      return;
-    }
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Eliminare il pagamento?'),
-        content: Text('${p.fromName} → ${p.toName}'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Indietro')),
-          FilledButton(
-            style: FilledButton.styleFrom(minimumSize: const Size(100, 44)),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Elimina'),
-          ),
-        ],
-      ),
-    );
-    if (ok == true) {
-      await _run(() => widget.api.deletePayment(widget.groupId, p.id), ok: 'Pagamento eliminato');
-    }
-  }
-
   Future<void> _rename(GroupDetail d) async {
     final name = TextEditingController(text: d.name);
     final ok = await showDialog<bool>(
@@ -323,7 +270,13 @@ class _GroupScreenState extends State<GroupScreen> {
                             for (final e in d.expenses)
                               InkWell(
                                 borderRadius: BorderRadius.circular(10),
-                                onTap: () => _voidExpense(d, e),
+                                onTap: () => showExpenseDetail(
+                                  context,
+                                  api: widget.api,
+                                  detail: d,
+                                  expense: e,
+                                  onDone: _reload,
+                                ),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(vertical: 7),
                                   child: Row(
@@ -336,11 +289,24 @@ class _GroupScreenState extends State<GroupScreen> {
                                               e.description,
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(fontWeight: FontWeight.w600),
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                decoration: e.voided
+                                                    ? TextDecoration.lineThrough
+                                                    : null,
+                                                color: e.voided
+                                                    ? Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface
+                                                        .withValues(alpha: 0.45)
+                                                    : null,
+                                              ),
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
-                                              'ha pagato ${e.payerName}'
+                                              '${e.payerName}'
+                                              '${e.createdAt != null ? ' · ${formatDateTime(e.createdAt)}' : ''}'
+                                              '${e.voided ? ' · annullata' : ''}'
                                               '${e.currency != d.baseCurrency ? ' · vale ${formatMinor(e.baseAmountMinor, expo)} ${d.baseCurrency}' : ''}',
                                               style: TextStyle(
                                                 fontSize: 12,
@@ -353,9 +319,38 @@ class _GroupScreenState extends State<GroupScreen> {
                                           ],
                                         ),
                                       ),
-                                      Text(
-                                        '${formatMinor(e.amountMinor, Meta.exponentOf(e.currency))} ${e.currency}',
-                                        style: const TextStyle(fontWeight: FontWeight.w800),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            '${formatMinor(e.amountMinor, Meta.exponentOf(e.currency))} ${e.currency}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w800,
+                                              decoration: e.voided
+                                                  ? TextDecoration.lineThrough
+                                                  : null,
+                                              color: e.voided
+                                                  ? Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withValues(alpha: 0.45)
+                                                  : null,
+                                            ),
+                                          ),
+                                          if (e.voided)
+                                            const Padding(
+                                              padding: EdgeInsets.only(top: 2),
+                                              child: Text(
+                                                'ANNULLATA',
+                                                style: TextStyle(
+                                                  fontSize: 9.5,
+                                                  fontWeight: FontWeight.w800,
+                                                  letterSpacing: 0.5,
+                                                  color: negColor,
+                                                ),
+                                              ),
+                                            ),
+                                        ],
                                       ),
                                     ],
                                   ),
@@ -373,15 +368,47 @@ class _GroupScreenState extends State<GroupScreen> {
                         for (final p in d.payments)
                           InkWell(
                             borderRadius: BorderRadius.circular(10),
-                            onTap: () => _deletePayment(d, p),
+                            onTap: () => showPaymentDetail(
+                              context,
+                              api: widget.api,
+                              detail: d,
+                              payment: p,
+                              onDone: _reload,
+                            ),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              padding: const EdgeInsets.symmetric(vertical: 7),
                               child: Row(
                                 children: [
                                   Expanded(
-                                    child: Text(
-                                      '${p.fromName} → ${p.toName}',
-                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${p.fromName} → ${p.toName}',
+                                          style: const TextStyle(fontWeight: FontWeight.w600),
+                                        ),
+                                        if ((p.note ?? '').trim().isNotEmpty ||
+                                            p.createdAt != null) ...[
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            [
+                                              if ((p.note ?? '').trim().isNotEmpty)
+                                                p.note!.trim(),
+                                              if (p.createdAt != null)
+                                                formatDateTime(p.createdAt),
+                                            ].join(' · '),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withValues(alpha: 0.55),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
                                     ),
                                   ),
                                   Text(
@@ -390,8 +417,8 @@ class _GroupScreenState extends State<GroupScreen> {
                                   ),
                                   const SizedBox(width: 4),
                                   Icon(
-                                    Icons.close,
-                                    size: 15,
+                                    Icons.chevron_right,
+                                    size: 17,
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface

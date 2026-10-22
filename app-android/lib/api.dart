@@ -19,7 +19,7 @@ import 'models.dart';
 
 const kApiBase = String.fromEnvironment(
   'API_URL',
-  defaultValue: 'https://b-lance.onrender.com',
+  defaultValue: 'https://b-lance.vercel.app',
 );
 
 class ApiException implements Exception {
@@ -266,6 +266,22 @@ class Api {
   }
 
   Future<void> logout() => saveToken(null);
+
+  /// Revoca tutti i token dell'utente e tiene vivo solo questo dispositivo.
+  Future<void> logoutAll() async {
+    final data =
+        await _req('POST', '/api/logout-all') as Map<String, dynamic>;
+    await saveToken(data['token'] as String);
+  }
+
+  // ---------------------------------------------------------------- inviti
+  Future<InvitePreview> invitePreview(String code) async {
+    final data = await _req(
+      'GET',
+      '/api/invites/${Uri.encodeComponent(code.trim().toUpperCase())}',
+    ) as Map<String, dynamic>;
+    return InvitePreview.fromJson(data);
+  }
 
   // ---------------------------------------------------------------- meta
   Future<void> loadMeta() async {

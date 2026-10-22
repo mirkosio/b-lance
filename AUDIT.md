@@ -73,17 +73,18 @@ Altri minori: nessuna anteprima del gruppo quando si entra con un codice (l'endp
 
 ## 5. Roadmap in 3 fasi
 
-### Fase 1 — "Solida" (prossime sessioni)
-- [ ] Storico con spese annullate visibili e badge
-- [ ] Tap su spesa/pagamento → dettaglio, azioni dentro il dettaglio
-- [ ] Note pagamenti visibili, date visibili
-- [ ] Valute: tutte in un selettore ricercabile
-- [ ] Validazioni non silenziose (nome gruppo vuoto, email, password)
-- [ ] Tema chiaro/scuro manuale
-- [ ] Sessioni con scadenza (30 giorni) + logout globale
-- [ ] Limite tentativi login/registrazione su DB
-- [ ] API gestione membri/ruoli (parità col sito)
-- [ ] Smoke test widget Flutter
+### Fase 1 — "Solida" (completata il 22/10/2026)
+- [x] Storico con spese annullate visibili e badge
+- [x] Tap su spesa/pagamento → dettaglio, azioni dentro il dettaglio
+- [x] Note pagamenti visibili, date visibili
+- [x] Valute: tutte in un selettore ricercabile
+- [x] Validazioni non silenziose (nome gruppo vuoto, email, password)
+- [x] Tema chiaro/scuro manuale
+- [x] Sessioni con scadenza (30 giorni) + logout globale
+- [x] Limite tentativi login/registrazione su DB
+- [x] API gestione membri/ruoli (parità col sito)
+- [x] Smoke test widget Flutter (11 test)
+- [x] Anteprima del gruppo prima di entrare con un codice
 
 ### Fase 2 — "Bella" (redesign con ui-ux-promax)
 - [ ] Design tokens in codice (colori, tipografia bundled Inter+Calistoga, spazi, raggi)

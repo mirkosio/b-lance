@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../models.dart';
+import '../theme_controller.dart';
 import '../ui.dart';
+import '../widgets/currency_picker.dart';
 import 'group_screen.dart';
 import 'login_screen.dart';
 
@@ -36,90 +38,97 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _newGroup() async {
-    final name = TextEditingController();
-    String currency = 'EUR';
-    final ok = await showDialog<bool>(
+    final created = await showModalBottomSheet<GroupSummary>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => _NewGroupSheet(api: widget.api),
+    );
+    if (created == null || !mounted) return;
+    _reload();
+    _openGroup(created);
+  }
+
+  Future<void> _joinGroup() async {
+    final code = TextEditingController();
+    String? error;
+    final search = await showDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setD) => AlertDialog(
-          title: const Text('Nuovo gruppo'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: name,
-                autofocus: true,
-                decoration: const InputDecoration(labelText: 'Nome (es. Vacanza, Casa)'),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                initialValue: currency,
-                decoration: const InputDecoration(labelText: 'Valuta del gruppo'),
-                items: [
-                  for (final c in Meta.currencies.take(20))
-                    DropdownMenuItem(value: c.code, child: Text('${c.code} — ${c.name}')),
-                ],
-                onChanged: (v) => setD(() => currency = v ?? 'EUR'),
-              ),
-            ],
+          title: const Text('Unisciti a un gruppo'),
+          content: TextField(
+            controller: code,
+            autofocus: true,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              labelText: 'Codice di invito',
+              hintText: 'Es. K7M2QX9P',
+              errorText: error,
+            ),
+            onSubmitted: (_) {
+              final c = code.text.trim();
+              if (c.isEmpty) {
+                setD(() => error = 'Scrivi il codice che ti hanno dato');
+                return;
+              }
+              Navigator.pop(ctx, true);
+            },
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
+            FilledButton(
+              style: FilledButton.styleFrom(minimumSize: const Size(100, 44)),
+              onPressed: () {
+                final c = code.text.trim();
+                if (c.isEmpty) {
+                  setD(() => error = 'Scrivi il codice che ti hanno dato');
+                  return;
+                }
+                Navigator.pop(ctx, true);
+              },
+              child: const Text('Cerca'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (search != true) return;
+    final value = code.text.trim().toUpperCase();
+    try {
+      // Prima mostro di quale gruppo si tratta: niente ingressi alla cieca.
+      final preview = await widget.api.invitePreview(value);
+      if (!mounted) return;
+      final join = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(preview.name),
+          content: Text(
+            '${preview.memberCount} ${preview.memberCount == 1 ? 'membro' : 'membri'}'
+            ' · valuta ${preview.baseCurrency}\n\nVuoi entrare in questo gruppo?',
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
             FilledButton(
               style: FilledButton.styleFrom(minimumSize: const Size(100, 44)),
               onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Crea'),
+              child: const Text('Entra'),
             ),
           ],
         ),
-      ),
-    );
-    if (ok != true || name.text.trim().isEmpty) return;
-    try {
-      final g = await widget.api.createGroup(name.text.trim(), currency);
+      );
+      if (join != true) return;
+      final g = await widget.api.joinGroup(value);
       if (!mounted) return;
       _reload();
       _openGroup(g);
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
-    }
-  }
-
-  Future<void> _joinGroup() async {
-    final code = TextEditingController();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Unisciti a un gruppo'),
-        content: TextField(
-          controller: code,
-          autofocus: true,
-          textCapitalization: TextCapitalization.characters,
-          decoration: const InputDecoration(
-            labelText: 'Codice di invito',
-            hintText: 'Es. K7M2QX9P',
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
-          FilledButton(
-            style: FilledButton.styleFrom(minimumSize: const Size(100, 44)),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Unisciti'),
-          ),
-        ],
-      ),
-    );
-    if (ok != true || code.text.trim().isEmpty) return;
-    try {
-      final g = await widget.api.joinGroup(code.text.trim());
+    } catch (e) {
       if (!mounted) return;
-      _reload();
-      _openGroup(g);
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(describeError(e))));
     }
   }
 
@@ -141,10 +150,14 @@ class _HomeScreenState extends State<HomeScreen> {
           PopupMenuButton<String>(
             onSelected: (v) {
               if (v == 'join') _joinGroup();
+              if (v == 'theme') showThemePicker(context);
               if (v == 'logout') _logout();
             },
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'join', child: Text('Unisciti con un codice')),
+              PopupMenuItem(value: 'theme', child: Text('Tema')),
+              PopupMenuDivider(),
+              PopupMenuItem(enabled: false, child: Text('Versione $kAppVersion')),
               PopupMenuItem(value: 'logout', child: Text('Esci')),
             ],
           ),
@@ -355,6 +368,144 @@ class _ErrorBox extends StatelessWidget {
           label: const Text('Riprova'),
         ),
       ],
+    );
+  }
+}
+
+/// Foglio "Nuovo gruppo": nome + valuta con ricerca, errori visibili.
+class _NewGroupSheet extends StatefulWidget {
+  const _NewGroupSheet({required this.api});
+
+  final Api api;
+
+  @override
+  State<_NewGroupSheet> createState() => _NewGroupSheetState();
+}
+
+class _NewGroupSheetState extends State<_NewGroupSheet> {
+  final _name = TextEditingController();
+  String _currency = 'EUR';
+  String? _error;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    super.dispose();
+  }
+
+  String get _currencyLabel {
+    final c = Meta.byCode(_currency);
+    return c == null ? _currency : '${c.code} · ${c.name}';
+  }
+
+  Future<void> _pickCurrency() async {
+    final code = await showCurrencyPicker(
+      context,
+      currencies: Meta.currencies,
+      selected: _currency,
+      title: 'Valuta del gruppo',
+    );
+    if (code != null && mounted) setState(() => _currency = code);
+  }
+
+  Future<void> _create() async {
+    final name = _name.text.trim();
+    if (name.isEmpty) {
+      setState(() => _error = 'Dai un nome al gruppo (es. Vacanza, Casa)');
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final g = await widget.api.createGroup(name, _currency);
+      if (!mounted) return;
+      Navigator.pop(context, g);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = e.message;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _busy = false;
+        _error = describeError(e);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 14),
+                decoration: BoxDecoration(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+            const Text('Nuovo gruppo',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _name,
+              autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
+              onChanged: (_) {
+                if (_error != null) setState(() => _error = null);
+              },
+              decoration: InputDecoration(
+                labelText: 'Nome (es. Vacanza, Casa)',
+                errorText: _error,
+              ),
+            ),
+            const SizedBox(height: 12),
+            InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: _busy ? null : _pickCurrency,
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Valuta del gruppo',
+                  suffixIcon: Icon(Icons.unfold_more, size: 20),
+                ),
+                child: Text(_currencyLabel),
+              ),
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: _busy ? null : _create,
+              child: _busy
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Crea gruppo'),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

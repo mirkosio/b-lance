@@ -112,6 +112,7 @@ class Expense {
   const Expense({
     required this.id,
     required this.description,
+    required this.category,
     required this.amountMinor,
     required this.currency,
     required this.baseAmountMinor,
@@ -122,10 +123,14 @@ class Expense {
     required this.createdAt,
     required this.splitMethod,
     required this.shares,
+    required this.voided,
+    this.voidedAt,
+    this.fxRate,
   });
 
   final int id;
   final String description;
+  final String category;
   final int amountMinor;
   final String currency;
   final int baseAmountMinor;
@@ -137,9 +142,17 @@ class Expense {
   final String splitMethod;
   final List<Share> shares;
 
+  /// Annullata: resta nello storico, non conta nei saldi.
+  final bool voided;
+  final String? voidedAt;
+
+  /// Tasso usato al momento del registro (1 unita' di currency in base).
+  final String? fxRate;
+
   factory Expense.fromJson(Map<String, dynamic> j) => Expense(
         id: j['id'] as int,
         description: j['description'] as String,
+        category: j['category'] as String? ?? 'other',
         amountMinor: (j['amount_minor'] as num).toInt(),
         currency: j['currency'] as String,
         baseAmountMinor: (j['base_amount_minor'] as num).toInt(),
@@ -152,6 +165,9 @@ class Expense {
         shares: (j['shares'] as List<dynamic>? ?? const [])
             .map((s) => Share.fromJson(s as Map<String, dynamic>))
             .toList(),
+        voided: j['voided_at'] != null,
+        voidedAt: j['voided_at'] as String?,
+        fxRate: j['fx_rate'] as String?,
       );
 }
 
@@ -177,6 +193,7 @@ class Payment {
     required this.amountMinor,
     required this.currency,
     required this.note,
+    this.createdAt,
   });
 
   final int id;
@@ -187,6 +204,7 @@ class Payment {
   final int amountMinor;
   final String currency;
   final String? note;
+  final String? createdAt;
 
   factory Payment.fromJson(Map<String, dynamic> j) => Payment(
         id: j['id'] as int,
@@ -197,6 +215,7 @@ class Payment {
         amountMinor: (j['amount_minor'] as num).toInt(),
         currency: j['currency'] as String? ?? 'EUR',
         note: j['note'] as String?,
+        createdAt: j['created_at'] as String?,
       );
 }
 
@@ -211,6 +230,25 @@ class Transfer {
         payerId: j['payer_id'] as int,
         payeeId: j['payee_id'] as int,
         amountMinor: (j['amount_minor'] as num).toInt(),
+      );
+}
+
+/// Anteprima di un invito: mostra il gruppo prima di entrarci.
+class InvitePreview {
+  const InvitePreview({
+    required this.name,
+    required this.baseCurrency,
+    required this.memberCount,
+  });
+
+  final String name;
+  final String baseCurrency;
+  final int memberCount;
+
+  factory InvitePreview.fromJson(Map<String, dynamic> j) => InvitePreview(
+        name: j['name'] as String? ?? '?',
+        baseCurrency: j['base_currency'] as String? ?? 'EUR',
+        memberCount: (j['member_count'] as num?)?.toInt() ?? 0,
       );
 }
 
