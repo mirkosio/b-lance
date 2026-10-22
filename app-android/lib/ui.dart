@@ -37,6 +37,21 @@ Duration motionDuration(BuildContext context, [int ms = 200]) {
   return reduce ? Duration.zero : Duration(milliseconds: ms);
 }
 
+/// Transizione di pagina breve, azzerata con "riduci animazioni".
+Route<T> appRoute<T>(BuildContext context, WidgetBuilder builder) {
+  final reduce = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
+  final duration = reduce ? Duration.zero : const Duration(milliseconds: 240);
+  return PageRouteBuilder<T>(
+    transitionDuration: duration,
+    reverseTransitionDuration: duration,
+    pageBuilder: (ctx, _, _) => builder(ctx),
+    transitionsBuilder: (ctx, animation, _, child) => FadeTransition(
+      opacity: animation.drive(CurveTween(curve: Curves.easeOutCubic)),
+      child: child,
+    ),
+  );
+}
+
 /// Feedback aptico leggero: selezione (tab, chip).
 void hapticTap() => HapticFeedback.selectionClick();
 
