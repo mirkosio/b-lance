@@ -1,4 +1,4 @@
-/* B-Lance — design system v3 "carta calda e salvia"
+/* b-lance — design system v3 "carta calda e salvia"
    Palette umana: carta avorio, inchiostro verde, salvia offuscato (#5f8d6e)
    come marca. Tema chiaro + scuro (toggle, rispetta prefers-color-scheme).
    Gradienti dosati: solo su marchio, CTA e hero (mai su dati o liste).
@@ -118,7 +118,10 @@ a:hover { text-decoration: underline; }
   padding: 6px 10px 16px;
 }
 .brand:hover { text-decoration: none; }
-.brand .mark img { width: 74%; height: 74%; display: block; }
+.mark img { width: 74%; height: 74%; display: block; }
+.mk-dark { display: none; }
+:root[data-theme="dark"] .mk-light { display: none; }
+:root[data-theme="dark"] .mk-dark { display: block; }
 .brand .mark {
   width: 34px;
   height: 34px;

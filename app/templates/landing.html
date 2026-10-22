@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}B-Lance — dividi le spese con amici{% endblock %}
+{% block title %}b-lance — dividi le spese con amici{% endblock %}
 {% block content %}
 <section class="hero">
   <div>
@@ -88,12 +88,13 @@
 
 <div class="card" style="text-align:center">
   <div class="section-title" style="justify-content:center">
-    <span><svg width="20" height="20" style="vertical-align:-4px;color:var(--gold)"><use href="#i-scale"></use></svg>
+    <span><img class="mk-light" src="/static/logo-mark.svg" width="20" height="20" style="vertical-align:-4px" alt=""><img class="mk-dark" src="/static/logo-mark-inverse.svg" width="20" height="20" style="vertical-align:-4px" alt="">
       Preciso al centesimo, sempre</span>
   </div>
   <p class="muted small" style="max-width:56ch;margin:0 auto">
     Niente conti che non tornano: gli importi sono interi, zero arrotondamenti
-    casuali. Funziona anche sul telefono, installabile come app.
+    casuali. C'è l'app Android nativa: stessa precisione, senza passare dal
+    browser.
   </p>
 </div>
 {% endblock %}

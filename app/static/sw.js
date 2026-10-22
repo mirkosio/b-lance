@@ -1,4 +1,4 @@
-/* B-Lance service worker.
+/* b-lance service worker.
  *
  * Strategia: NETWORK FIRST per tutto (pagine E asset), cache come fallback.
  *
@@ -56,7 +56,7 @@ async function networkFirst(req) {
     const landing = await caches.match("/");
     if (landing) return landing;
     return new Response(
-      "<!doctype html><meta charset=utf-8><body style='background:#f5f4ef;color:#242b27;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center'><div><h1>Sei offline</h1><p>B-Lance ha bisogno di connessione per i saldi. Riprova.</p></div></body>",
+      "<!doctype html><meta charset=utf-8><body style='background:#f5f4ef;color:#242b27;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;text-align:center'><div><h1>Sei offline</h1><p>b-lance ha bisogno di connessione per i saldi. Riprova.</p></div></body>",
       { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }
     );
   }

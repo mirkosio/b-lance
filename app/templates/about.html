@@ -1,9 +1,19 @@
 {% extends "base.html" %}
 {% block title %}Informazioni — b-lance{% endblock %}
 {% block content %}
+{% if not user %}
+<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px">
+  <a href="/" class="brand" style="padding:0">
+    <span class="mark"><img src="/static/logo-mark-inverse.svg" alt=""></span>
+    <span class="wm">b-<em>lance</em></span>
+  </a>
+  <a class="btn sm ghost" href="/">Apri b-lance</a>
+</div>
+{% endif %}
 <section class="card">
   <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-    <img src="/static/logo-mark.svg" width="64" height="64" alt="Marchio b-lance">
+    <img class="mk-light" src="/static/logo-mark.svg" width="64" height="64" alt="Marchio b-lance">
+    <img class="mk-dark" src="/static/logo-mark-inverse.svg" width="64" height="64" alt="">
     <div>
       <div class="section-title" style="margin:0;font-size:1.45rem">
         <span class="wm">b-<em style="font-style:normal;color:var(--primary)">lance</em></span>
