@@ -119,6 +119,7 @@ a:hover { text-decoration: underline; }
   padding: 6px 10px 16px;
 }
 .brand:hover { text-decoration: none; }
+.wm { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.02em; }
 .mark img { width: 74%; height: 74%; display: block; }
 .mk-dark { display: none; }
 :root[data-theme="dark"] .mk-light { display: none; }
