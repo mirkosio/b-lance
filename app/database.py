@@ -115,6 +115,22 @@ def _migrate() -> None:
                     "ADD COLUMN session_version INTEGER NOT NULL DEFAULT 0"
                 )
             )
+    if "handle" not in user_columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN handle VARCHAR(30)"))
+            conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_handle "
+                    "ON users (handle)"
+                )
+            )
+
+    expense_columns = {c["name"] for c in inspect(engine).get_columns("expenses")}
+    if "updated_at" not in expense_columns:
+        with engine.begin() as conn:
+            conn.execute(
+                text("ALTER TABLE expenses ADD COLUMN updated_at TIMESTAMP")
+            )
 
 
 def init_db(retries: int = 5, delay: float = 2.0) -> None:

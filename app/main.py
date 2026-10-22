@@ -17,7 +17,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from urllib.parse import quote, urlsplit
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
+from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -27,6 +27,7 @@ from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 from sqlalchemy.orm import Session, selectinload
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from .account import anonymize_user
 from .api import router as api_router
 from .auth import (
     create_session_token,
@@ -36,10 +37,13 @@ from .auth import (
     verify_password,
 )
 from .core.currencies import is_valid_currency, sorted_currencies
+from .core.categories import CATEGORIES, category_label, clean_category
 from .core.money import MoneyError, format_amount, parse_user_amount
+from .core.recurring import materialize_due
 from .core.splitting import SplitMethod, compute_shares
 from .database import get_db, init_db
-from .models import Expense, Group, GroupMember, Payment, Share, User
+from .export import group_csv, group_pdf
+from .models import Expense, Group, GroupMember, Payment, RecurringExpense, Share, User
 from .permissions import (
     ALL_PERMS,
     EDITABLE_ROLES,
@@ -256,10 +260,10 @@ async def assetlinks():
             "relation": ["delegate_permission/common.handle_all_urls"],
             "target": {
                 "namespace": "android_app",
-                "package_name": "com.onrender.b_lance.twa",
+                "package_name": "com.mirkosio.blance",
                 "sha256_cert_fingerprints": [
-                    # Firma reale dell'APK (keystore bubblewrap android.keystore).
-                    "90:39:8F:2C:B5:10:B8:46:90:4C:C7:2B:36:D7:8C:01:C7:FC:F2:23:BA:F8:AB:BD:B4:2F:95:08:0D:C2:C8:0A"
+                    # Firma reale dell'APK (keystore b-lance).
+                    "9F:D8:69:2E:7F:92:8E:B9:07:5D:5F:47:C9:F5:76:A7:45:A7:5B:E7:5C:6E:76:19:49:A2:49:84:6D:E2:F0:3C"
                 ],
             },
         }
@@ -279,6 +283,8 @@ def _jinja_filters() -> None:
     templates.env.globals["no_rate_codes"] = sorted(
         c for c in CURRENCIES if c != "EUR" and c not in RATES_VS_EUR
     )
+    templates.env.globals["categories"] = CATEGORIES
+    templates.env.globals["category_label"] = category_label
 
 
 _jinja_filters()
@@ -401,6 +407,7 @@ def home(request: Request, user: User | None = Depends(current_user), db: Sessio
     # Ritorna {currency: net_minor} così il template mostra ogni valuta.
     net_by_currency: dict[str, int] = {}
     for g in groups:
+        materialize_due(db, g.id)
         view = compute_balances(db, g)
         for m in view.members:
             if m.user_id == user.id:
@@ -536,6 +543,110 @@ def logout():
     return resp
 
 
+# ---------------------------------------------------------------- informazioni
+@app.get("/about")
+def about_page(
+    request: Request,
+    user: User | None = Depends(current_user),
+):
+    return templates.TemplateResponse(
+        request, "about.html", {"request": request, "user": user}
+    )
+
+
+# ---------------------------------------------------------------- account
+@app.get("/account")
+def account_page(
+    request: Request,
+    ok: str = Query(""),
+    err: str = Query(""),
+    user: User = Depends(require_user),
+):
+    return templates.TemplateResponse(
+        request,
+        "account.html",
+        {"request": request, "user": user, "ok": bool(ok), "err": err},
+    )
+
+
+@app.post("/account")
+def account_update(
+    request: Request,
+    name: str = Form(...),
+    color: str = Form(...),
+    handle: str = Form(""),
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    import re
+
+    clean_name = name.strip()
+    clean_handle = handle.strip().lower().lstrip("@") or None
+    clean_color = color.strip().upper()
+    error = None
+    if not 1 <= len(clean_name) <= 60:
+        error = "Il nome deve avere da 1 a 60 caratteri."
+    elif clean_handle and not re.fullmatch(r"[a-z0-9_]{3,20}", clean_handle):
+        error = "Handle: 3-20 caratteri, lettere minuscole, numeri o _."
+    elif not re.fullmatch(r"#[0-9A-F]{6}([0-9A-F]{2})?", clean_color):
+        error = "Colore non valido (es. #5F8D6E)."
+    elif clean_handle and db.scalar(
+        select(User).where(User.handle == clean_handle, User.id != user.id)
+    ):
+        error = f"@{clean_handle} è già in uso."
+    if error:
+        return templates.TemplateResponse(
+            request,
+            "account.html",
+            {"request": request, "user": user, "error": error},
+            status_code=400,
+        )
+    user.name = clean_name
+    user.color = clean_color
+    user.handle = clean_handle
+    db.commit()
+    return RedirectResponse("/account?ok=1", status_code=303)
+
+
+@app.post("/account/password")
+def account_password(
+    current: str = Form(...),
+    new: str = Form(...),
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    if not verify_password(current, user.password_hash):
+        return RedirectResponse(
+            "/account?err=Password+attuale+errata", status_code=303
+        )
+    if len(new) < 6:
+        return RedirectResponse(
+            "/account?err=La+nuova+password+deve+avere+almeno+6+caratteri",
+            status_code=303,
+        )
+    user.password_hash = hash_password(new)
+    user.session_version += 1
+    db.commit()
+    resp = RedirectResponse("/account?ok=1", status_code=303)
+    resp.set_cookie(
+        SESSION_COOKIE,
+        create_session_token(user.id, user.session_version),
+        httponly=True,
+        samesite="lax",
+    )
+    return resp
+
+
+@app.post("/account/delete")
+def account_delete(
+    user: User = Depends(require_user), db: Session = Depends(get_db)
+):
+    anonymize_user(db, user)
+    resp = RedirectResponse("/", status_code=303)
+    resp.delete_cookie(SESSION_COOKIE)
+    return resp
+
+
 # ---------------------------------------------------------------- gruppi
 @app.get("/groups/new")
 def new_group_form(request: Request, user: User = Depends(require_user)):
@@ -576,11 +687,13 @@ def create_group(
 def group_detail(
     request: Request,
     group_id: int,
+    q: str = Query(""),
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
     group = _get_group_for_user(db, group_id, user)
     member = _member_row(db, group_id, user)
+    materialize_due(db, group.id)
     view = compute_balances(db, group)
 
     expenses = db.scalars(
@@ -589,10 +702,19 @@ def group_detail(
         .where(Expense.group_id == group_id, Expense.voided_at.is_(None))
         .order_by(Expense.created_at.desc())
     ).all()
+    needle = q.strip().lower()
     for e in expenses:
         e.payer_name = next(
             (m.name for m in view.members if m.user_id == e.paid_by), "?"
         )
+    if needle:
+        expenses = [
+            e
+            for e in expenses
+            if needle in e.description.lower()
+            or needle in e.payer_name.lower()
+            or needle in e.category.lower()
+        ]
 
     payments = db.scalars(
         select(Payment)
@@ -602,6 +724,14 @@ def group_detail(
     for p in payments:
         p.from_name = next((m.name for m in view.members if m.user_id == p.from_user), "?")
         p.to_name = next((m.name for m in view.members if m.user_id == p.to_user), "?")
+    if needle:
+        payments = [
+            p
+            for p in payments
+            if needle in (p.note or "").lower()
+            or needle in p.from_name.lower()
+            or needle in p.to_name.lower()
+        ]
 
     return templates.TemplateResponse(
         request,
@@ -613,6 +743,7 @@ def group_detail(
             "view": view,
             "expenses": expenses,
             "payments": payments,
+            "query": q.strip(),
             "split_methods": list(SplitMethod),
             "currencies": sorted_currencies(),
             # Permessi di CHI STA GUARDANDO la pagina (per mostrare/nascondere).
@@ -621,6 +752,68 @@ def group_detail(
             "is_owner": member.role == "owner",
         },
     )
+
+
+@app.get("/groups/{group_id}/export.csv")
+def export_group_csv(
+    group_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    group = _get_group_for_user(db, group_id, user)
+    return Response(
+        content=group_csv(db, group),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="b-lance-gruppo-{group.id}.csv"'
+        },
+    )
+
+
+@app.get("/groups/{group_id}/export.pdf")
+def export_group_pdf(
+    group_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    group = _get_group_for_user(db, group_id, user)
+    return Response(
+        content=group_pdf(db, group),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="b-lance-gruppo-{group.id}.pdf"'
+        },
+    )
+
+
+@app.post("/groups/{group_id}/invite-handle")
+def invite_by_handle(
+    request: Request,
+    group_id: int,
+    handle: str = Form(...),
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    group, _actor = _require_perm(db, group_id, user, "members_manage")
+    import re
+
+    clean = handle.strip().lower().lstrip("@")
+    if not re.fullmatch(r"[a-z0-9_]{3,20}", clean):
+        return _back_with_err(request, "Handle non valido: 3-20 caratteri.")
+    target = db.scalar(select(User).where(User.handle == clean))
+    if target is None:
+        return _back_with_err(request, f"Nessuno con @{clean}.")
+    existing = db.scalar(
+        select(GroupMember).where(
+            GroupMember.group_id == group.id,
+            GroupMember.user_id == target.id,
+        )
+    )
+    if existing is not None:
+        return _back_with_err(request, f"@{clean} è già nel gruppo.")
+    db.add(GroupMember(group_id=group.id, user_id=target.id, role="member"))
+    db.commit()
+    return RedirectResponse(f"/groups/{group.id}?ok=Persona+aggiunta", status_code=303)
 
 
 @app.post("/groups/{group_id}/invite")
@@ -735,6 +928,9 @@ def delete_group(
         raise HTTPException(
             status_code=403, detail="Solo il creatore del gruppo può eliminarlo"
         )
+    db.query(RecurringExpense).filter(
+        RecurringExpense.group_id == group.id
+    ).delete(synchronize_session=False)
     db.delete(group)  # cascata ORM: membri, quote, spese, pagamenti
     db.commit()
     return RedirectResponse("/", status_code=303)
@@ -870,6 +1066,7 @@ async def add_expense(
     members: list[int] = Form(...),
     currency: str = Form(""),
     fx_rate: str = Form(""),
+    category: str = Form("other"),
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
@@ -947,6 +1144,7 @@ async def add_expense(
             group_id=group.id,
             paid_by=paid_by,
             description=description.strip(),
+            category=clean_category(category),
             amount_minor=amount_minor,
             currency=exp_code,
             base_amount_minor=base_amount_minor,

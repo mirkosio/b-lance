@@ -1,121 +1,189 @@
-# B-Lance
+<p align="center">
+  <img src="app/static/logo-mark.svg" width="96" alt="Marchio b-lance">
+</p>
 
-Dividi le spese con gli amici: weekend, gite, vacanze. Aggiungi chi ha pagato,
-dividi, e vedi esattamente chi deve cosa. Niente discussioni, niente fogli Excel.
+<h1 align="center">b-lance</h1>
 
-B-Lance = "balance" (bilancio). Bilanci sempre in equilibrio, al centesimo.
+<p align="center"><b>Dividi le spese, non le amicizie.</b><br>
+App Android nativa + sito web per tenere i conti di gruppo, al centesimo.</p>
 
-## Perché esiste
+---
 
-Le app esistenti hanno problemi reali (recensioni vere):
+## Cos'è
 
-- **Splitwise**: stagnante, lento, ads.
-- **Tricount**: "i conti non tornavano e non capivo perché".
-- **Stippl**: non puoi segnare che 2 su 4 hanno già pagato.
-- **Settle Up**: nessuna integrazione di pagamento, quando chiudi il debito non puoi pagare.
+b-lance è un'app per dividere spese tra amici, coinquilini e compagni di viaggio.
+Vacanze, cene, affitti, regali: ogni spesa resta nello storico e ogni saldo si
+ricalcola da zero. Non serve un foglio Excel e non serve fidarsi dei
+"te lo ridò dopo".
 
-B-Lance risolve i punti precisi:
+Il nome viene da **balance**: il conto deve sempre tornare.
 
-1. **Importi in unità intere, mai float.** Zero arrotondamenti casuali. I conti tornano sempre.
-2. **Pagamento parziale reale.** "Ha saldato 20 su 47,50". Registri pagamenti a rate.
-3. **Numero minimo di bonifici.** Ti diciamo chi paga chi con il minor numero di trasferimenti.
-4. **Annullamento, non cancellazione.** Storico immutabile: le spese annullate restano tracciate.
-5. **125 valute.** Ogni valuta con il numero corretto di decimali (JPY 0, KWD 3, EUR 2).
-6. **Multi-valuta vera.** Paga in baht, bilancia in euro: conversione con snapshot del tasso al registro.
+## Cosa c'è dentro
 
-## Come funziona il motore
-
-Il cuore è in `app/core/`, tutto in unità MINORI intere (centesimi/yen/millesimi):
-
-- `money.py` — aritmetica in unità intere con `Decimal`. Parsing, formattazione e roundtrip con exponent 0/2/3.
-- `currencies.py` — 125 valute ISO 4217 con symbol e exponent.
-- `exchange.py` — tassi vs EUR, conversione incrociata via EUR, override manuale. Nessuna API esterna: deterministico e offline.
-- `splitting.py` — quote esatte. Equa / importi esatti / percentuale, con distribuzione del resto (largest remainder).
-- `settlement.py` — semplificazione debiti. Greedy: bilancia massimi creditori e debitori. Massimo (n-1) trasferimenti.
-
-I saldi si ricalcolano sempre dallo storico (spese + quote + pagamenti). Le spese
-multi-valuta salvano `base_amount_minor` già convertito al registro: nessun
-ricalcolo runtime, nessuno storico che cambia se cambiano i tassi.
-
-## Avvio rapido
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-
-uvicorn app.main:app --reload
-```
-
-Poi apri http://127.0.0.1:8000
-
-## Test
-
-```bash
-pytest tests/ -q
-```
-
-55 test: flusso end-to-end (registrazione, gruppo, spesa, saldo, pagamento
-parziale, annullamento), multi-valuta (THB→EUR), split esatto/percentuale,
-validazioni di sicurezza, e test property-based (hypothesis) sul motore.
-
-## Mobile (PWA)
-
-B-Lance è una PWA installabile:
-
-- `manifest.webmanifest` — nome, icone, standalone, shortcuts.
-- `static/sw.js` — cache-first per gli asset, network-first per le pagine, fallback offline.
-- Icone generate da `scripts/gen_icons.py` (monogramma B, gradiente indigo→viola).
-
-**Installazione su Android/iOS**: apri il sito → menu del browser →
-"Installa app" / "Aggiungi a schermata Home". Si apre a schermo intero come un'app nativa.
+- **Gruppi con ruoli e permessi**: owner, membri, chi può gestire spese,
+  pagamenti, membri e impostazioni.
+- **Divisione precisa**: parti uguali, importi esatti o percentuali. Gli importi
+  sono in unità minori intere (`int`), mai float. Il resto viene distribuito al
+  centesimo.
+- **Pagamenti parziali**: "ha saldato 20 su 47,50" è uno stato reale, non una
+  nota a testo.
+- **Annullamento, non cancellazione**: una spesa annullata resta nello storico,
+  barrata, e non entra nei saldi.
+- **Minimo numero di bonifici**: il motore calcola chi paga chi con il minor
+  numero di trasferimenti possibile.
+- **125 valute**: ogni valuta ha il suo exponent (JPY 0, KWD 3, EUR 2). I tassi
+  BCE vengono aggiornati ogni giorno con fallback statico; il tasso usato viene
+  salvato sulla spesa, quindi lo storico non cambia.
+- **Categorie**: 10 categorie fisse con icone, filtrabili nei movimenti.
+- **Ricerca e modifica**: ricerca globale e nel gruppo, modifica della spesa
+  con ricalcolo delle quote.
+- **Spese ricorrenti**: giornaliere, settimanali, mensili o annuali, con
+  intervallo 1/2/3/6. Il server crea la spesa alla scadenza.
+- **Export**: CSV dall'app, CSV e PDF dal sito.
+- **Inviti**: link, QR, condivisione nativa Android e aggiunta diretta tramite
+  `@handle`. Nessun caricamento della rubrica.
+- **Profilo e privacy**: nome, colore, `@handle`, cambio password, eliminazione
+  account con anonimizzazione ("Ex-membro"): email e handle spariscono, le
+  spese restano per non rompere i saldi degli altri.
+- **Tema chiaro/scuro**, font Inter + Calistoga inclusi nell'app, motion
+  discreto e rispetto di `reduce motion`.
+- **Avvio curato**: splash nativo con il marchio e loader animato (la pancia
+  del marchio oscilla come un bilanciere) durante il controllo della sessione.
+  Niente indirizzi server o dettagli tecnici a schermo.
 
 ## Stack
 
-- **Backend**: FastAPI + SQLAlchemy 2.0
-- **Frontend**: Jinja2 + Vanilla JS + CSS custom (nessun build step)
-- **DB**: SQLite in dev, PostgreSQL in prod (via `DATABASE_URL`)
-- **Auth**: sessioni cookie firmati (itsdangerous) + bcrypt
-- **Test**: pytest + hypothesis
+| Livello | Scelta |
+|---|---|
+| App | Flutter nativo Android (nessuna TWA, nessuna WebView) |
+| Backend | FastAPI + SQLAlchemy 2 |
+| Database | SQLite in locale, PostgreSQL/Neon in produzione |
+| Deploy | Vercel Python per API e sito |
+| Sito | Jinja2 + CSS/JS senza build step |
+| Auth | cookie di sessione firmati + bcrypt; token Bearer per l'app |
+| Test | pytest + hypothesis, flutter_test |
 
 ## Struttura
 
 ```
 app/
-  core/          # motore matematico puro (testato)
-    money.py
-    currencies.py
-    exchange.py
-    splitting.py
-    settlement.py
-  models.py      # ORM
-  services.py    # calcolo saldi da storico
-  auth.py        # hash + sessioni
-  main.py        # rotte FastAPI
-  templates/     # pagine Jinja2
-  static/        # CSS, PWA (manifest, sw, icone)
-scripts/
-  gen_icons.py   # genera le icone PNG
-tests/
-  test_math.py      # property-based sul motore
-  test_currency.py  # valute, cambio, multi-valuta, sicurezza
-  test_app.py       # end-to-end flusso utente
+  api.py                 # API JSON usata dall'app
+  main.py                # sito, pagine HTML, health, assetlinks
+  models.py              # utenti, gruppi, spese, quote, pagamenti, ricorrenze
+  database.py            # engine + migrazioni idempotenti
+  account.py             # anonimizzazione account condivisa API/sito
+  export.py              # CSV e PDF del gruppo
+  core/
+    money.py             # aritmetica in unità minori
+    currencies.py        # 125 valute ISO 4217
+    exchange.py          # tassi BCE + fallback + override manuale
+    splitting.py         # quote esatte e resto
+    settlement.py        # semplificazione debiti
+    categories.py        # categorie fisse
+    recurring.py         # materializzazione delle ricorrenze
+  templates/             # pagine Jinja2
+  static/                # CSS, icone, marchio SVG, service worker
+app-android/             # progetto Flutter
+design-system/b-lance/   # design system (MASTER.md)
+scripts/                 # icone, server locale, deploy
+tests/                   # suite backend
 ```
 
-## Sicurezza
+## Avvio locale
 
-- Password: bcrypt (niente hash deboli).
-- Sessioni: cookie firmati httpOnly.
-- Validazione membri: chi paga e i partecipanti di un pagamento devono essere
-  membri del gruppo (niente id estranei).
-- Accesso gruppi: se non sei membro, 404 (non riveli l'esistenza).
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Apri `http://127.0.0.1:8000`.
+
+Variabili utili:
+
+```bash
+DATABASE_URL=postgresql://...   # default: sqlite:///./b-lance.db
+SECRET_KEY=...                  # obbligatoria in produzione
+BLANCE_FX_LIVE=0                # disattiva la rete BCE (test/offline)
+```
+
+## App Android
+
+```bash
+cd app-android
+flutter pub get
+flutter test
+flutter analyze
+
+export PATH=/home/mirkosio/flutter/bin:$PATH
+export ANDROID_HOME=/home/mirkosio/android-sdk
+export JAVA_HOME=/home/mirkosio/.bubblewrap/jdk/jdk-17.0.11+9
+flutter build apk --release
+```
+
+L'APK esce in `app-android/build/app/outputs/flutter-apk/app-release.apk`.
+La versione corrente è **1.2.0** (`versionCode 12`).
+
+Link diretti: `https://b-lance.vercel.app/join/CODICE` aprono l'app tramite
+App Links. La verifica dipende da `/.well-known/assetlinks.json` con package
+`com.mirkosio.blance` e fingerprint SHA-256 del keystore di release.
+
+## Test
+
+```bash
+# backend (113 test)
+.venv/bin/python -m pytest tests/ -q
+
+# app (18 test)
+cd app-android && flutter test
+```
+
+I test backend usano SQLite e disattivano la rete BCE (`tests/conftest.py`) per
+essere deterministici. La suite copre: flusso completo, multi-valuta, split
+esatto/percentuale, annullamenti, permessi, sessioni, movimenti globali,
+account e anonimizzazione, handle, categorie, modifica spesa, ricorrenze,
+export CSV/PDF, assetlinks.
 
 ## Deploy
 
+Backend e sito su Vercel:
+
 ```bash
-docker build -t b-lance .
-docker run -p 8000:8000 -e DATABASE_URL=postgresql://... b-lance
+npx vercel --prod --yes
 ```
 
-In produzione: `DATABASE_URL` su PostgreSQL e una `SECRET_KEY` forte da env var
-(oggi in `app/auth.py`, da spostare su variabile d'ambiente).
+Health check: `https://b-lance.vercel.app/health`.
+Le release APK sono su
+[github.com/mirkosio/b-lance/releases](https://github.com/mirkosio/b-lance/releases).
+
+## Stato (ottobre 2026)
+
+Fase 1 "Solida", Fase 2 "Bella" e Fase 3 "Completa" sono implementate e in
+produzione.
+
+Non ancora dentro, per scelta o perché mancano credenziali esterne:
+
+- **Push Firebase**: serve un progetto Firebase e `google-services.json`.
+- **Sentry**: serve il DSN del progetto.
+- **Recupero password via email**: serve un provider email (Resend/SMTP).
+  Il cambio password da loggato è già disponibile.
+- **i18n IT/EN**: l'interfaccia è in italiano; la traduzione completa è
+  rimandata per non fare mezzo lavoro.
+
+Dettagli tecnici e decisioni: [`AUDIT.md`](AUDIT.md),
+[`OPERAZIONE.md`](OPERAZIONE.md) e
+[`design-system/b-lance/MASTER.md`](design-system/b-lance/MASTER.md).
+
+## Privacy
+
+- Nessuna rubrica caricata.
+- Nessuna pubblicità, nessuna vendita di dati.
+- Gli errori non mostrano mai JSON o pagine tecniche al browser.
+- Eliminando l'account il profilo viene anonimizzato, non cancellato in modo
+  da rompere i saldi dei gruppi.
+
+## Informazioni
+
+Pagina pubblica: `https://b-lance.vercel.app/about`.
+Problemi e idee: [github.com/mirkosio/b-lance/issues](https://github.com/mirkosio/b-lance/issues).

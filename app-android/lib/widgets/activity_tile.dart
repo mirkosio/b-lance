@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../api.dart';
+import '../categories.dart';
 import '../models.dart';
 import '../ui.dart';
 
@@ -16,6 +17,7 @@ class ActivityTile extends StatelessWidget {
     final expo = Meta.exponentOf(item.currency);
     final muted = mutedOn(context);
     final isPayment = item.isPayment;
+    final cat = categoryInfo(item.category);
     final parts = [
       item.groupName,
       if (item.subtitle.trim().isNotEmpty) item.subtitle.trim(),
@@ -37,22 +39,20 @@ class ActivityTile extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color:
-                        (isPayment
-                                ? sage
-                                : Theme.of(context).colorScheme.onSurface)
-                            .withValues(alpha: 0.09),
+                    color: (isPayment ? sage : cat.color).withValues(
+                      alpha: 0.10,
+                    ),
                     borderRadius: BorderRadius.circular(13),
                   ),
                   alignment: Alignment.center,
                   child: Icon(
-                    isPayment ? Icons.swap_horiz : Icons.receipt_long_outlined,
+                    isPayment ? Icons.swap_horiz : cat.icon,
                     size: 22,
                     color: isPayment
                         ? (Theme.of(context).brightness == Brightness.dark
                               ? sage
                               : sageInk)
-                        : Theme.of(context).colorScheme.onSurface,
+                        : cat.color,
                   ),
                 ),
                 const SizedBox(width: 12),

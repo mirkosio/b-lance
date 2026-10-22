@@ -5,6 +5,7 @@ import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
 import 'theme_controller.dart';
 import 'ui.dart';
+import 'widgets/brand_loader.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,15 +51,6 @@ class _GateState extends State<_Gate> {
 
   String _phase = 'Avvio…';
   Object? _error;
-  int _round = 0;
-
-  static String get _host {
-    try {
-      return Uri.parse(kApiBase).host;
-    } catch (_) {
-      return kApiBase;
-    }
-  }
 
   @override
   void initState() {
@@ -71,15 +63,14 @@ class _GateState extends State<_Gate> {
   }
 
   Future<void> _boot() async {
-    _round++;
     setState(() {
       _error = null;
-      _phase = 'Leggo la sessione salvata…';
+      _phase = 'Preparo i tuoi conti…';
     });
     try {
       await _api.loadToken();
       if (_api.token != null) {
-        _setPhase('Parlo con $_host…');
+        _setPhase('Controllo la connessione…');
         await _api.loadMeta();
         _setPhase("Verifico l'account…");
         final user = await _api.me();
@@ -92,7 +83,7 @@ class _GateState extends State<_Gate> {
         return;
       }
     } catch (e) {
-      // Token scaduto, server vecchio, rete assente: qualsiasi cosa,
+      // Token scaduto, rete assente, risposta inattesa: qualsiasi cosa,
       // pulisco e lascio decidere all'utente (non resta appeso).
       try {
         await _api.saveToken(null);
@@ -167,15 +158,6 @@ class _GateState extends State<_Gate> {
                           .withValues(alpha: 0.6),
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Server: $_host',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurface
-                          .withValues(alpha: 0.45),
-                    ),
-                  ),
                   const SizedBox(height: 20),
                   FilledButton(
                     onPressed: () {
@@ -198,61 +180,12 @@ class _GateState extends State<_Gate> {
       );
     }
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'b-',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                  TextSpan(
-                    text: 'lance',
-                    style: TextStyle(
-                      color: Theme.of(context).brightness == Brightness.dark
-                          ? sage
-                          : sageInk,
-                    ),
-                  ),
-                ],
-              ),
-              style: const TextStyle(
-                fontFamily: 'Calistoga',
-                fontSize: 38,
-                height: 1,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 28),
-            const SizedBox(
-              width: 26,
-              height: 26,
-              child: CircularProgressIndicator(strokeWidth: 2.5, color: sage),
-            ),
-            const SizedBox(height: 18),
-            Text(
-              _phase,
-              style: TextStyle(
-                fontSize: 13,
-                color: Theme.of(context).colorScheme.onSurface
-                    .withValues(alpha: 0.6),
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              '$_host · tentativo $_round',
-              style: TextStyle(
-                fontSize: 11.5,
-                color: Theme.of(context).colorScheme.onSurface
-                    .withValues(alpha: 0.4),
-              ),
-            ),
-          ],
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: BrandLoader(phase: _phase),
+          ),
         ),
       ),
     );

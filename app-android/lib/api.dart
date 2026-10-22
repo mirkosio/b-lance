@@ -285,6 +285,54 @@ class Api {
 
   Future<void> logout() => saveToken(null);
 
+  Future<User> updateMe({
+    String? name,
+    String? color,
+    String? handle,
+    bool changeHandle = false,
+  }) async {
+    final body = <String, dynamic>{};
+    if (name != null) body['name'] = name;
+    if (color != null) body['color'] = color;
+    if (changeHandle) body['handle'] = handle;
+    final data = await _req('PATCH', '/api/me', body: body) as Map<String, dynamic>;
+    return User.fromJson(data['user'] as Map<String, dynamic>);
+  }
+
+  Future<void> changePassword({
+    required String current,
+    required String next,
+  }) async {
+    final data = await _req(
+      'POST',
+      '/api/me/password',
+      body: {'current': current, 'new': next},
+    ) as Map<String, dynamic>;
+    await saveToken(data['token'] as String);
+  }
+
+  /// Anonimizza l'account sul server e cancella il token locale.
+  Future<void> deleteAccount() async {
+    await _req('DELETE', '/api/me');
+    await saveToken(null);
+  }
+
+  Future<List<PublicUser>> searchUsers(String query) async {
+    final q = Uri.encodeQueryComponent(query.trim().replaceFirst('@', ''));
+    final data = await _req('GET', '/api/users/search?q=$q') as Map<String, dynamic>;
+    return (data['users'] as List<dynamic>)
+        .map((u) => PublicUser.fromJson(u as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<void> inviteByHandle(int groupId, String handle) async {
+    await _req(
+      'POST',
+      '/api/groups/$groupId/members',
+      body: {'handle': handle.trim().replaceFirst('@', '')},
+    );
+  }
+
   /// Revoca tutti i token dell'utente e tiene vivo solo questo dispositivo.
   Future<void> logoutAll() async {
     final data = await _req('POST', '/api/logout-all') as Map<String, dynamic>;
@@ -336,9 +384,21 @@ class Api {
   }
 
   /// Ultimi movimenti da tutti i gruppi dell'utente.
-  Future<List<ActivityItem>> activity({int limit = 40}) async {
+  Future<List<ActivityItem>> activity({
+    int limit = 40,
+    String q = '',
+    String category = '',
+    String kind = '',
+  }) async {
+    final params = <String, String>{'limit': '$limit'};
+    if (q.trim().isNotEmpty) params['q'] = q.trim();
+    if (category.isNotEmpty) params['category'] = category;
+    if (kind.isNotEmpty) params['kind'] = kind;
+    final query = params.entries
+        .map((e) => '${e.key}=${Uri.encodeQueryComponent(e.value)}')
+        .join('&');
     final data =
-        await _req('GET', '/api/activity?limit=$limit') as Map<String, dynamic>;
+        await _req('GET', '/api/activity?$query') as Map<String, dynamic>;
     return (data['items'] as List<dynamic>)
         .map((e) => ActivityItem.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -388,6 +448,7 @@ class Api {
     String splitMethod = 'even',
     String currency = '',
     String fxRate = '',
+    String category = 'other',
     Map<String, String> values = const {},
   }) async {
     final data = await _req(
@@ -401,6 +462,38 @@ class Api {
         'split_method': splitMethod,
         'currency': currency,
         'fx_rate': fxRate,
+        'category': category,
+        'values': values,
+      },
+    ) as Map<String, dynamic>;
+    return Expense.fromJson(data);
+  }
+
+  Future<Expense> editExpense(
+    int groupId,
+    int expenseId, {
+    required String description,
+    required String amount,
+    required int paidBy,
+    required List<int> members,
+    String splitMethod = 'even',
+    String currency = '',
+    String fxRate = '',
+    String category = 'other',
+    Map<String, String> values = const {},
+  }) async {
+    final data = await _req(
+      'PATCH',
+      '/api/groups/$groupId/expenses/$expenseId',
+      body: {
+        'description': description,
+        'amount': amount,
+        'paid_by': paidBy,
+        'members': members,
+        'split_method': splitMethod,
+        'currency': currency,
+        'fx_rate': fxRate,
+        'category': category,
         'values': values,
       },
     ) as Map<String, dynamic>;
@@ -409,6 +502,59 @@ class Api {
 
   Future<void> voidExpense(int groupId, int expenseId) =>
       _req('DELETE', '/api/groups/$groupId/expenses/$expenseId');
+
+  // ---------------------------------------------------------------- ricorrenti
+  Future<List<RecurringRule>> recurringRules(int groupId) async {
+    final data = await _req('GET', '/api/groups/$groupId/recurring')
+        as Map<String, dynamic>;
+    return (data['rules'] as List<dynamic>)
+        .map((r) => RecurringRule.fromJson(r as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<RecurringRule> addRecurring(
+    int groupId, {
+    required String description,
+    required String amount,
+    required int paidBy,
+    required List<int> members,
+    String splitMethod = 'even',
+    String currency = '',
+    String fxRate = '',
+    String category = 'other',
+    Map<String, String> values = const {},
+    String frequency = 'monthly',
+    int interval = 1,
+  }) async {
+    final data = await _req(
+      'POST',
+      '/api/groups/$groupId/recurring',
+      body: {
+        'description': description,
+        'amount': amount,
+        'paid_by': paidBy,
+        'members': members,
+        'split_method': splitMethod,
+        'currency': currency,
+        'fx_rate': fxRate,
+        'category': category,
+        'values': values,
+        'frequency': frequency,
+        'interval': interval,
+      },
+    ) as Map<String, dynamic>;
+    return RecurringRule.fromJson(data['rule'] as Map<String, dynamic>);
+  }
+
+  Future<void> setRecurringActive(int groupId, int ruleId, bool active) =>
+      _req(
+        'PATCH',
+        '/api/groups/$groupId/recurring/$ruleId',
+        body: {'active': active},
+      );
+
+  Future<void> deleteRecurring(int groupId, int ruleId) =>
+      _req('DELETE', '/api/groups/$groupId/recurring/$ruleId');
 
   // ---------------------------------------------------------------- pagamenti
   Future<Payment> addPayment(

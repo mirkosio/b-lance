@@ -55,6 +55,7 @@ Build e rilascio:
 ```bash
 cd app-android
 # 1) bump di version: in pubspec.yaml (version: X.Y.Z+N, N = versionCode Android)
+#    e in lib/ui.dart (kAppVersion, mostrata nel Profilo)
 # 2) build (API_URL compilato dentro):
 /home/mirkosio/flutter/bin/flutter build apk --release \
   --dart-define=API_URL=https://b-lance.vercel.app
@@ -72,12 +73,33 @@ Firma: keystore locale `app-android/android/app/upload-keystore.jks`
 
 Mai lanciare DUE build contemporaneamente: si corrompe il NDK (successo).
 
+## Marchio e icone
+
+La geometria del marchio vive in `app/static/logo-mark.svg` e in
+`app-android/lib/widgets/logo_mark.dart`. Per rigenerare PWA, favicon e launcher
+Android dallo stesso disegno:
+
+```bash
+.venv/bin/python scripts/gen_brand_assets.py
+```
+
+`scripts/gen_icons.py` resta come alias compatibile. Non modificare i PNG a
+mano: cambia la geometria e rigenera.
+
+## Dipendenze Fase 3
+
+- Backend: `reportlab==4.5.1` per il PDF del sito. Nessun'altra dipendenza nuova.
+- App: `share_plus`, `path_provider`, `qr_flutter`, `app_links`.
+- Tassi BCE: `BLANCE_FX_LIVE=0` disattiva la rete e usa la tabella statica
+  (i test lo impostano già in `tests/conftest.py`). In produzione è attiva:
+  cache 12h, fallback statico se la BCE non risponde.
+
 ## Test
 
 ```bash
-.venv/bin/python -m pytest tests/ -q           # suite locale (108 test)
+.venv/bin/python -m pytest tests/ -q           # suite locale (113 test)
 .venv/bin/python /tmp/opencode/e2e_phase1.py   # E2E produzione (Fase 1 + movimenti)
-cd app-android && flutter test                 # 14 test Dart (modelli e formati)
+cd app-android && flutter test                 # 18 test Dart (modelli, formati, Fase 3)
 ```
 
 ## Sicurezza sessioni e accessi (dalla 1.0.9)

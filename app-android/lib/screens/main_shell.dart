@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 
 import '../api.dart';
@@ -24,6 +27,82 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int _index = 0;
   int _revision = 0;
+  late User _user = widget.user;
+  final _links = AppLinks();
+  StreamSubscription<Uri>? _linkSub;
+  String? _lastLink;
+
+  @override
+  void initState() {
+    super.initState();
+    _linkSub = _links.uriLinkStream.listen(_handleLink);
+    _links.getInitialLink().then((uri) {
+      if (uri != null) _handleLink(uri);
+    });
+  }
+
+  @override
+  void dispose() {
+    _linkSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _handleLink(Uri uri) async {
+    if (_lastLink == uri.toString()) return;
+    final segments = uri.pathSegments;
+    final joinIndex = segments.indexOf('join');
+    if (joinIndex < 0 || joinIndex + 1 >= segments.length) return;
+    final code = segments[joinIndex + 1].trim().toUpperCase();
+    if (code.isEmpty) return;
+    _lastLink = uri.toString();
+    if (!mounted) return;
+    try {
+      final preview = await widget.api.invitePreview(code);
+      if (!mounted) return;
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(preview.name),
+          content: Text(
+            '${preview.memberCount} '
+            '${preview.memberCount == 1 ? 'membro' : 'membri'}'
+            ' · valuta ${preview.baseCurrency}\n\nVuoi entrare in questo gruppo?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Annulla'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Entra'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+      await widget.api.joinGroup(code);
+      if (!mounted) return;
+      hapticConfirm();
+      setState(() {
+        _index = 2;
+        _revision++;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sei entrato in "${preview.name}"')),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(describeError(e))));
+    }
+  }
 
   void _changed() => setState(() => _revision++);
 
@@ -42,7 +121,7 @@ class _MainShellState extends State<MainShell> {
         children: [
           HomeScreen(
             api: widget.api,
-            user: widget.user,
+            user: _user,
             revision: _revision,
             onChanged: _changed,
             onOpenProfile: () => _goTo(3),
@@ -59,7 +138,14 @@ class _MainShellState extends State<MainShell> {
             revision: _revision,
             onChanged: _changed,
           ),
-          ProfileScreen(api: widget.api, user: widget.user),
+          ProfileScreen(
+            api: widget.api,
+            user: _user,
+            onUserChanged: (u) => setState(() {
+              _user = u;
+              _revision++;
+            }),
+          ),
         ],
       ),
       bottomNavigationBar: DecoratedBox(

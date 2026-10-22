@@ -15,9 +15,14 @@ storico non cambia se i tassi cambiano dopo (regola del dominio money).
 
 from __future__ import annotations
 
+import os
+import time
+import urllib.request
+import xml.etree.ElementTree as ET
 from decimal import Decimal, InvalidOperation
 
-# Quanto vale 1 EUR nelle valute indicate. Vuoto -> tasso manuale obbligatorio.
+# Quanto vale 1 EUR nelle valute indicate. È il FALLBACK deterministico:
+# se la BCE non è raggiungibile (o i test disattivano la rete), si usa questo.
 # Aggiornamento manuale: sostituire i valori con quelli correnti quando serve.
 RATES_VS_EUR: dict[str, str] = {
     "USD": "1.08",
@@ -105,23 +110,96 @@ RATES_VS_EUR: dict[str, str] = {
 }
 
 
+ECB_URL = "https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
+_CACHE_SECONDS = 12 * 60 * 60
+_RETRY_SECONDS = 10 * 60
+
+_live_rates: dict[str, str] = {}
+_live_date: str | None = None
+_last_attempt: float = 0.0
+
+
 class ExchangeError(ValueError):
     """Tasso di cambio mancante o non valido."""
 
 
+def _live_enabled() -> bool:
+    return os.getenv("BLANCE_FX_LIVE", "1").strip().lower() not in ("0", "false", "no")
+
+
+def refresh_ecb_rates(force: bool = False) -> bool:
+    """Scarica i tassi giornalieri BCE. Ritorna True se ha aggiornato.
+
+    Non solleva mai: in caso di rete assente si continua col fallback statico.
+    """
+    global _live_rates, _live_date, _last_attempt
+    if not _live_enabled():
+        return False
+    now = time.time()
+    if not force and _live_rates and now - _last_attempt < _CACHE_SECONDS:
+        return False
+    if not force and _last_attempt and now - _last_attempt < _RETRY_SECONDS:
+        return False
+    _last_attempt = now
+    try:
+        request = urllib.request.Request(
+            ECB_URL, headers={"User-Agent": "B-Lance/1.2 (+https://b-lance.vercel.app)"}
+        )
+        with urllib.request.urlopen(request, timeout=3.0) as response:
+            payload = response.read(300_000)
+        root = ET.fromstring(payload)
+        rates: dict[str, str] = {"EUR": "1"}
+        date_value = None
+        for element in root.iter():
+            if not element.tag.endswith("Cube"):
+                continue
+            currency = element.attrib.get("currency")
+            rate = element.attrib.get("rate")
+            if currency and rate:
+                rates[currency.upper()] = rate
+            if element.attrib.get("time"):
+                date_value = element.attrib["time"]
+        if len(rates) < 10:
+            return False
+        _live_rates = rates
+        _live_date = date_value
+        return True
+    except Exception:
+        return False
+
+
+def current_rates() -> dict[str, str]:
+    """Tassi correnti: BCE se disponibile, altrimenti statici."""
+    refresh_ecb_rates()
+    if _live_rates:
+        merged = dict(RATES_VS_EUR)
+        merged.update(_live_rates)
+        return merged
+    return dict(RATES_VS_EUR)
+
+
+def rate_date() -> str | None:
+    return _live_date
+
+
+def rate_source() -> str:
+    return "ECB" if _live_rates else "static"
+
+
 def has_rate(code: str) -> bool:
     """True se conosciamo il tasso vs EUR per questa valuta."""
-    return (code or "").strip().upper() in RATES_VS_EUR
+    return (code or "").strip().upper() in current_rates()
 
 
 def _rate_vs_eur(code: str) -> Decimal:
     normalized = (code or "").strip().upper()
     if normalized == "EUR":
         return Decimal("1")
-    if normalized not in RATES_VS_EUR:
+    rates = current_rates()
+    if normalized not in rates:
         raise ExchangeError(f"tasso per {normalized} non disponibile, inseriscilo a mano")
     try:
-        value = Decimal(RATES_VS_EUR[normalized])
+        value = Decimal(rates[normalized])
     except InvalidOperation as exc:
         raise ExchangeError(f"tasso non valido per {normalized}") from exc
     if value <= 0:

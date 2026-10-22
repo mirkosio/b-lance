@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Informazioni — b-lance{% endblock %}
+{% block content %}
+<section class="card">
+  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <img src="/static/logo-mark.svg" width="64" height="64" alt="Marchio b-lance">
+    <div>
+      <div class="section-title" style="margin:0;font-size:1.45rem">
+        <span class="wm">b-<em style="font-style:normal;color:var(--primary)">lance</em></span>
+      </div>
+      <p class="muted" style="margin:2px 0 0">Dividi le spese, non le amicizie.</p>
+    </div>
+  </div>
+  <p style="margin-top:16px">
+    b-lance è un'app per tenere i conti di gruppo senza fogli Excel e senza
+    discussioni. Vacanze, case condivise, cene, regali: ogni spesa resta
+    tracciata e ogni saldo torna al centesimo.
+  </p>
+</section>
+
+<div class="grid cols-2">
+  <div class="card">
+    <div class="section-title">Come funziona</div>
+    <p class="muted small">
+      Gli importi sono in unità minori intere: niente float, niente centesimi
+      che spariscono. Le spese si possono dividere in parti uguali, per importo
+      o per percentuale. Il motore calcola il numero minimo di bonifici per
+      chiudere tutti i debiti.
+    </p>
+    <p class="muted small">
+      Puoi registrare pagamenti parziali ("ha saldato 20 su 47,50") e annullare
+      una spesa senza cancellarla: lo storico resta leggibile.
+    </p>
+  </div>
+  <div class="card">
+    <div class="section-title">Categorie, ricorrenze, valute</div>
+    <p class="muted small">
+      Dieci categorie con icone, ricerca nello storico, spese ricorrenti
+      giornaliere/settimanali/mensili/annuali, export CSV e PDF. I tassi BCE
+      vengono aggiornati ogni giorno e restano salvati sulla spesa: lo storico
+      non cambia se il cambio cambia.
+    </p>
+  </div>
+  <div class="card">
+    <div class="section-title">Privacy</div>
+    <p class="muted small">
+      Niente rubrica caricata: gli inviti usano un link, un QR o un @handle.
+      Se elimini l'account, il profilo diventa "Ex-membro": email, password e
+      handle spariscono, mentre le spese restano nei gruppi per non rompere i
+      saldi degli altri.
+    </p>
+  </div>
+  <div class="card">
+    <div class="section-title">L'app nativa</div>
+    <p class="muted small">
+      L'app Android è Flutter nativo, non una scorza web. Funziona con App
+      Links, condivisione nativa dei file e tema chiaro/scuro. La versione
+      corrente è <b>1.2.0</b>.
+    </p>
+    <p class="muted small">
+      <a class="btn sm ghost" href="https://github.com/mirkosio/b-lance/releases/latest" rel="noopener">
+        Scarica l'APK
+      </a>
+    </p>
+  </div>
+</div>
+
+<div class="card" style="text-align:center">
+  <p class="muted small" style="margin:0">
+    Codice e problemi su
+    <a href="https://github.com/mirkosio/b-lance" rel="noopener">github.com/mirkosio/b-lance</a>.
+    Il sito non usa pubblicità e non vende dati.
+  </p>
+</div>
+{% endblock %}

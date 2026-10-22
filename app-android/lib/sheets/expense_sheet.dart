@@ -1,21 +1,33 @@
 import 'package:flutter/material.dart';
 
 import '../api.dart';
+import '../categories.dart';
 import '../models.dart';
+import '../ui.dart';
 import '../widgets/currency_picker.dart';
 
-/// Foglio "Nuova spesa": stesso flusso del sito, stessi controlli del server.
+/// Foglio "Nuova spesa" / "Modifica spesa".
+///
+/// Stesso flusso del sito, stessi controlli del server. Con `existing` apre
+/// la modifica e precompila tutto; con `allowRecurring` permette di creare
+/// una regola che il server materializzerà alla data giusta.
 Future<void> showExpenseSheet(
   BuildContext context, {
   required Api api,
   required GroupDetail detail,
   required VoidCallback onDone,
+  Expense? existing,
 }) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => _ExpenseSheet(api: api, detail: detail, onDone: onDone),
+    builder: (_) => _ExpenseSheet(
+      api: api,
+      detail: detail,
+      onDone: onDone,
+      existing: existing,
+    ),
   );
 }
 
@@ -24,11 +36,13 @@ class _ExpenseSheet extends StatefulWidget {
     required this.api,
     required this.detail,
     required this.onDone,
+    this.existing,
   });
 
   final Api api;
   final GroupDetail detail;
   final VoidCallback onDone;
+  final Expense? existing;
 
   @override
   State<_ExpenseSheet> createState() => _ExpenseSheetState();
@@ -42,14 +56,71 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
   late final List<Member> _people = widget.detail.members
       .where((m) => m.active)
       .toList();
-  late int? _paidBy = _people.any((m) => m.isMe)
-      ? _people.firstWhere((m) => m.isMe).userId
-      : (_people.isNotEmpty ? _people.first.userId : null);
-  late final Set<int> _selected = _people.map((m) => m.userId).toSet();
+  late int? _paidBy;
+  late final Set<int> _selected;
   String _method = 'even';
-  late String _currency = widget.detail.baseCurrency;
+  late String _currency;
+  String _category = 'other';
   final Map<int, TextEditingController> _values = {};
   bool _busy = false;
+
+  bool _recurring = false;
+  String _frequency = 'monthly';
+  int _interval = 1;
+
+  bool get _isEdit => widget.existing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final e = widget.existing;
+    if (e == null) {
+      _paidBy = _people.any((m) => m.isMe)
+          ? _people.firstWhere((m) => m.isMe).userId
+          : (_people.isNotEmpty ? _people.first.userId : null);
+      _selected = _people.map((m) => m.userId).toSet();
+      _currency = widget.detail.baseCurrency;
+    } else {
+      _desc.text = e.description;
+      _currency = e.currency;
+      _category = e.category;
+      _method = e.splitMethod;
+      _fx.text = (e.fxRate ?? '').replaceFirst(RegExp(r'\.0+$'), '');
+      final exp = Meta.exponentOf(e.currency);
+      _amount.text = _plainMajor(e.amountMinor, exp);
+      _selected = e.shares
+          .map((s) => s.userId)
+          .where((id) => _people.any((m) => m.userId == id))
+          .toSet();
+      if (_selected.isEmpty) {
+        _selected.addAll(_people.map((m) => m.userId));
+      }
+      final activeIds = _people.map((m) => m.userId).toSet();
+      _paidBy = activeIds.contains(e.paidBy)
+          ? e.paidBy
+          : (_people.isNotEmpty ? _people.first.userId : null);
+      // Precompilo importi/percentuali dalle quote già salvate.
+      for (final s in e.shares) {
+        if (_method == 'percent') {
+          final pct = e.baseAmountMinor == 0
+              ? 0.0
+              : s.amountMinor / e.baseAmountMinor * 100;
+          _valueCtrl(s.userId).text = pct.toStringAsFixed(2);
+        } else if (_method == 'exact') {
+          final orig = e.baseAmountMinor == 0
+              ? 0
+              : (s.amountMinor * e.amountMinor / e.baseAmountMinor).round();
+          _valueCtrl(s.userId).text = _plainMajor(orig, exp);
+        }
+      }
+    }
+  }
+
+  String _plainMajor(int minor, int exponent) {
+    // formatMinor usa la virgola e i punti delle migliaia: qui serve il
+    // numero "grezzo" da rimettere in un campo di testo.
+    return formatMinor(minor, exponent).replaceAll('.', '').replaceAll(',', '.');
+  }
 
   @override
   void dispose() {
@@ -90,9 +161,9 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
       _snack('Seleziona almeno una persona');
       return;
     }
-    final fx = _fx.text.trim();
+    final fx = _fx.text.trim().replaceAll(',', '.');
     if (_needManualRate &&
-        (fx.isEmpty || double.tryParse(fx.replaceAll(',', '.')) == null)) {
+        (fx.isEmpty || double.tryParse(fx) == null)) {
       _snack(
         'Scrivi il tasso: 1 $_currency vale quanti ${widget.detail.baseCurrency}?',
       );
@@ -106,27 +177,68 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
     }
     setState(() => _busy = true);
     try {
-      await widget.api.addExpense(
-        widget.detail.id,
-        description: desc,
-        amount: amount,
-        paidBy: _paidBy!,
-        members: _selected.toList(),
-        splitMethod: _method,
-        currency: _currency,
-        fxRate: fx.replaceAll(',', '.'),
-        values: values,
-      );
+      if (_isEdit) {
+        await widget.api.editExpense(
+          widget.detail.id,
+          widget.existing!.id,
+          description: desc,
+          amount: amount,
+          paidBy: _paidBy!,
+          members: _selected.toList(),
+          splitMethod: _method,
+          currency: _currency,
+          fxRate: fx,
+          category: _category,
+          values: values,
+        );
+      } else if (_recurring) {
+        await widget.api.addRecurring(
+          widget.detail.id,
+          description: desc,
+          amount: amount,
+          paidBy: _paidBy!,
+          members: _selected.toList(),
+          splitMethod: _method,
+          currency: _currency,
+          fxRate: fx,
+          category: _category,
+          values: values,
+          frequency: _frequency,
+          interval: _interval,
+        );
+      } else {
+        await widget.api.addExpense(
+          widget.detail.id,
+          description: desc,
+          amount: amount,
+          paidBy: _paidBy!,
+          members: _selected.toList(),
+          splitMethod: _method,
+          currency: _currency,
+          fxRate: fx,
+          category: _category,
+          values: values,
+        );
+      }
       if (!mounted) return;
       Navigator.of(context).pop();
       widget.onDone();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Spesa aggiunta')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isEdit
+                ? 'Spesa modificata'
+                : _recurring
+                ? 'Spesa ricorrente creata'
+                : 'Spesa aggiunta',
+          ),
+        ),
+      );
     } on ApiException catch (e) {
       _snack(e.message);
       if (mounted) setState(() => _busy = false);
-    } catch (_) {
-      _snack('Connessione assente: riprova.');
+    } catch (e) {
+      _snack(describeError(e));
       if (mounted) setState(() => _busy = false);
     }
   }
@@ -161,9 +273,9 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                 ),
               ),
             ),
-            const Text(
-              'Nuova spesa',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            Text(
+              _isEdit ? 'Modifica spesa' : 'Nuova spesa',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 14),
             TextField(
@@ -226,10 +338,35 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                   hintText: '1 $_currency = ? $base',
                   helperText: _needManualRate
                       ? '$_currency non ha un tasso automatico: scrivilo tu.'
-                      : 'Predefinito: tasso automatico del server (puoi correggerlo).',
+                      : 'Predefinito: tasso automatico (puoi correggerlo).',
                 ),
               ),
             ],
+            const SizedBox(height: 14),
+            const Text(
+              'Categoria',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: [
+                for (final c in categories)
+                  ChoiceChip(
+                    label: Text(c.label),
+                    avatar: Icon(c.icon, size: 17),
+                    selected: _category == c.code,
+                    showCheckmark: false,
+                    visualDensity: VisualDensity.compact,
+                    selectedColor: c.color.withValues(alpha: 0.16),
+                    onSelected: (_) {
+                      hapticTap();
+                      setState(() => _category = c.code);
+                    },
+                  ),
+              ],
+            ),
             const SizedBox(height: 12),
             DropdownButtonFormField<int>(
               initialValue: _paidBy,
@@ -258,7 +395,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
             const SizedBox(height: 10),
             Text(
               _method == 'even'
-                  ? 'Tutti pagano la stessa quota: il server divide al centesimo.'
+                  ? 'Tutti pagano la stessa quota: la divisione arriva al centesimo.'
                   : '$_methodLabel per persona: compila i campi qui sotto.',
               style: TextStyle(
                 fontSize: 12.5,
@@ -319,6 +456,68 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                     ],
                   ),
                 ),
+            if (!_isEdit) ...[
+              const SizedBox(height: 8),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                value: _recurring,
+                title: const Text('Ripeti nel tempo'),
+                subtitle: const Text(
+                  'Creo la spesa a ogni scadenza.',
+                ),
+                onChanged: (v) => setState(() => _recurring = v),
+              ),
+              if (_recurring)
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<int>(
+                        initialValue: _interval,
+                        decoration: const InputDecoration(
+                          labelText: 'Ogni',
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: 1, child: Text('1')),
+                          DropdownMenuItem(value: 2, child: Text('2')),
+                          DropdownMenuItem(value: 3, child: Text('3')),
+                          DropdownMenuItem(value: 6, child: Text('6')),
+                        ],
+                        onChanged: (v) => setState(() => _interval = v ?? 1),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      flex: 2,
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _frequency,
+                        decoration: const InputDecoration(
+                          labelText: 'Frequenza',
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'daily',
+                            child: Text('Giorni'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'weekly',
+                            child: Text('Settimane'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'monthly',
+                            child: Text('Mesi'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'yearly',
+                            child: Text('Anni'),
+                          ),
+                        ],
+                        onChanged: (v) =>
+                            setState(() => _frequency = v ?? 'monthly'),
+                      ),
+                    ),
+                  ],
+                ),
+            ],
             const SizedBox(height: 18),
             FilledButton(
               onPressed: _busy ? null : _submit,
@@ -331,7 +530,13 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Aggiungi spesa'),
+                  : Text(
+                      _isEdit
+                          ? 'Salva modifiche'
+                          : _recurring
+                          ? 'Crea ricorrenza'
+                          : 'Aggiungi spesa',
+                    ),
             ),
           ],
         ),

@@ -28,7 +28,7 @@ const textDark = Color(0xFFEFF3EE);
 const posColor = Color(0xFF3B7A52);
 const negColor = Color(0xFFA0432F);
 
-const kAppVersion = '1.1.0';
+const kAppVersion = '1.2.0';
 
 /// Durata coerente col motion 4/10, azzerata se il sistema chiede
 /// di ridurre le animazioni.

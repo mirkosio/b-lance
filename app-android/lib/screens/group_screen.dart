@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../api.dart';
+import '../categories.dart';
+import '../export_csv.dart';
 import '../models.dart';
 import '../sheets/detail_sheets.dart';
 import '../sheets/expense_sheet.dart';
+import '../sheets/group_sheets.dart';
 import '../sheets/payment_sheet.dart';
 import '../ui.dart';
 import '../widgets/hero_balance.dart';
@@ -22,15 +25,20 @@ class GroupScreen extends StatefulWidget {
 
 class _GroupScreenState extends State<GroupScreen> {
   late Future<GroupDetail> _future;
+  late Future<List<RecurringRule>> _rulesFuture;
 
   @override
   void initState() {
     super.initState();
     _future = widget.api.groupDetail(widget.groupId);
+    _rulesFuture = widget.api.recurringRules(widget.groupId);
   }
 
   void _reload() {
-    setState(() => _future = widget.api.groupDetail(widget.groupId));
+    setState(() {
+      _future = widget.api.groupDetail(widget.groupId);
+      _rulesFuture = widget.api.recurringRules(widget.groupId);
+    });
   }
 
   void _snack(String msg) {
@@ -123,6 +131,78 @@ class _GroupScreenState extends State<GroupScreen> {
     _snack('Link di invito copiato: incollalo su WhatsApp');
   }
 
+  Future<void> _showInvite(GroupDetail d) {
+    return showInviteSheet(
+      context,
+      groupName: d.name,
+      code: d.inviteCode,
+      link: '${widget.api.base}/join/${d.inviteCode}',
+    );
+  }
+
+  Future<void> _inviteHandle() async {
+    final added = await showInviteByHandleSheet(
+      context,
+      api: widget.api,
+      groupId: widget.groupId,
+    );
+    if (added) {
+      _reload();
+      _snack('Persona aggiunta al gruppo');
+    }
+  }
+
+  Future<void> _shareCsv(GroupDetail d) async {
+    try {
+      await shareGroupCsv(d);
+    } catch (e) {
+      _snack(describeError(e));
+    }
+  }
+
+  Future<void> _toggleRule(RecurringRule r) async {
+    try {
+      await widget.api.setRecurringActive(widget.groupId, r.id, !r.active);
+      _reload();
+      _snack(r.active ? 'Ricorrenza in pausa' : 'Ricorrenza riattivata');
+    } on ApiException catch (e) {
+      _snack(e.message);
+    } catch (_) {
+      _snack('Connessione assente: riprova.');
+    }
+  }
+
+  Future<void> _deleteRule(RecurringRule r) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Eliminare "${r.description}"?'),
+        content: const Text(
+          'Le spese già create restano. Non verranno create le prossime.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Indietro'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: negColor),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Elimina'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await widget.api.deleteRecurring(widget.groupId, r.id);
+      _reload();
+      _snack('Ricorrenza eliminata');
+    } on ApiException catch (e) {
+      _snack(e.message);
+    }
+  }
+
   Future<void> _regenerateInvite(GroupDetail d) async {
     await _run(() async {
       await widget.api.regenerateInvite(widget.groupId);
@@ -175,20 +255,29 @@ class _GroupScreenState extends State<GroupScreen> {
               style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
             ),
             actions: [
-              if (d.isOwner)
-                PopupMenuButton<String>(
-                  onSelected: (v) {
-                    if (v == 'rename') _rename(d);
-                    if (v == 'delete') _deleteGroup();
-                  },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'rename', child: Text('Rinomina')),
-                    PopupMenuItem(
+              PopupMenuButton<String>(
+                onSelected: (v) {
+                  if (v == 'rename') _rename(d);
+                  if (v == 'delete') _deleteGroup();
+                  if (v == 'export') _shareCsv(d);
+                },
+                itemBuilder: (_) => [
+                  const PopupMenuItem(
+                    value: 'export',
+                    child: Text('Esporta CSV'),
+                  ),
+                  if (d.isOwner) ...[
+                    const PopupMenuItem(
+                      value: 'rename',
+                      child: Text('Rinomina'),
+                    ),
+                    const PopupMenuItem(
                       value: 'delete',
                       child: Text('Elimina gruppo'),
                     ),
                   ],
-                ),
+                ],
+              ),
             ],
           ),
           body: RefreshIndicator(
@@ -372,7 +461,8 @@ class _GroupScreenState extends State<GroupScreen> {
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
-                                              '${e.payerName}'
+                                              '${categoryInfo(e.category).label}'
+                                              ' · ${e.payerName}'
                                               '${e.createdAt != null ? ' · ${formatDateTime(e.createdAt)}' : ''}'
                                               '${e.voided ? ' · annullata' : ''}'
                                               '${e.currency != d.baseCurrency ? ' · vale ${formatMinor(e.baseAmountMinor, expo)} ${d.baseCurrency}' : ''}',
@@ -509,6 +599,90 @@ class _GroupScreenState extends State<GroupScreen> {
                   ),
                 ],
                 const SizedBox(height: 12),
+                FutureBuilder<List<RecurringRule>>(
+                  future: _rulesFuture,
+                  builder: (ctx, snap) {
+                    final rules = snap.data ?? const <RecurringRule>[];
+                    if (rules.isEmpty) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: SectionCard(
+                        title: 'Spese ricorrenti',
+                        child: Column(
+                          children: [
+                            for (final r in rules)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      categoryInfo(r.category).icon,
+                                      size: 20,
+                                      color: categoryInfo(r.category).color,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            r.description,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              color: r.active
+                                                  ? null
+                                                  : Theme.of(ctx)
+                                                        .colorScheme
+                                                        .onSurface
+                                                        .withValues(alpha: 0.45),
+                                            ),
+                                          ),
+                                          Text(
+                                            '${r.frequencyLabel}'
+                                            '${r.nextRun != null ? ' · prossima ${formatDateTime(r.nextRun)}' : ''}'
+                                            '${r.active ? '' : ' · in pausa'}',
+                                            style: TextStyle(
+                                              fontSize: 11.5,
+                                              color: Theme.of(ctx)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withValues(alpha: 0.6),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Text(
+                                      '${formatMinor(r.amountMinor, Meta.exponentOf(r.currency))} ${r.currency}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12.5,
+                                      ),
+                                    ),
+                                    Switch(
+                                      value: r.active,
+                                      onChanged: (_) => _toggleRule(r),
+                                    ),
+                                    IconButton(
+                                      tooltip: 'Elimina ricorrenza',
+                                      onPressed: () => _deleteRule(r),
+                                      icon: const Icon(
+                                        Icons.delete_outline,
+                                        size: 19,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
                 SectionCard(
                   title: 'Invita amici',
                   child: Column(
@@ -525,19 +699,37 @@ class _GroupScreenState extends State<GroupScreen> {
                       Row(
                         children: [
                           Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () => _copyInvite(d),
-                              icon: const Icon(Icons.link, size: 18),
-                              label: const Text('Copia link'),
+                            child: FilledButton.icon(
+                              onPressed: () => _showInvite(d),
+                              icon: const Icon(Icons.qr_code_2, size: 19),
+                              label: const Text('QR e link'),
                             ),
                           ),
                           if (canManageInvite) ...[
                             const SizedBox(width: 8),
-                            OutlinedButton(
+                            OutlinedButton.icon(
+                              onPressed: _inviteHandle,
+                              icon: const Icon(Icons.alternate_email, size: 17),
+                              label: const Text('@handle'),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton.icon(
+                              onPressed: () => _copyInvite(d),
+                              icon: const Icon(Icons.link, size: 17),
+                              label: const Text('Copia link'),
+                            ),
+                          ),
+                          if (canManageInvite)
+                            TextButton(
                               onPressed: () => _regenerateInvite(d),
                               child: const Text('Nuovo codice'),
                             ),
-                          ],
                         ],
                       ),
                     ],

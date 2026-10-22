@@ -15,6 +15,15 @@ Adattato al brand b-lance: la palette e i font decisi dal proprietario **vincono
 
 - Wordmark: `b-lance`, minuscolo, tight. `b-` in inchiostro, `lance` in salvia.
 - Mai "B-Lance", mai "Blance" nell'interfaccia.
+- Marchio: **split b**. Asta intera in inchiostro; pancia circolare in salvia
+  divisa in due archi uguali da due tagli diagonali. È la divisione della spesa
+  che resta in equilibrio: due parti, un unico conto.
+- File: `app/static/logo-mark.svg` (marchio), `logo-mark-inverse.svg` (su salvia),
+  `logo.svg` e `logo-lockup-dark.svg` (lockup). La stessa geometria è in
+  `app-android/lib/widgets/logo_mark.dart` e nelle icone generate da
+  `scripts/gen_brand_assets.py`.
+- Icona app: fondo salvia con gradiente dosato + marchio carta; niente lettera
+  "B" di sistema, niente viola.
 
 ## Colori (token)
 
@@ -94,7 +103,7 @@ Dentro un gruppo: header con **saldo tuo nel gruppo**, poi sezioni Saldi / Chi p
 - Hover-only (non c'è hover sul telefono).
 - Testo < 12 px per informazioni essenziali.
 
-## Stato implementazione (app 1.1.0, Fase 2)
+## Stato implementazione (app 1.2.0, Fase 3)
 
 - Token reali in `app-android/lib/ui.dart`: salvia `#5F8D6E`, testo salvia `#3D644B`,
   bottoni `#4A7357` (bianco ≥ 4.5:1), carta `#F5F4EF`, notte `#141816`.
@@ -103,13 +112,24 @@ Dentro un gruppo: header con **saldo tuo nel gruppo**, poi sezioni Saldi / Chi p
 - Shell `screens/main_shell.dart`: Home / Movimenti / Gruppi / Profilo, `IndexedStack`.
 - `HomeScreen`: hero saldo per valuta, due azioni rapide (Nuovo gruppo, Unisciti),
   tre gruppi recenti, "Vedi tutti"; skeleton e stato vuoto con CTA.
-- `ActivityScreen`: endpoint `/api/activity` (ultimi 40 movimenti, tutti i gruppi),
-  filtri Tutto/Spese/Pagamenti; tap → gruppo.
+- `ActivityScreen`: ricerca testuale, filtri Tutto/Spese/Pagamenti e categoria
+  (endpoint `/api/activity`); tap → gruppo.
 - `GroupsScreen`: elenco completo, FAB Nuovo gruppo, ingresso con codice.
-- `ProfileScreen`: tema, esci da tutti i dispositivi, esci, versione, server.
-- `GroupScreen`: hero "Il tuo saldo nel gruppo", sezioni, CTA nella sezione Spese vuota.
+- `ProfileScreen`: nome/colore/`@handle`, tema, sicurezza, elimina account, versione.
+- `GroupScreen`: hero saldo, categorie con icone, ricorrenti, QR/share, invito `@handle`,
+  export CSV; sezioni e CTA nella sezione Spese vuota.
+- `ExpenseSheet`: categorie, modifica spesa precompilata, ricorrenza
+  (giorni/settimane/mesi/anni, intervallo 1/2/3/6).
+- `showInviteSheet`: QR del link, codice, share sheet nativo.
+- App Links: manifest `autoVerify` + `/.well-known/assetlinks.json` con package
+  `com.mirkosio.blance` e fingerprint SHA-256 reale.
 - Componenti: `HeroBalance`, `GroupTile`, `ActivityTile`, `Skeleton`, `EmptyState`.
 - Movimento: fade di pagina, 200–260 ms, aptica su tab/conferme; `motionDuration`
   azzera le animazioni se il sistema chiede di ridurle.
-- Nota: i toast sono ancora gli SnackBar Material (tema scuro, flottanti); il
-  componente `BlanceToast` dedicato arriva con la Fase 3.
+- Nota: i toast sono ancora gli SnackBar Material (tema scuro, flottanti).
+- Categorie: 10 codici stabili (`food`, `groceries`, `transport`, `home`, `travel`,
+  `fun`, `health`, `shopping`, `bills`, `other`) con icone Material e colori propri.
+- Export CSV usa il foglio di condivisione Android (file temporaneo, nessun permesso
+  storage); il sito genera CSV+PDF con reportlab.
+- Tassi BCE con cache 12h e fallback statico; il tasso usato resta salvato sulla spesa.
+- Non ancora dentro: push Firebase, i18n IT/EN, Sentry (DSN), recupero password email.

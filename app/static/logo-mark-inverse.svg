@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="blTitleInv">
+  <title id="blTitleInv">b-lance</title>
+  <g fill="none" stroke="#F5F4EF">
+    <path d="M19 12.5V51.5" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="35" cy="36" r="13" stroke-width="7"
+            stroke-dasharray="36.6 4.24" transform="rotate(45 35 36)"/>
+  </g>
+</svg>

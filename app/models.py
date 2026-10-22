@@ -40,6 +40,9 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     # Color per riconoscere i membri nei grafici/saldi.
     color: Mapped[str] = mapped_column(String(9), default="#6366f1")
+    # Handle pubblico per farsi trovare e invitare senza condividere la rubrica.
+    # None = non impostato. Sempre minuscolo, unico.
+    handle: Mapped[str | None] = mapped_column(String(30), unique=True, index=True, nullable=True)
     # Versione della sessione: "esci da tutti i dispositivi" la incrementa
     # e tutti i token emessi prima diventano invalidi.
     session_version: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
@@ -114,6 +117,7 @@ class Expense(Base):
     split_method: Mapped[str] = mapped_column(String(16), default="even")
     # Annullata invece di cancellata: storico immutabile.
     voided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
@@ -156,6 +160,45 @@ class Payment(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     group: Mapped[Group] = relationship(back_populates="payments")
+
+
+class RecurringExpense(Base):
+    """Regola di spesa ricorrente (affitto, bollette, abbonamenti).
+
+    Non è una spesa: quando arriva la data, viene materializzata in una vera
+    Expense (storico normale). I valori di divisione sono salvati come JSON
+    per riprodurre esattamente la stessa ripartizione a ogni giro.
+    """
+
+    __tablename__ = "recurring_expenses"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), index=True)
+    description: Mapped[str] = mapped_column(String(200))
+    category: Mapped[str] = mapped_column(String(40), default="other")
+    amount_minor: Mapped[int] = mapped_column(Integer)
+    currency: Mapped[str] = mapped_column(String(3), default="EUR")
+    base_amount_minor: Mapped[int] = mapped_column(Integer, default=0)
+    base_currency: Mapped[str] = mapped_column(String(3), default="EUR")
+    fx_rate: Mapped[str] = mapped_column(String(30), default="1.0")
+    split_method: Mapped[str] = mapped_column(String(16), default="even")
+    paid_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    members_json: Mapped[str] = mapped_column(Text, default="[]")
+    values_json: Mapped[str] = mapped_column(Text, default="{}")
+    # Quote già calcolate in valuta base: si riusano identiche a ogni giro.
+    shares_json: Mapped[str] = mapped_column(Text, default="{}")
+    # daily / weekly / monthly / yearly, ogni `interval` unità.
+    frequency: Mapped[str] = mapped_column(String(16), default="monthly")
+    interval: Mapped[int] = mapped_column(Integer, default=1)
+    next_run: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_run_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    group: Mapped[Group] = relationship()
 
 
 class LoginAttempt(Base):

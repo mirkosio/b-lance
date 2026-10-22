@@ -1,4 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../api.dart';
 import '../models.dart';
@@ -264,4 +269,263 @@ class _NewGroupSheetState extends State<_NewGroupSheet> {
       ),
     );
   }
+}
+
+
+/// Invito con QR, codice e condivisione nativa.
+Future<void> showInviteSheet(
+  BuildContext context, {
+  required String groupName,
+  required String code,
+  required String link,
+}) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (ctx) => Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: 16),
+            decoration: BoxDecoration(
+              color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+          const Text(
+            'Invita nel gruppo',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            groupName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 13,
+              color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: Theme.of(ctx).dividerColor,
+              ),
+            ),
+            child: QrImageView(
+              data: link,
+              size: 210,
+              backgroundColor: Colors.white,
+              eyeStyle: const QrEyeStyle(
+                eyeShape: QrEyeShape.square,
+                color: Color(0xFF242B27),
+              ),
+              dataModuleStyle: const QrDataModuleStyle(
+                dataModuleShape: QrDataModuleShape.square,
+                color: Color(0xFF3D644B),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            code,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 3,
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () async {
+              await SharePlus.instance.share(
+                ShareParams(
+                  subject: 'Invito a $groupName su b-lance',
+                  text:
+                      'Ti invito su b-lance nel gruppo "$groupName".\n'
+                      'Apri: $link\nCodice: $code',
+                ),
+              );
+            },
+            icon: const Icon(Icons.share_outlined, size: 19),
+            label: const Text('Condividi link'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: link));
+              if (ctx.mounted) {
+                ScaffoldMessenger.of(ctx).showSnackBar(
+                  const SnackBar(content: Text('Link copiato')),
+                );
+              }
+            },
+            icon: const Icon(Icons.link, size: 19),
+            label: const Text('Copia link'),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// Invito diretto cercando un @handle. Ritorna true se ha aggiunto qualcuno.
+Future<bool> showInviteByHandleSheet(
+  BuildContext context, {
+  required Api api,
+  required int groupId,
+}) async {
+  final controller = TextEditingController();
+  String? error;
+  bool busy = false;
+  List<PublicUser> results = const [];
+  Timer? debounce;
+  final added = await showModalBottomSheet<bool>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    builder: (ctx) => StatefulBuilder(
+      builder: (ctx, setD) {
+        Future<void> submit() async {
+          final handle = controller.text.trim().replaceFirst('@', '');
+          if (handle.length < 3) {
+            setD(() => error = 'Scrivi un @handle (almeno 3 caratteri)');
+            return;
+          }
+          setD(() {
+            busy = true;
+            error = null;
+          });
+          try {
+            await api.inviteByHandle(groupId, handle);
+            if (!ctx.mounted) return;
+            Navigator.pop(ctx, true);
+          } on ApiException catch (e) {
+            if (!ctx.mounted) return;
+            setD(() {
+              busy = false;
+              error = e.message;
+            });
+          } catch (e) {
+            if (!ctx.mounted) return;
+            setD(() {
+              busy = false;
+              error = describeError(e);
+            });
+          }
+        }
+
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Invita con @handle',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'La persona deve avere un handle nel suo profilo. '
+                  'Nessuna rubrica da caricare.',
+                  style: TextStyle(
+                    fontSize: 12.5,
+                    color: Theme.of(ctx).colorScheme.onSurface
+                        .withValues(alpha: 0.6),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  autocorrect: false,
+                  textInputAction: TextInputAction.done,
+                  decoration: InputDecoration(
+                    labelText: '@handle',
+                    prefixText: '@',
+                    hintText: 'mirkosio',
+                    errorText: error,
+                  ),
+                  onChanged: (value) {
+                    debounce?.cancel();
+                    final needle = value.trim().replaceFirst('@', '');
+                    if (needle.length < 2) {
+                      setD(() => results = const []);
+                      return;
+                    }
+                    debounce = Timer(const Duration(milliseconds: 300), () async {
+                      try {
+                        final found = await api.searchUsers(needle);
+                        if (ctx.mounted) setD(() => results = found);
+                      } catch (_) {
+                        // La ricerca è un aiuto: se fallisce si può scrivere
+                        // l'handle a mano e premere Aggiungi.
+                      }
+                    });
+                  },
+                  onSubmitted: (_) => busy ? null : submit(),
+                ),
+                if (results.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  for (final u in results)
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      leading: CircleAvatar(
+                        backgroundColor: parseHexColor(u.color),
+                        child: Text(
+                          u.name.isEmpty
+                              ? '?'
+                              : u.name.characters.first.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      title: Text(u.name),
+                      subtitle: Text('@${u.handle}'),
+                      onTap: () {
+                        controller.text = '@${u.handle}';
+                        setD(() => results = const []);
+                      },
+                    ),
+                ],
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: busy ? null : submit,
+                  child: busy
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Aggiungi al gruppo'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
+  debounce?.cancel();
+  controller.dispose();
+  return added == true;
 }

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../api.dart';
+import '../categories.dart';
 import '../models.dart';
 import '../ui.dart';
+import 'expense_sheet.dart';
 
 /// Dettaglio di una spesa. Il tocco non annulla più niente: qui si legge
 /// tutto e, se hai il permesso, decidi di annullare.
@@ -89,6 +91,25 @@ class _ExpenseDetailState extends State<_ExpenseDetail> {
     final me = _meOf(widget.detail);
     if (me == null || widget.expense.voided) return false;
     return widget.expense.createdBy == me.userId || me.canExpenseManage;
+  }
+
+  bool get _canEdit {
+    final me = _meOf(widget.detail);
+    if (me == null || widget.expense.voided) return false;
+    return widget.expense.createdBy == me.userId || me.canExpenseManage;
+  }
+
+  Future<void> _edit() async {
+    final parent = widget.parentContext;
+    if (!parent.mounted) return;
+    Navigator.pop(context);
+    await showExpenseSheet(
+      parent,
+      api: widget.api,
+      detail: widget.detail,
+      existing: widget.expense,
+      onDone: widget.onDone,
+    );
   }
 
   Future<void> _void() async {
@@ -224,6 +245,7 @@ class _ExpenseDetailState extends State<_ExpenseDetail> {
             ),
           ],
           const SizedBox(height: 18),
+          _Row(label: 'Categoria', value: categoryInfo(e.category).label),
           _Row(label: 'Pagato da', value: _nameOf(widget.detail, e.paidBy)),
           _Row(label: 'Divisione', value: splitMethodLabel(e.splitMethod)),
           if (e.createdAt != null)
@@ -246,7 +268,7 @@ class _ExpenseDetailState extends State<_ExpenseDetail> {
                       ),
                     ),
                     Text(
-                      '${formatMinor(s.amountMinor, expo)} ${e.currency}',
+                      '${formatMinor(s.amountMinor, Meta.exponentOf(e.baseCurrency))} ${e.baseCurrency}',
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ],
@@ -254,6 +276,17 @@ class _ExpenseDetailState extends State<_ExpenseDetail> {
               ),
           ],
           const SizedBox(height: 22),
+          if (_canEdit) ...[
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                minimumSize: const Size.fromHeight(50),
+              ),
+              onPressed: _busy ? null : _edit,
+              icon: const Icon(Icons.edit_outlined, size: 19),
+              label: const Text('Modifica spesa'),
+            ),
+            const SizedBox(height: 8),
+          ],
           if (_canVoid) ...[
             FilledButton.icon(
               style: FilledButton.styleFrom(

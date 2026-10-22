@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../ui.dart';
+import '../widgets/logo_mark.dart';
 import 'main_shell.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -87,6 +88,8 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const Center(child: LogoMark(size: 62)),
+                  const SizedBox(height: 10),
                   const Center(child: _Wordmark(size: 26.0)),
                   const SizedBox(height: 6),
                   Center(

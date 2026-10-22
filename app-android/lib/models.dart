@@ -7,18 +7,43 @@ class User {
     required this.name,
     required this.email,
     required this.color,
+    this.handle,
   });
 
   final int id;
   final String name;
   final String email;
   final String color;
+  final String? handle;
 
   factory User.fromJson(Map<String, dynamic> j) => User(
     id: j['id'] as int,
     name: j['name'] as String,
     email: j['email'] as String? ?? '',
     color: j['color'] as String? ?? '#6366f1',
+    handle: j['handle'] as String?,
+  );
+}
+
+/// Persona trovata cercando un @handle. Non contiene l'email.
+class PublicUser {
+  const PublicUser({
+    required this.id,
+    required this.name,
+    required this.color,
+    required this.handle,
+  });
+
+  final int id;
+  final String name;
+  final String color;
+  final String handle;
+
+  factory PublicUser.fromJson(Map<String, dynamic> j) => PublicUser(
+    id: j['id'] as int,
+    name: j['name'] as String? ?? '?',
+    color: j['color'] as String? ?? '#94a3b8',
+    handle: j['handle'] as String? ?? '',
   );
 }
 
@@ -104,6 +129,7 @@ class ActivityItem {
     required this.groupName,
     required this.title,
     required this.subtitle,
+    required this.category,
     required this.amountMinor,
     required this.currency,
     required this.baseAmountMinor,
@@ -118,6 +144,7 @@ class ActivityItem {
   final String groupName;
   final String title;
   final String subtitle;
+  final String category;
   final int amountMinor;
   final String currency;
   final int baseAmountMinor;
@@ -134,6 +161,7 @@ class ActivityItem {
     groupName: j['group_name'] as String? ?? '?',
     title: j['title'] as String? ?? '',
     subtitle: j['subtitle'] as String? ?? '',
+    category: j['category'] as String? ?? '',
     amountMinor: (j['amount_minor'] as num?)?.toInt() ?? 0,
     currency: j['currency'] as String? ?? 'EUR',
     baseAmountMinor: (j['base_amount_minor'] as num?)?.toInt() ?? 0,
@@ -391,4 +419,65 @@ class GroupDetail {
           const [],
     );
   }
+}
+
+
+/// Regola di spesa ricorrente. La vera spesa viene creata dal server quando
+/// arriva la data; qui si mostrano frequenza e prossima occorrenza.
+class RecurringRule {
+  const RecurringRule({
+    required this.id,
+    required this.groupId,
+    required this.description,
+    required this.category,
+    required this.amountMinor,
+    required this.currency,
+    required this.frequency,
+    required this.interval,
+    required this.nextRun,
+    required this.active,
+    required this.paidBy,
+    required this.members,
+  });
+
+  final int id;
+  final int groupId;
+  final String description;
+  final String category;
+  final int amountMinor;
+  final String currency;
+  final String frequency;
+  final int interval;
+  final String? nextRun;
+  final bool active;
+  final int paidBy;
+  final List<int> members;
+
+  String get frequencyLabel {
+    final base = switch (frequency) {
+      'daily' => 'giorno',
+      'weekly' => 'settimana',
+      'monthly' => 'mese',
+      'yearly' => 'anno',
+      _ => 'mese',
+    };
+    return interval == 1 ? 'Ogni $base' : 'Ogni $interval $base';
+  }
+
+  factory RecurringRule.fromJson(Map<String, dynamic> j) => RecurringRule(
+    id: j['id'] as int,
+    groupId: j['group_id'] as int,
+    description: j['description'] as String? ?? '',
+    category: j['category'] as String? ?? 'other',
+    amountMinor: (j['amount_minor'] as num?)?.toInt() ?? 0,
+    currency: j['currency'] as String? ?? 'EUR',
+    frequency: j['frequency'] as String? ?? 'monthly',
+    interval: (j['interval'] as num?)?.toInt() ?? 1,
+    nextRun: j['next_run'] as String?,
+    active: j['active'] as bool? ?? true,
+    paidBy: (j['paid_by'] as num?)?.toInt() ?? 0,
+    members: (j['members'] as List<dynamic>? ?? const [])
+        .map((e) => (e as num).toInt())
+        .toList(),
+  );
 }

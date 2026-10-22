@@ -28,9 +28,9 @@ def test_assetlinks_serve_lapk(client: TestClient):
     data = r.json()
     target = data[0]["target"]
     assert target["namespace"] == "android_app"
-    assert target["package_name"] == "com.onrender.b_lance.twa"
+    assert target["package_name"] == "com.mirkosio.blance"
     # La fingerprint SHA-256 del keystore che firma l'APK.
     assert target["sha256_cert_fingerprints"] == [
-        "90:39:8F:2C:B5:10:B8:46:90:4C:C7:2B:36:D7:8C:01:C7:FC:F2:23:BA:F8:AB:BD:B4:2F:95:08:0D:C2:C8:0A"
+        "9F:D8:69:2E:7F:92:8E:B9:07:5D:5F:47:C9:F5:76:A7:45:A7:5B:E7:5C:6E:76:19:49:A2:49:84:6D:E2:F0:3C"
     ]
     assert data[0]["relation"] == ["delegate_permission/common.handle_all_urls"]

@@ -1,6 +1,6 @@
 # Audit b-lance — 22 ottobre 2026
 
-**Metodo.** Lettura completa di: app Flutter (8 file: schermate, fogli, modelli, UI), API JSON, auth, modelli DB; suite backend **100/100 verde**; verifica della coerenza tra testo mostrato e comportamento reale. Non ho potuto provare sul tuo Poco F6 (push, QR, app links richiedono il telefono).
+**Metodo.** Lettura completa di: app Flutter (8 file: schermate, fogli, modelli, UI), API JSON, auth, modelli DB; suite backend **113/113 verde**; verifica della coerenza tra testo mostrato e comportamento reale. Non ho potuto provare sul tuo Poco F6 (push, QR, app links richiedono il telefono).
 
 **Verdetto.** La base è buona: soldi in unità minori, bcrypt, permessi lato server, errori API sempre JSON, test seri. I problemi veri sono tre famiglie: **bug fuorvianti nell'app**, **sicurezza incompleta**, **struttura lineare** che non regge il salto a "prodotto".
 
@@ -67,7 +67,7 @@ Altri minori: nessuna anteprima del gruppo quando si entra con un codice (l'endp
 - Gap non uniformi (risolto in 1.1.0): griglia a 16 px, card in riga di altezza uguale.
 - Duplicazione `SectionCard` (risolta in 1.1.0): una sola definizione in `ui.dart`.
 - `formatMinor` solo italiano: **ancora aperto**, si chiude con l'i18n in Fase 3.
-- Zero widget test Flutter (risolto): 14 test (modelli, formati, dashboard, movimenti).
+- Test Flutter: 18 (modelli, formati, dashboard, movimenti, categorie, ricorrenze).
 
 ---
 
@@ -96,19 +96,30 @@ Altri minori: nessuna anteprima del gruppo quando si entra con un codice (l'endp
 - [x] Skeleton, stati vuoti con CTA, transizioni di pagina
 - [x] Accessibilità: contrasto ≥ 4.5:1, target 44 px, Semantics
 - [x] Light/dark a parità di qualità
-- [x] Test: 108 backend, 14 Flutter, E2E produzione con movimenti globali
+- [x] Test: 113 backend, 18 Flutter, E2E produzione con movimenti globali
 
-### Fase 3 — "Completa"
-- [ ] Profilo: nome/colore, elimina account (anonimizza), reset password con avviso spam
-- [ ] Categorie con icone (API input + UI + filtri)
-- [ ] Ricerca storico, modifica spesa, spese ricorrenti
-- [ ] Export: CSV app, PDF+CSV sito
-- [ ] QR invito, App Links, share nativo
-- [ ] Amici `@handle` + inviti
-- [ ] Tassi BCE giornalieri + override
-- [ ] Push Firebase
-- [ ] i18n IT/EN
-- [ ] Sentry
+### Fase 3 — "Completa" (1.2.0, 22/10/2026)
+- [x] Profilo: nome/colore, `@handle`, elimina account (anonimizzazione "Ex-membro", spese intatte)
+- [x] Cambio password da loggato (sito e app tramite profilo)
+- [ ] Recupero password via email: **bloccato**, manca un provider email (Resend/SMTP)
+- [x] Categorie fisse con icone: input API/web, picker app, filtri Movimenti
+- [x] Ricerca storico (globale e nel gruppo), modifica spesa, spese ricorrenti
+- [x] Export: CSV dall'app, CSV+PDF dal sito
+- [x] QR invito, App Links (`/join/CODICE`), condivisione nativa
+- [x] Amici `@handle`: ricerca, invito diretto nel gruppo, nessuna rubrica
+- [x] Tassi BCE giornalieri (fallback statico) + override manuale già esistente
+- [ ] Push Firebase: **bloccato**, serve il progetto Firebase e `google-services.json`
+- [ ] i18n IT/EN: **rimandato**, richiede la traduzione di tutte le stringhe app+sito
+- [ ] Sentry: **predisposto solo il punto di innesto**, serve il DSN del progetto
+
+**Verifica Fase 3:** 113 test backend, 18 test Flutter, E2E produzione Fase 1+2+3 verde
+(include cambio password, export CSV/PDF, account, handle, ricorrenze, assetlinks).
+Le funzioni che richiedono credenziali esterne non sono dichiarate come testate.
+
+**Marchio e contenuti (23/10/2026):** nuovo marchio "split b" (asta intera,
+pancia divisa in due archi uguali) in `app/static/logo*.svg`; icone PWA e
+launcher Android rigenerate dallo stesso disegno; pagina `/about`, scheda
+Informazioni nell'app e README riscritto sullo stato reale.
 
 ---
 

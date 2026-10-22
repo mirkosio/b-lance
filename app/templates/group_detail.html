@@ -4,9 +4,13 @@
 <div class="card">
   <div class="section-title">
     <span>{{ group.name }} <span class="chip">{{ group.base_currency }}</span></span>
-    {% if 'group_edit' in perms %}
-      <a class="btn sm ghost" href="/groups/{{ group.id }}/edit">Modifica</a>
-    {% endif %}
+    <span style="display:flex;gap:8px">
+      <a class="btn sm ghost" href="/groups/{{ group.id }}/export.csv">CSV</a>
+      <a class="btn sm ghost" href="/groups/{{ group.id }}/export.pdf">PDF</a>
+      {% if 'group_edit' in perms %}
+        <a class="btn sm ghost" href="/groups/{{ group.id }}/edit">Modifica</a>
+      {% endif %}
+    </span>
   </div>
   <div class="summary">
     <div class="stat">
@@ -144,6 +148,17 @@
       </form>
     {% endif %}
   </div>
+  {% if 'members_manage' in perms %}
+    <form method="post" action="/groups/{{ group.id }}/invite-handle"
+          class="row" style="margin-top:10px">
+      <input type="text" name="handle" placeholder="@handle" autocapitalize="none"
+             style="flex:1">
+      <button class="btn ghost" type="submit">Invita</button>
+    </form>
+    <p class="muted small" style="margin:6px 0 0">
+      La persona deve avere un handle nel profilo. Nessuna rubrica caricata.
+    </p>
+  {% endif %}
 </div>
 
 <!-- Aggiungi spesa -->
@@ -152,6 +167,13 @@
   <form method="post" action="/groups/{{ group.id }}/expenses" id="expense-form">
     <label>Descrizione</label>
     <input type="text" name="description" required placeholder="Es. Cena, benzina, biglietti">
+
+    <label>Categoria</label>
+    <select name="category">
+      {% for code, label in categories.items() %}
+        <option value="{{ code }}" {% if code == 'other' %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
 
     <div class="row">
       <div>
@@ -230,12 +252,18 @@
 <!-- Spese -->
 <div class="card">
   <div class="section-title">Spese recenti</div>
+  <form method="get" action="/groups/{{ group.id }}" class="row" style="margin-bottom:10px">
+    <input type="text" name="q" value="{{ query }}" placeholder="Cerca per descrizione, persona o categoria"
+           style="flex:1">
+    <button class="btn sm ghost" type="submit">Cerca</button>
+    {% if query %}<a class="btn sm ghost" href="/groups/{{ group.id }}">Pulisci</a>{% endif %}
+  </form>
   {% if expenses %}
     {% for e in expenses %}
       <div class="expense-item">
         <div>
           <div class="desc">{{ e.description }}</div>
-          <div class="meta">{{ e.payer_name }} ha pagato · {{ e.created_at.strftime('%d/%m') }}</div>
+          <div class="meta">{{ e.payer_name }} ha pagato · {{ category_label(e.category) }} · {{ e.created_at.strftime('%d/%m') }}</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
           <span style="font-weight:700">{{ e.amount_minor | money(e.currency) }}</span>
