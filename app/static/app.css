@@ -111,9 +111,10 @@ a:hover { text-decoration: underline; }
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 800;
-  font-size: 1.18rem;
-  letter-spacing: -0.04em;
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: 1.34rem;
+  letter-spacing: -0.02em;
   color: var(--text);
   padding: 6px 10px 16px;
 }
@@ -238,7 +239,7 @@ button.side-link:hover { background: var(--bg-soft); }
   background: var(--chrome);
   border-bottom: 1px solid var(--border);
 }
-.topbar .brand { padding: 0; font-size: 1.05rem; }
+.topbar .brand { padding: 0; font-size: 1.2rem; }
 .topbar .brand .mark { width: 30px; height: 30px; border-radius: 9px; }
 .topbar .right { display: flex; align-items: center; gap: 10px; }
 
