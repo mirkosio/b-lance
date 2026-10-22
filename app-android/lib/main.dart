@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'api.dart';
-import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/main_shell.dart';
 import 'theme_controller.dart';
 import 'ui.dart';
 
@@ -85,7 +85,9 @@ class _GateState extends State<_Gate> {
         final user = await _api.me();
         if (!mounted) return;
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => HomeScreen(api: _api, user: user)),
+          MaterialPageRoute(
+            builder: (_) => MainShell(api: _api, user: user),
+          ),
         );
         return;
       }
@@ -148,7 +150,12 @@ class _GateState extends State<_Gate> {
                   const SizedBox(height: 14),
                   const Text(
                     'Non riesco a collegarmi',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Calistoga',
+                      fontSize: 26,
+                      height: 1.1,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -156,9 +163,7 @@ class _GateState extends State<_Gate> {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 13.5,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
+                      color: Theme.of(context).colorScheme.onSurface
                           .withValues(alpha: 0.6),
                     ),
                   ),
@@ -167,9 +172,7 @@ class _GateState extends State<_Gate> {
                     'Server: $_host',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
+                      color: Theme.of(context).colorScheme.onSurface
                           .withValues(alpha: 0.45),
                     ),
                   ),
@@ -199,15 +202,44 @@ class _GateState extends State<_Gate> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(color: sage),
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: 'b-',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                  ),
+                  TextSpan(
+                    text: 'lance',
+                    style: TextStyle(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? sage
+                          : sageInk,
+                    ),
+                  ),
+                ],
+              ),
+              style: const TextStyle(
+                fontFamily: 'Calistoga',
+                fontSize: 38,
+                height: 1,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 28),
+            const SizedBox(
+              width: 26,
+              height: 26,
+              child: CircularProgressIndicator(strokeWidth: 2.5, color: sage),
+            ),
             const SizedBox(height: 18),
             Text(
               _phase,
               style: TextStyle(
                 fontSize: 13,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
+                color: Theme.of(context).colorScheme.onSurface
                     .withValues(alpha: 0.6),
               ),
             ),
@@ -216,9 +248,7 @@ class _GateState extends State<_Gate> {
               '$_host · tentativo $_round',
               style: TextStyle(
                 fontSize: 11.5,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
+                color: Theme.of(context).colorScheme.onSurface
                     .withValues(alpha: 0.4),
               ),
             ),

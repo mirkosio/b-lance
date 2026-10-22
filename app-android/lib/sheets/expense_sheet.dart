@@ -20,7 +20,11 @@ Future<void> showExpenseSheet(
 }
 
 class _ExpenseSheet extends StatefulWidget {
-  const _ExpenseSheet({required this.api, required this.detail, required this.onDone});
+  const _ExpenseSheet({
+    required this.api,
+    required this.detail,
+    required this.onDone,
+  });
 
   final Api api;
   final GroupDetail detail;
@@ -35,7 +39,9 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
   final _amount = TextEditingController();
   final _fx = TextEditingController();
 
-  late final List<Member> _people = widget.detail.members.where((m) => m.active).toList();
+  late final List<Member> _people = widget.detail.members
+      .where((m) => m.active)
+      .toList();
   late int? _paidBy = _people.any((m) => m.isMe)
       ? _people.firstWhere((m) => m.isMe).userId
       : (_people.isNotEmpty ? _people.first.userId : null);
@@ -62,8 +68,11 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
   bool get _needManualRate =>
       _currency != widget.detail.baseCurrency && !Meta.hasAutoRate(_currency);
 
-  String get _methodLabel =>
-      _method == 'even' ? 'Uguale per tutti' : _method == 'exact' ? 'Importo fisso' : 'Percentuale';
+  String get _methodLabel => _method == 'even'
+      ? 'Uguale per tutti'
+      : _method == 'exact'
+      ? 'Importo fisso'
+      : 'Percentuale';
 
   Future<void> _submit() async {
     final desc = _desc.text.trim();
@@ -82,8 +91,11 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
       return;
     }
     final fx = _fx.text.trim();
-    if (_needManualRate && (fx.isEmpty || double.tryParse(fx.replaceAll(',', '.')) == null)) {
-      _snack('Scrivi il tasso: 1 $_currency vale quanti ${widget.detail.baseCurrency}?');
+    if (_needManualRate &&
+        (fx.isEmpty || double.tryParse(fx.replaceAll(',', '.')) == null)) {
+      _snack(
+        'Scrivi il tasso: 1 $_currency vale quanti ${widget.detail.baseCurrency}?',
+      );
       return;
     }
     final values = <String, String>{};
@@ -108,9 +120,8 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
       if (!mounted) return;
       Navigator.of(context).pop();
       widget.onDone();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Spesa aggiunta')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Spesa aggiunta')));
     } on ApiException catch (e) {
       _snack(e.message);
       if (mounted) setState(() => _busy = false);
@@ -129,7 +140,9 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
   Widget build(BuildContext context) {
     final base = widget.detail.baseCurrency;
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
         child: Column(
@@ -142,18 +155,23 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 14),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
+                  color: Theme.of(context).colorScheme.onSurface
+                      .withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
             ),
-            const Text('Nuova spesa',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const Text(
+              'Nuova spesa',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
             const SizedBox(height: 14),
             TextField(
               controller: _desc,
               textCapitalization: TextCapitalization.sentences,
-              decoration: const InputDecoration(labelText: 'Cosa hai pagato? (es. Cena)'),
+              decoration: const InputDecoration(
+                labelText: 'Cosa hai pagato? (es. Cena)',
+              ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -161,7 +179,9 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                 Expanded(
                   child: TextField(
                     controller: _amount,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: const InputDecoration(labelText: 'Importo'),
                   ),
                 ),
@@ -196,9 +216,13 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
               const SizedBox(height: 12),
               TextField(
                 controller: _fx,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
-                  labelText: _needManualRate ? 'Tasso di cambio' : 'Tasso (opzionale)',
+                  labelText: _needManualRate
+                      ? 'Tasso di cambio'
+                      : 'Tasso (opzionale)',
                   hintText: '1 $_currency = ? $base',
                   helperText: _needManualRate
                       ? '$_currency non ha un tasso automatico: scrivilo tu.'
@@ -211,12 +235,16 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
               initialValue: _paidBy,
               decoration: const InputDecoration(labelText: 'Chi ha pagato'),
               items: [
-                for (final m in _people) DropdownMenuItem(value: m.userId, child: Text(m.name)),
+                for (final m in _people)
+                  DropdownMenuItem(value: m.userId, child: Text(m.name)),
               ],
               onChanged: (v) => setState(() => _paidBy = v),
             ),
             const SizedBox(height: 16),
-            const Text('Come si divide?', style: TextStyle(fontWeight: FontWeight.w700)),
+            const Text(
+              'Come si divide?',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
             SegmentedButton<String>(
               segments: const [
@@ -234,7 +262,8 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                   : '$_methodLabel per persona: compila i campi qui sotto.',
               style: TextStyle(
                 fontSize: 12.5,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                color: Theme.of(context).colorScheme.onSurface
+                    .withValues(alpha: 0.55),
               ),
             ),
             const SizedBox(height: 6),
@@ -278,7 +307,9 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                         child: TextField(
                           controller: _valueCtrl(m.userId),
                           enabled: _selected.contains(m.userId),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
                           decoration: InputDecoration(
                             isDense: true,
                             labelText: _method == 'percent' ? '%' : base,
@@ -295,7 +326,10 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Text('Aggiungi spesa'),
             ),

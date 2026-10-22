@@ -124,13 +124,12 @@ class _ExpenseDetailState extends State<_ExpenseDetail> {
       if (!mounted) return;
       Navigator.pop(context);
       widget.onDone();
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Spesa annullata')),
-      );
+      messenger.showSnackBar(const SnackBar(content: Text('Spesa annullata')));
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
@@ -248,8 +247,7 @@ class _ExpenseDetailState extends State<_ExpenseDetail> {
                     ),
                     Text(
                       '${formatMinor(s.amountMinor, expo)} ${e.currency}',
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w700),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -316,7 +314,8 @@ class _PaymentDetailState extends State<_PaymentDetail> {
     final me = _meOf(widget.detail);
     if (me == null) return false;
     final involved =
-        widget.payment.fromUser == me.userId || widget.payment.toUser == me.userId;
+        widget.payment.fromUser == me.userId ||
+        widget.payment.toUser == me.userId;
     return involved || me.canPaymentManage;
   }
 
@@ -361,7 +360,8 @@ class _PaymentDetailState extends State<_PaymentDetail> {
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
       setState(() => _busy = false);
@@ -391,8 +391,10 @@ class _PaymentDetailState extends State<_PaymentDetail> {
               ),
             ),
           ),
-          const Text('Pagamento',
-              style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800)),
+          const Text(
+            'Pagamento',
+            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+          ),
           const SizedBox(height: 12),
           Text(
             '${formatMinor(p.amountMinor, Meta.exponentOf(p.currency))} ${p.currency}',
@@ -482,9 +484,7 @@ class _Row extends StatelessWidget {
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
+                color: Theme.of(context).colorScheme.onSurface
                     .withValues(alpha: 0.55),
               ),
             ),
@@ -492,7 +492,10 @@ class _Row extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

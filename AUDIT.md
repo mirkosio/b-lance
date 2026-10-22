@@ -58,16 +58,16 @@ Altri minori: nessuna anteprima del gruppo quando si entra con un codice (l'endp
 
 ## 4. UI/UX e accessibilità (Fase 2)
 
-- **Struttura lineare**: home = lista gruppi + menu a tendina. Da rifare a sezioni stile banca: bottom nav **Home / Movimenti / Gruppi / Profilo**.
-- Manca il **saldo personale totale** in evidenza (oggi solo per gruppo).
-- Nessuno skeleton di caricamento, nessuna transizione, nessuno stagger, nessun haptic: solo spinner circolari.
-- Stati vuoti senza pulsante d'azione (l'utente deve trovare il FAB).
-- Selettore valute non ricercabile (dropdown con 125 voci).
-- Accessibilità: contrasti da misurare, target 44×44, Semantics sulle icone, rispetto di "riduci animazioni".
-- Gap non uniformi: 10, 12 e 16 px mescolati; card con altezze diverse in riga.
-- Duplicazione: `SectionCard` esiste in `ui.dart:147` **e** in `group_screen.dart:491`.
-- `formatMinor` (`ui.dart:124`) è solo italiano: da parametrizzare per l'i18n.
-- Zero widget test Flutter.
+- **Struttura lineare** (risolto in 1.1.0): ora bottom nav **Home / Movimenti / Gruppi / Profilo** con `IndexedStack`.
+- Manca il **saldo personale totale** (risolto in 1.1.0): hero con saldo per valuta sommato dai gruppi.
+- Nessuno skeleton/transizione/haptic (risolto in 1.1.0): skeleton pulsante, transizioni fade, haptic leggeri, reduced-motion.
+- Stati vuoti senza CTA (risolto in 1.1.0): ogni stato vuoto ha un'azione.
+- Selettore valute non ricercabile (risolto in 1.0.9).
+- Accessibilità (risolto in 1.1.0): contrasto ≥ 4.5:1, target 44, Semantics, riduzione animazioni.
+- Gap non uniformi (risolto in 1.1.0): griglia a 16 px, card in riga di altezza uguale.
+- Duplicazione `SectionCard` (risolta in 1.1.0): una sola definizione in `ui.dart`.
+- `formatMinor` solo italiano: **ancora aperto**, si chiude con l'i18n in Fase 3.
+- Zero widget test Flutter (risolto): 14 test (modelli, formati, dashboard, movimenti).
 
 ---
 
@@ -86,16 +86,17 @@ Altri minori: nessuna anteprima del gruppo quando si entra con un codice (l'endp
 - [x] Smoke test widget Flutter (11 test)
 - [x] Anteprima del gruppo prima di entrare con un codice
 
-### Fase 2 — "Bella" (redesign con ui-ux-promax)
-- [ ] Design tokens in codice (colori, tipografia bundled Inter+Calistoga, spazi, raggi)
-- [ ] Bottom nav 4 sezioni + schermata Profilo
-- [ ] Home bancaria: saldo totale, "ti devono / devi", gruppi
-- [ ] Movimenti globale con filtri
-- [ ] Group screen: saldo in evidenza, sezioni, azioni nel dettaglio
-- [ ] Motion 4/10 (150–220 ms, stagger 40–60 ms), haptic leggeri, reduced-motion
-- [ ] Skeleton, stati vuoti con CTA, transizioni di pagina
-- [ ] Accessibilità: contrasto 4.5:1, 44 px, Semantics
-- [ ] Light/dark a parità di qualità
+### Fase 2 — "Bella" (completata il 22/10/2026, app 1.1.0)
+- [x] Design tokens in codice (colori, tipografia bundled Inter+Calistoga, spazi, raggi)
+- [x] Bottom nav 4 sezioni + schermata Profilo (tema, sicurezza, logout globale, versione)
+- [x] Home bancaria: saldo totale per valuta, azioni rapide, gruppi recenti
+- [x] Movimenti globale con filtri (nuovo endpoint `/api/activity`)
+- [x] Group screen: saldo in evidenza, sezioni, azioni nel dettaglio
+- [x] Motion 4/10 (200–260 ms, haptic leggeri, reduced-motion; niente stagger per scelta)
+- [x] Skeleton, stati vuoti con CTA, transizioni di pagina
+- [x] Accessibilità: contrasto ≥ 4.5:1, target 44 px, Semantics
+- [x] Light/dark a parità di qualità
+- [x] Test: 108 backend, 14 Flutter, E2E produzione con movimenti globali
 
 ### Fase 3 — "Completa"
 - [ ] Profilo: nome/colore, elimina account (anonimizza), reset password con avviso spam

@@ -55,12 +55,16 @@ class _CurrencyPickerState extends State<_CurrencyPicker> {
     final filtered = q.isEmpty
         ? widget.currencies
         : widget.currencies
-            .where((c) =>
-                c.code.toLowerCase().contains(q) ||
-                c.name.toLowerCase().contains(q))
-            .toList();
+              .where(
+                (c) =>
+                    c.code.toLowerCase().contains(q) ||
+                    c.name.toLowerCase().contains(q),
+              )
+              .toList();
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SizedBox(
         height: MediaQuery.of(context).size.height * 0.75,
         child: Column(
@@ -70,9 +74,7 @@ class _CurrencyPickerState extends State<_CurrencyPicker> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
+                color: Theme.of(context).colorScheme.onSurface
                     .withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(4),
               ),
@@ -108,9 +110,7 @@ class _CurrencyPickerState extends State<_CurrencyPicker> {
                       child: Text(
                         'Nessuna valuta trovata',
                         style: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
+                          color: Theme.of(context).colorScheme.onSurface
                               .withValues(alpha: 0.55),
                         ),
                       ),
@@ -127,7 +127,9 @@ class _CurrencyPickerState extends State<_CurrencyPicker> {
                             radius: 18,
                             backgroundColor: sage.withValues(alpha: 0.12),
                             child: Text(
-                              c.symbol.isEmpty ? c.code.substring(0, 1) : c.symbol,
+                              c.symbol.isEmpty
+                                  ? c.code.substring(0, 1)
+                                  : c.symbol,
                               style: const TextStyle(
                                 color: sage,
                                 fontWeight: FontWeight.w800,
@@ -138,8 +140,9 @@ class _CurrencyPickerState extends State<_CurrencyPicker> {
                           title: Text(
                             '${c.code} · ${c.name}',
                             style: TextStyle(
-                              fontWeight:
-                                  isSel ? FontWeight.w800 : FontWeight.w500,
+                              fontWeight: isSel
+                                  ? FontWeight.w800
+                                  : FontWeight.w500,
                             ),
                           ),
                           trailing: isSel

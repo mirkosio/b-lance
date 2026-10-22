@@ -2,217 +2,250 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../models.dart';
-import '../theme_controller.dart';
+import '../sheets/group_sheets.dart';
 import '../ui.dart';
-import '../widgets/currency_picker.dart';
+import '../widgets/group_tile.dart';
+import '../widgets/hero_balance.dart';
+import '../widgets/skeleton.dart';
 import 'group_screen.dart';
-import 'login_screen.dart';
 
+/// Home: saldo complessivo, azioni rapide, gruppi recenti.
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.api, required this.user});
+  const HomeScreen({
+    super.key,
+    required this.api,
+    required this.user,
+    required this.revision,
+    required this.onChanged,
+    required this.onOpenProfile,
+    required this.onSeeAllGroups,
+  });
 
   final Api api;
   final User user;
+  final int revision;
+  final VoidCallback onChanged;
+  final VoidCallback onOpenProfile;
+  final VoidCallback onSeeAllGroups;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late Future<List<GroupSummary>> _future;
+  late Future<Dashboard> _future = widget.api.dashboard();
 
   @override
-  void initState() {
-    super.initState();
-    _future = widget.api.groups();
+  void didUpdateWidget(covariant HomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.revision != widget.revision) _reload();
   }
 
   void _reload() {
-    setState(() => _future = widget.api.groups());
+    setState(() => _future = widget.api.dashboard());
   }
 
-  void _openGroup(GroupSummary g) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => GroupScreen(api: widget.api, groupId: g.id)),
-    );
-  }
-
-  Future<void> _newGroup() async {
-    final created = await showModalBottomSheet<GroupSummary>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (_) => _NewGroupSheet(api: widget.api),
-    );
-    if (created == null || !mounted) return;
+  Future<void> _refresh() async {
     _reload();
-    _openGroup(created);
-  }
-
-  Future<void> _joinGroup() async {
-    final code = TextEditingController();
-    String? error;
-    final search = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setD) => AlertDialog(
-          title: const Text('Unisciti a un gruppo'),
-          content: TextField(
-            controller: code,
-            autofocus: true,
-            textCapitalization: TextCapitalization.characters,
-            decoration: InputDecoration(
-              labelText: 'Codice di invito',
-              hintText: 'Es. K7M2QX9P',
-              errorText: error,
-            ),
-            onSubmitted: (_) {
-              final c = code.text.trim();
-              if (c.isEmpty) {
-                setD(() => error = 'Scrivi il codice che ti hanno dato');
-                return;
-              }
-              Navigator.pop(ctx, true);
-            },
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
-            FilledButton(
-              style: FilledButton.styleFrom(minimumSize: const Size(100, 44)),
-              onPressed: () {
-                final c = code.text.trim();
-                if (c.isEmpty) {
-                  setD(() => error = 'Scrivi il codice che ti hanno dato');
-                  return;
-                }
-                Navigator.pop(ctx, true);
-              },
-              child: const Text('Cerca'),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (search != true) return;
-    final value = code.text.trim().toUpperCase();
     try {
-      // Prima mostro di quale gruppo si tratta: niente ingressi alla cieca.
-      final preview = await widget.api.invitePreview(value);
-      if (!mounted) return;
-      final join = await showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: Text(preview.name),
-          content: Text(
-            '${preview.memberCount} ${preview.memberCount == 1 ? 'membro' : 'membri'}'
-            ' · valuta ${preview.baseCurrency}\n\nVuoi entrare in questo gruppo?',
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
-            FilledButton(
-              style: FilledButton.styleFrom(minimumSize: const Size(100, 44)),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Entra'),
-            ),
-          ],
-        ),
-      );
-      if (join != true) return;
-      final g = await widget.api.joinGroup(value);
-      if (!mounted) return;
-      _reload();
-      _openGroup(g);
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(describeError(e))));
+      await _future;
+    } catch (_) {
+      // L'errore e' gia' mostrato dal FutureBuilder.
     }
   }
 
-  Future<void> _logout() async {
-    await widget.api.logout();
-    if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => LoginScreen(api: widget.api)),
-      (_) => false,
+  Future<void> _openGroup(int id) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => GroupScreen(api: widget.api, groupId: id),
+      ),
     );
+    if (mounted) widget.onChanged();
+  }
+
+  Future<void> _newGroup() async {
+    final created = await showNewGroupSheet(context, api: widget.api);
+    if (created == null || !mounted) return;
+    widget.onChanged();
+    await _openGroup(created.id);
+  }
+
+  Future<void> _joinGroup() async {
+    final joined = await showJoinGroupSheet(context, api: widget.api);
+    if (joined == null || !mounted) return;
+    widget.onChanged();
+    await _openGroup(joined.id);
   }
 
   @override
   Widget build(BuildContext context) {
+    final dark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('b-lance', style: TextStyle(fontWeight: FontWeight.w800)),
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (v) {
-              if (v == 'join') _joinGroup();
-              if (v == 'theme') showThemePicker(context);
-              if (v == 'logout') _logout();
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'join', child: Text('Unisciti con un codice')),
-              PopupMenuItem(value: 'theme', child: Text('Tema')),
-              PopupMenuDivider(),
-              PopupMenuItem(enabled: false, child: Text('Versione $kAppVersion')),
-              PopupMenuItem(value: 'logout', child: Text('Esci')),
+        titleSpacing: 16,
+        title: Text.rich(
+          TextSpan(
+            children: [
+              TextSpan(
+                text: 'b-',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+              TextSpan(
+                text: 'lance',
+                style: TextStyle(color: dark ? sage : sageInk),
+              ),
             ],
           ),
+          style: const TextStyle(
+            fontFamily: 'Calistoga',
+            fontSize: 26,
+            height: 1,
+            letterSpacing: -0.4,
+          ),
+        ),
+        actions: [
+          Tooltip(
+            message: 'Profilo',
+            child: Semantics(
+              button: true,
+              label: 'Apri il profilo',
+              child: InkWell(
+                borderRadius: BorderRadius.circular(999),
+                onTap: () {
+                  widget.onOpenProfile();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: parseHexColor(widget.user.color),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      widget.user.name.isEmpty
+                          ? '?'
+                          : widget.user.name.characters.first.toUpperCase(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _newGroup,
-        backgroundColor: sage,
-        foregroundColor: Colors.white,
-        icon: const Icon(Icons.add),
-        label: const Text('Nuovo gruppo', style: TextStyle(fontWeight: FontWeight.w700)),
-      ),
       body: RefreshIndicator(
-        onRefresh: () async => _reload(),
-        child: FutureBuilder<List<GroupSummary>>(
+        onRefresh: _refresh,
+        child: FutureBuilder<Dashboard>(
           future: _future,
           builder: (ctx, snap) {
             if (snap.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator(color: sage));
+              return const DashboardSkeleton();
             }
             if (snap.hasError) {
               return ListView(
-                padding: const EdgeInsets.all(20),
+                physics: const AlwaysScrollableScrollPhysics(),
                 children: [
-                  const SizedBox(height: 60),
-                  _ErrorBox(
-                    message: snap.error is ApiException
-                        ? (snap.error as ApiException).message
-                        : 'Connessione assente: controlla la rete.',
-                    onRetry: _reload,
+                  const SizedBox(height: 40),
+                  EmptyState(
+                    icon: Icons.cloud_off,
+                    title: 'Non riesco a collegarmi',
+                    message: describeError(snap.error!),
+                    action: OutlinedButton.icon(
+                      onPressed: _reload,
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Riprova'),
+                    ),
                   ),
                 ],
               );
             }
-            final groups = snap.data ?? const [];
+            final data = snap.data!;
+            final groups = data.groups;
+            final recent = groups.take(3).toList();
             return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
               children: [
                 Text(
-                  'Ciao ${widget.user.name}',
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w800),
+                  'Ciao, ${widget.user.name}',
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Ecco a che punto sono i tuoi conti.',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                  ),
+                  'Ecco come stanno i tuoi conti.',
+                  style: TextStyle(fontSize: 13.5, color: mutedOn(context)),
                 ),
-                const SizedBox(height: 18),
+                const SizedBox(height: 16),
+                HeroBalance(nets: data.netByCurrency),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _QuickAction(
+                        icon: Icons.add,
+                        label: 'Nuovo gruppo',
+                        onTap: _newGroup,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _QuickAction(
+                        icon: Icons.group_add_outlined,
+                        label: 'Unisciti',
+                        onTap: _joinGroup,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'I tuoi gruppi',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    if (groups.isNotEmpty)
+                      TextButton(
+                        onPressed: () {
+                          widget.onSeeAllGroups();
+                        },
+                        child: const Text('Vedi tutti'),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
                 if (groups.isEmpty)
-                  const _EmptyBox()
+                  EmptyState(
+                    icon: Icons.groups_outlined,
+                    title: 'Nessun gruppo ancora',
+                    message:
+                        'Crea un gruppo per dividere le spese, oppure entra '
+                        'in quello di un amico con un codice.',
+                    action: SizedBox(
+                      width: 220,
+                      child: FilledButton.icon(
+                        onPressed: _newGroup,
+                        icon: const Icon(Icons.add, size: 19),
+                        label: const Text('Crea il primo gruppo'),
+                      ),
+                    ),
+                  )
                 else
-                  for (final g in groups) _GroupCard(group: g, onTap: () => _openGroup(g)),
+                  for (final g in recent)
+                    GroupTile(group: g, onTap: () => _openGroup(g.id)),
               ],
             );
           },
@@ -222,288 +255,56 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _GroupCard extends StatelessWidget {
-  const _GroupCard({required this.group, required this.onTap});
+/// Azione rapida: card bassa, icona in tinta, etichetta.
+class _QuickAction extends StatelessWidget {
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
-  final GroupSummary group;
+  final IconData icon;
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final net = group.netMinor;
-    final color = net > 0 ? posColor : net < 0 ? negColor : null;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Card(
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: sage.withValues(alpha: 0.13),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    group.name.characters.first.toUpperCase(),
-                    style: const TextStyle(
-                        color: sage, fontWeight: FontWeight.w800, fontSize: 19),
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        group.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15.5),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        '${group.memberCount} ${group.memberCount == 1 ? 'membro' : 'membri'}'
-                        ' · speso ${formatMinor(group.totalExpensesMinor, Meta.exponentOf(group.baseCurrency))} ${group.baseCurrency}',
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      net == 0 ? 'in pari' : _netText(net, group.baseCurrency),
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13.5,
-                        color: color ?? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    if (net != 0)
-                      Text(
-                        net > 0 ? 'ti devono' : 'devi',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  String _netText(int net, String cur) =>
-      '${net > 0 ? '+' : '-'}${formatMinor(net.abs(), Meta.exponentOf(cur))} $cur';
-}
-
-class _EmptyBox extends StatelessWidget {
-  const _EmptyBox();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 48),
-      child: Column(
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: sage.withValues(alpha: 0.10),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: const Icon(Icons.receipt_long_outlined, size: 34, color: sage),
-          ),
-          const SizedBox(height: 16),
-          const Text('Nessun gruppo ancora',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
-          const SizedBox(height: 6),
-          Text(
-            'Crea un gruppo oppure unisciti\na quello degli amici con un codice.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 13.5,
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ErrorBox extends StatelessWidget {
-  const _ErrorBox({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const SizedBox(height: 40),
-        Text(message, textAlign: TextAlign.center),
-        const SizedBox(height: 14),
-        OutlinedButton.icon(
-          onPressed: onRetry,
-          icon: const Icon(Icons.refresh),
-          label: const Text('Riprova'),
-        ),
-      ],
-    );
-  }
-}
-
-/// Foglio "Nuovo gruppo": nome + valuta con ricerca, errori visibili.
-class _NewGroupSheet extends StatefulWidget {
-  const _NewGroupSheet({required this.api});
-
-  final Api api;
-
-  @override
-  State<_NewGroupSheet> createState() => _NewGroupSheetState();
-}
-
-class _NewGroupSheetState extends State<_NewGroupSheet> {
-  final _name = TextEditingController();
-  String _currency = 'EUR';
-  String? _error;
-  bool _busy = false;
-
-  @override
-  void dispose() {
-    _name.dispose();
-    super.dispose();
-  }
-
-  String get _currencyLabel {
-    final c = Meta.byCode(_currency);
-    return c == null ? _currency : '${c.code} · ${c.name}';
-  }
-
-  Future<void> _pickCurrency() async {
-    final code = await showCurrencyPicker(
-      context,
-      currencies: Meta.currencies,
-      selected: _currency,
-      title: 'Valuta del gruppo',
-    );
-    if (code != null && mounted) setState(() => _currency = code);
-  }
-
-  Future<void> _create() async {
-    final name = _name.text.trim();
-    if (name.isEmpty) {
-      setState(() => _error = 'Dai un nome al gruppo (es. Vacanza, Casa)');
-      return;
-    }
-    setState(() {
-      _busy = true;
-      _error = null;
-    });
-    try {
-      final g = await widget.api.createGroup(name, _currency);
-      if (!mounted) return;
-      Navigator.pop(context, g);
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _busy = false;
-        _error = e.message;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _busy = false;
-        _error = describeError(e);
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 14),
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () {
+          hapticTap();
+          onTap();
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+          child: Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(4),
+                  color: sage.withValues(alpha: dark ? 0.22 : 0.13),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 20, color: dark ? sage : sageInk),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13.5,
+                    height: 1.2,
+                  ),
                 ),
               ),
-            ),
-            const Text('Nuovo gruppo',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 14),
-            TextField(
-              controller: _name,
-              autofocus: true,
-              textCapitalization: TextCapitalization.sentences,
-              onChanged: (_) {
-                if (_error != null) setState(() => _error = null);
-              },
-              decoration: InputDecoration(
-                labelText: 'Nome (es. Vacanza, Casa)',
-                errorText: _error,
-              ),
-            ),
-            const SizedBox(height: 12),
-            InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: _busy ? null : _pickCurrency,
-              child: InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'Valuta del gruppo',
-                  suffixIcon: Icon(Icons.unfold_more, size: 20),
-                ),
-                child: Text(_currencyLabel),
-              ),
-            ),
-            const SizedBox(height: 20),
-            FilledButton(
-              onPressed: _busy ? null : _create,
-              child: _busy
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Crea gruppo'),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

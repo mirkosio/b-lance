@@ -19,7 +19,11 @@ Future<void> showPaymentSheet(
 }
 
 class _PaymentSheet extends StatefulWidget {
-  const _PaymentSheet({required this.api, required this.detail, required this.onDone});
+  const _PaymentSheet({
+    required this.api,
+    required this.detail,
+    required this.onDone,
+  });
 
   final Api api;
   final GroupDetail detail;
@@ -33,7 +37,9 @@ class _PaymentSheetState extends State<_PaymentSheet> {
   final _amount = TextEditingController();
   final _note = TextEditingController();
 
-  late final List<Member> _people = widget.detail.members.where((m) => m.active).toList();
+  late final List<Member> _people = widget.detail.members
+      .where((m) => m.active)
+      .toList();
 
   // Default sensati: chi deve -> chi e in credito.
   late int? _from = _defaults()['from'];
@@ -85,9 +91,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
       if (!mounted) return;
       Navigator.of(context).pop();
       widget.onDone();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Pagamento registrato')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text('Pagamento registrato')));
     } on ApiException catch (e) {
       _snack(e.message);
       if (mounted) setState(() => _busy = false);
@@ -101,7 +106,9 @@ class _PaymentSheetState extends State<_PaymentSheet> {
   Widget build(BuildContext context) {
     final base = widget.detail.baseCurrency;
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
         child: Column(
@@ -114,19 +121,23 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 14),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.15),
+                  color: Theme.of(context).colorScheme.onSurface
+                      .withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
             ),
-            const Text('Registra pagamento',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+            const Text(
+              'Registra pagamento',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
             const SizedBox(height: 6),
             Text(
               'Un bonifico fra due membri, anche parziale.',
               style: TextStyle(
                 fontSize: 12.5,
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                color: Theme.of(context).colorScheme.onSurface
+                    .withValues(alpha: 0.55),
               ),
             ),
             const SizedBox(height: 14),
@@ -137,7 +148,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                     initialValue: _from,
                     decoration: const InputDecoration(labelText: 'Chi paga'),
                     items: [
-                      for (final m in _people) DropdownMenuItem(value: m.userId, child: Text(m.name)),
+                      for (final m in _people)
+                        DropdownMenuItem(value: m.userId, child: Text(m.name)),
                     ],
                     onChanged: (v) => setState(() => _from = v),
                   ),
@@ -151,7 +163,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                     initialValue: _to,
                     decoration: const InputDecoration(labelText: 'A chi'),
                     items: [
-                      for (final m in _people) DropdownMenuItem(value: m.userId, child: Text(m.name)),
+                      for (final m in _people)
+                        DropdownMenuItem(value: m.userId, child: Text(m.name)),
                     ],
                     onChanged: (v) => setState(() => _to = v),
                   ),
@@ -161,7 +174,9 @@ class _PaymentSheetState extends State<_PaymentSheet> {
             const SizedBox(height: 12),
             TextField(
               controller: _amount,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
               decoration: InputDecoration(
                 labelText: 'Importo',
                 hintText: 'es. 15,00 $base',
@@ -180,7 +195,10 @@ class _PaymentSheetState extends State<_PaymentSheet> {
                   ? const SizedBox(
                       width: 20,
                       height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Text('Registra pagamento'),
             ),

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../ui.dart';
-import 'home_screen.dart';
+import 'main_shell.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.api, this.notice});
@@ -62,7 +62,9 @@ class _LoginScreenState extends State<LoginScreen> {
       await widget.api.loadMeta();
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen(api: widget.api, user: user)),
+        MaterialPageRoute(
+          builder: (_) => MainShell(api: widget.api, user: user),
+        ),
       );
     } on ApiException catch (e) {
       _snack(e.message);
@@ -91,7 +93,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       _register ? 'Crea il tuo account' : 'Bentornato',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                        color: Theme.of(context).colorScheme.onSurface
+                            .withValues(alpha: 0.6),
                         fontSize: 14.5,
                       ),
                     ),
@@ -104,16 +107,25 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: BoxDecoration(
                         color: negColor.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: negColor.withValues(alpha: 0.35)),
+                        border: Border.all(
+                          color: negColor.withValues(alpha: 0.35),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.info_outline, size: 18, color: negColor),
+                          const Icon(
+                            Icons.info_outline,
+                            size: 18,
+                            color: negColor,
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               widget.notice!,
-                              style: const TextStyle(fontSize: 13, color: negColor),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: negColor,
+                              ),
                             ),
                           ),
                         ],
@@ -144,9 +156,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       labelText: 'Password',
                       helperText: _register ? 'Minimo 6 caratteri.' : null,
                       suffixIcon: IconButton(
-                        tooltip: _obscure ? 'Mostra password' : 'Nascondi password',
+                        tooltip: _obscure
+                            ? 'Mostra password'
+                            : 'Nascondi password',
                         icon: Icon(
-                          _obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                          _obscure
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
                           size: 20,
                         ),
                         onPressed: () => setState(() => _obscure = !_obscure),
@@ -158,14 +174,20 @@ class _LoginScreenState extends State<LoginScreen> {
                     onPressed: _busy ? null : _submit,
                     child: _busy
                         ? const SizedBox(
-                            width: 20, height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : Text(_register ? 'Crea account' : 'Entra'),
                   ),
                   const SizedBox(height: 10),
                   TextButton(
-                    onPressed: _busy ? null : () => setState(() => _register = !_register),
+                    onPressed: _busy
+                        ? null
+                        : () => setState(() => _register = !_register),
                     child: Text(
                       _register
                           ? 'Hai già un account? Entra'
@@ -194,15 +216,20 @@ class _Wordmark extends StatelessWidget {
       TextSpan(
         text: 'b-',
         style: TextStyle(
+          fontFamily: 'Calistoga',
           fontSize: size,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.5,
+          height: 1,
+          letterSpacing: -0.4,
           color: Theme.of(context).colorScheme.onSurface,
         ),
         children: [
           TextSpan(
             text: 'lance',
-            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? sage
+                  : sageInk,
+            ),
           ),
         ],
       ),

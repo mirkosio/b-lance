@@ -291,6 +291,94 @@ def api_groups(user: User = Depends(require_api_user), db: Session = Depends(get
     return {"groups": out, "net_by_currency": net_by_currency}
 
 
+@router.get("/activity")
+def api_activity(
+    limit: int = 40,
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    """Ultimi movimenti dell'utente, da TUTTI i suoi gruppi.
+
+    Serve alla sezione "Movimenti" dell'app: una sola chiamata invece di
+    scaricare il dettaglio di ogni gruppo.
+    """
+    limit = max(1, min(limit, 100))
+    group_ids = db.scalars(
+        select(GroupMember.group_id).where(GroupMember.user_id == user.id)
+    ).all()
+    if not group_ids:
+        return {"items": []}
+
+    groups = {
+        g.id: g
+        for g in db.scalars(select(Group).where(Group.id.in_(group_ids))).all()
+    }
+    expenses = db.scalars(
+        select(Expense)
+        .where(Expense.group_id.in_(group_ids))
+        .order_by(Expense.created_at.desc())
+        .limit(limit)
+    ).all()
+    payments = db.scalars(
+        select(Payment)
+        .where(Payment.group_id.in_(group_ids))
+        .order_by(Payment.created_at.desc())
+        .limit(limit)
+    ).all()
+
+    user_ids = {e.paid_by for e in expenses} | {
+        p.from_user for p in payments
+    } | {p.to_user for p in payments}
+    names = dict(
+        db.execute(select(User.id, User.name).where(User.id.in_(user_ids))).all()
+    )
+
+    items: list[dict] = []
+    for e in expenses:
+        g = groups.get(e.group_id)
+        if g is None:
+            continue
+        items.append(
+            {
+                "kind": "expense",
+                "id": e.id,
+                "group_id": g.id,
+                "group_name": g.name,
+                "title": e.description,
+                "subtitle": f"ha pagato {names.get(e.paid_by, '?')}",
+                "amount_minor": e.amount_minor,
+                "currency": e.currency,
+                "base_amount_minor": e.base_amount_minor,
+                "base_currency": e.base_currency,
+                "created_at": e.created_at.isoformat() if e.created_at else None,
+                "voided": e.voided_at is not None,
+            }
+        )
+    for p in payments:
+        g = groups.get(p.group_id)
+        if g is None:
+            continue
+        items.append(
+            {
+                "kind": "payment",
+                "id": p.id,
+                "group_id": g.id,
+                "group_name": g.name,
+                "title": f"{names.get(p.from_user, '?')} → {names.get(p.to_user, '?')}",
+                "subtitle": (p.note or "").strip(),
+                "amount_minor": p.amount_minor,
+                "currency": p.currency,
+                "base_amount_minor": p.amount_minor,
+                "base_currency": p.currency,
+                "created_at": p.created_at.isoformat() if p.created_at else None,
+                "voided": False,
+            }
+        )
+
+    items.sort(key=lambda x: x["created_at"] or "", reverse=True)
+    return {"items": items[:limit]}
+
+
 @router.post("/groups")
 def api_create_group(
     data: GroupIn,

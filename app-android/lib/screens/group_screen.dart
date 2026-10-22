@@ -7,6 +7,8 @@ import '../sheets/detail_sheets.dart';
 import '../sheets/expense_sheet.dart';
 import '../sheets/payment_sheet.dart';
 import '../ui.dart';
+import '../widgets/hero_balance.dart';
+import '../widgets/skeleton.dart';
 
 class GroupScreen extends StatefulWidget {
   const GroupScreen({super.key, required this.api, required this.groupId});
@@ -36,7 +38,10 @@ class _GroupScreenState extends State<GroupScreen> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  Future<void> _run(Future<void> Function() action, {String ok = 'Fatto'}) async {
+  Future<void> _run(
+    Future<void> Function() action, {
+    String ok = 'Fatto',
+  }) async {
     try {
       await action();
       _reload();
@@ -57,7 +62,10 @@ class _GroupScreenState extends State<GroupScreen> {
         title: const Text('Rinomina gruppo'),
         content: TextField(controller: name, autofocus: true),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Annulla')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annulla'),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(minimumSize: const Size(100, 44)),
             onPressed: () => Navigator.pop(ctx, true),
@@ -67,7 +75,9 @@ class _GroupScreenState extends State<GroupScreen> {
       ),
     );
     if (ok == true && name.text.trim().isNotEmpty) {
-      await _run(() => widget.api.renameGroup(widget.groupId, name.text.trim()));
+      await _run(
+        () => widget.api.renameGroup(widget.groupId, name.text.trim()),
+      );
     }
   }
 
@@ -76,9 +86,14 @@ class _GroupScreenState extends State<GroupScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Eliminare il gruppo?'),
-        content: const Text('Vengono cancellati spese, pagamenti e saldi. Non si torna indietro.'),
+        content: const Text(
+          'Vengono cancellati spese, pagamenti e saldi. Non si torna indietro.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Indietro')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Indietro'),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(
               minimumSize: const Size(100, 44),
@@ -121,35 +136,44 @@ class _GroupScreenState extends State<GroupScreen> {
       future: _future,
       builder: (ctx, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator(color: sage)));
+          return Scaffold(appBar: AppBar(), body: const ListSkeleton(rows: 4));
         }
         if (snap.hasError) {
           return Scaffold(
             appBar: AppBar(),
-            body: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(snap.error is ApiException
-                      ? (snap.error as ApiException).message
-                      : 'Connessione assente.'),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
+            body: ListView(
+              children: [
+                const SizedBox(height: 40),
+                EmptyState(
+                  icon: Icons.cloud_off,
+                  title: 'Non riesco a collegarmi',
+                  message: describeError(snap.error!),
+                  action: OutlinedButton.icon(
                     onPressed: _reload,
                     icon: const Icon(Icons.refresh),
                     label: const Text('Riprova'),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         }
         final d = snap.data!;
         final expo = Meta.exponentOf(d.baseCurrency);
+        Member? me;
+        for (final m in d.members) {
+          if (m.isMe && m.active) {
+            me = m;
+            break;
+          }
+        }
         final canManageInvite = d.isOwner || d.perms.contains('members_manage');
         return Scaffold(
           appBar: AppBar(
-            title: Text(d.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+            title: Text(
+              d.name,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+            ),
             actions: [
               if (d.isOwner)
                 PopupMenuButton<String>(
@@ -159,7 +183,10 @@ class _GroupScreenState extends State<GroupScreen> {
                   },
                   itemBuilder: (_) => const [
                     PopupMenuItem(value: 'rename', child: Text('Rinomina')),
-                    PopupMenuItem(value: 'delete', child: Text('Elimina gruppo')),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Elimina gruppo'),
+                    ),
                   ],
                 ),
             ],
@@ -169,7 +196,19 @@ class _GroupScreenState extends State<GroupScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
               children: [
-                _SectionCard(
+                if (me != null) ...[
+                  HeroBalance(
+                    nets: {d.baseCurrency: me.netMinor},
+                    label: 'Il tuo saldo nel gruppo',
+                    footnote: me.netMinor > 0
+                        ? 'Ti devono'
+                        : me.netMinor < 0
+                        ? 'Devi'
+                        : 'In pari',
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                SectionCard(
                   title: 'Saldi',
                   child: Column(
                     children: [
@@ -182,7 +221,7 @@ class _GroupScreenState extends State<GroupScreen> {
                                 width: 10,
                                 height: 10,
                                 decoration: BoxDecoration(
-                                  color: _parseColor(m.color),
+                                  color: parseHexColor(m.color),
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -190,23 +229,27 @@ class _GroupScreenState extends State<GroupScreen> {
                               Expanded(
                                 child: Text(
                                   m.isMe ? '${m.name} (tu)' : m.name,
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                               Text(
                                 m.netMinor == 0
                                     ? 'in pari'
-                                    : formatSigned(m.netMinor, expo, d.baseCurrency),
+                                    : formatSigned(
+                                        m.netMinor,
+                                        expo,
+                                        d.baseCurrency,
+                                      ),
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   color: m.netMinor > 0
                                       ? posColor
                                       : m.netMinor < 0
-                                          ? negColor
-                                          : Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withValues(alpha: 0.45),
+                                      ? negColor
+                                      : Theme.of(context).colorScheme.onSurface
+                                            .withValues(alpha: 0.66),
                                 ),
                               ),
                             ],
@@ -217,7 +260,7 @@ class _GroupScreenState extends State<GroupScreen> {
                 ),
                 if (d.transfers.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  _SectionCard(
+                  SectionCard(
                     title: 'Chi paga a chi',
                     child: Column(
                       children: [
@@ -230,12 +273,21 @@ class _GroupScreenState extends State<GroupScreen> {
                                   child: Text(
                                     '${d.memberById(t.payerId)?.name ?? "?"} → '
                                     '${d.memberById(t.payeeId)?.name ?? "?"}',
-                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                                 Text(
                                   '${formatMinor(t.amountMinor, expo)} ${d.baseCurrency}',
-                                  style: const TextStyle(fontWeight: FontWeight.w800, color: sage),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                    color:
+                                        Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? sage
+                                        : sageInk,
+                                  ),
                                 ),
                               ],
                             ),
@@ -245,24 +297,35 @@ class _GroupScreenState extends State<GroupScreen> {
                   ),
                 ],
                 const SizedBox(height: 12),
-                _SectionCard(
+                SectionCard(
                   title: 'Spese',
                   trailing: Text(
                     '${formatMinor(d.totalExpensesMinor, expo)} ${d.baseCurrency}',
-                    style: const TextStyle(fontWeight: FontWeight.w800, color: sage),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? sage
+                          : sageInk,
+                    ),
                   ),
                   child: d.expenses.isEmpty
-                      ? Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            'Nessuna spesa: aggiungine una col pulsante sotto.',
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.55),
-                            ),
+                      ? EmptyState(
+                          compact: true,
+                          icon: Icons.receipt_long_outlined,
+                          title: 'Nessuna spesa',
+                          message: 'Aggiungi la prima spesa del gruppo.',
+                          action: OutlinedButton.icon(
+                            onPressed: () {
+                              hapticConfirm();
+                              showExpenseSheet(
+                                context,
+                                api: widget.api,
+                                detail: d,
+                                onDone: _reload,
+                              );
+                            },
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('Aggiungi spesa'),
                           ),
                         )
                       : Column(
@@ -278,12 +341,15 @@ class _GroupScreenState extends State<GroupScreen> {
                                   onDone: _reload,
                                 ),
                                 child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 7),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 7,
+                                  ),
                                   child: Row(
                                     children: [
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
                                               e.description,
@@ -296,9 +362,11 @@ class _GroupScreenState extends State<GroupScreen> {
                                                     : null,
                                                 color: e.voided
                                                     ? Theme.of(context)
-                                                        .colorScheme
-                                                        .onSurface
-                                                        .withValues(alpha: 0.45)
+                                                          .colorScheme
+                                                          .onSurface
+                                                          .withValues(
+                                                            alpha: 0.45,
+                                                          )
                                                     : null,
                                               ),
                                             ),
@@ -313,14 +381,15 @@ class _GroupScreenState extends State<GroupScreen> {
                                                 color: Theme.of(context)
                                                     .colorScheme
                                                     .onSurface
-                                                    .withValues(alpha: 0.55),
+                                                    .withValues(alpha: 0.66),
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
                                       Column(
-                                        crossAxisAlignment: CrossAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
                                         children: [
                                           Text(
                                             '${formatMinor(e.amountMinor, Meta.exponentOf(e.currency))} ${e.currency}',
@@ -331,9 +400,9 @@ class _GroupScreenState extends State<GroupScreen> {
                                                   : null,
                                               color: e.voided
                                                   ? Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurface
-                                                      .withValues(alpha: 0.45)
+                                                        .colorScheme
+                                                        .onSurface
+                                                        .withValues(alpha: 0.45)
                                                   : null,
                                             ),
                                           ),
@@ -361,7 +430,7 @@ class _GroupScreenState extends State<GroupScreen> {
                 ),
                 if (d.payments.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  _SectionCard(
+                  SectionCard(
                     title: 'Pagamenti',
                     child: Column(
                       children: [
@@ -381,18 +450,23 @@ class _GroupScreenState extends State<GroupScreen> {
                                 children: [
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           '${p.fromName} → ${p.toName}',
-                                          style: const TextStyle(fontWeight: FontWeight.w600),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                         if ((p.note ?? '').trim().isNotEmpty ||
                                             p.createdAt != null) ...[
                                           const SizedBox(height: 2),
                                           Text(
                                             [
-                                              if ((p.note ?? '').trim().isNotEmpty)
+                                              if ((p.note ?? '')
+                                                  .trim()
+                                                  .isNotEmpty)
                                                 p.note!.trim(),
                                               if (p.createdAt != null)
                                                 formatDateTime(p.createdAt),
@@ -404,7 +478,7 @@ class _GroupScreenState extends State<GroupScreen> {
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withValues(alpha: 0.55),
+                                                  .withValues(alpha: 0.66),
                                             ),
                                           ),
                                         ],
@@ -413,7 +487,9 @@ class _GroupScreenState extends State<GroupScreen> {
                                   ),
                                   Text(
                                     '${formatMinor(p.amountMinor, expo)} ${p.currency}',
-                                    style: const TextStyle(fontWeight: FontWeight.w800),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
                                   const SizedBox(width: 4),
                                   Icon(
@@ -422,7 +498,7 @@ class _GroupScreenState extends State<GroupScreen> {
                                     color: Theme.of(context)
                                         .colorScheme
                                         .onSurface
-                                        .withValues(alpha: 0.35),
+                                        .withValues(alpha: 0.45),
                                   ),
                                 ],
                               ),
@@ -433,14 +509,17 @@ class _GroupScreenState extends State<GroupScreen> {
                   ),
                 ],
                 const SizedBox(height: 12),
-                _SectionCard(
+                SectionCard(
                   title: 'Invita amici',
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Codice: ${d.inviteCode}',
-                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                        ),
                       ),
                       const SizedBox(height: 10),
                       Row(
@@ -476,12 +555,15 @@ class _GroupScreenState extends State<GroupScreen> {
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(50),
                     ),
-                    onPressed: () => showPaymentSheet(
-                      context,
-                      api: widget.api,
-                      detail: d,
-                      onDone: _reload,
-                    ),
+                    onPressed: () {
+                      hapticConfirm();
+                      showPaymentSheet(
+                        context,
+                        api: widget.api,
+                        detail: d,
+                        onDone: _reload,
+                      );
+                    },
                     icon: const Icon(Icons.swap_horiz, size: 19),
                     label: const Text('Pagamento'),
                   ),
@@ -489,12 +571,15 @@ class _GroupScreenState extends State<GroupScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () => showExpenseSheet(
-                      context,
-                      api: widget.api,
-                      detail: d,
-                      onDone: _reload,
-                    ),
+                    onPressed: () {
+                      hapticConfirm();
+                      showExpenseSheet(
+                        context,
+                        api: widget.api,
+                        detail: d,
+                        onDone: _reload,
+                      );
+                    },
                     icon: const Icon(Icons.add, size: 19),
                     label: const Text('Spesa'),
                   ),
@@ -504,46 +589,6 @@ class _GroupScreenState extends State<GroupScreen> {
           ),
         );
       },
-    );
-  }
-
-  Color _parseColor(String hex) {
-    var h = hex.replaceFirst('#', '');
-    if (h.length == 6) h = 'FF$h';
-    final v = int.tryParse(h, radix: 16);
-    return v == null ? sage : Color(v);
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.title, required this.child, this.trailing});
-
-  final String title;
-  final Widget child;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(17),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(title,
-                      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15)),
-                ),
-                ?trailing,
-              ],
-            ),
-            const SizedBox(height: 10),
-            child,
-          ],
-        ),
-      ),
     );
   }
 }

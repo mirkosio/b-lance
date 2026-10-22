@@ -213,3 +213,52 @@ def test_membro_senza_permesso_non_gestisce_membri(client: TestClient):
         headers=_auth(token_b),
     )
     assert r.status_code == 403
+
+
+def test_activity_unisce_spese_e_pagamenti(client: TestClient):
+    token_a, user_a = _register(client, "A", "a@x.it")
+    token_b, user_b = _register(client, "B", "b@x.it")
+    group = _create_group(client, token_a)
+    gid = group["id"]
+    client.post(
+        "/api/groups/join", json={"code": group["invite_code"]}, headers=_auth(token_b)
+    )
+    r = client.post(
+        f"/api/groups/{gid}/expenses",
+        json={
+            "description": "Cena",
+            "amount": "10.00",
+            "paid_by": user_a["id"],
+            "members": [user_a["id"], user_b["id"]],
+            "split_method": "even",
+        },
+        headers=_auth(token_a),
+    )
+    assert r.status_code == 200, r.text
+    expense_id = r.json()["id"]
+
+    client.post(
+        f"/api/groups/{gid}/payments",
+        json={"from_user": user_b["id"], "to_user": user_a["id"], "amount": "5.00", "note": "bonifico"},
+        headers=_auth(token_b),
+    )
+
+    r = client.get("/api/activity", headers=_auth(token_a))
+    assert r.status_code == 200, r.text
+    items = r.json()["items"]
+    assert [i["kind"] for i in items] == ["payment", "expense"]
+    assert items[1]["title"] == "Cena"
+    assert items[1]["group_name"] == "Casa"
+    assert items[1]["voided"] is False
+    assert items[0]["subtitle"] == "bonifico"
+
+    # Un membro esterno non vede nulla di questo gruppo.
+    token_c, _ = _register(client, "C", "c@x.it")
+    items_c = client.get("/api/activity", headers=_auth(token_c)).json()["items"]
+    assert items_c == []
+
+    # La spesa annullata resta nei movimenti col marcatore.
+    client.delete(f"/api/groups/{gid}/expenses/{expense_id}", headers=_auth(token_a))
+    items = client.get("/api/activity", headers=_auth(token_a)).json()["items"]
+    expense = next(i for i in items if i["kind"] == "expense")
+    assert expense["voided"] is True

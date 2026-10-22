@@ -93,3 +93,23 @@ Dentro un gruppo: header con **saldo tuo nel gruppo**, poi sezioni Saldi / Chi p
 - Tabelle con overshoot o animazioni lunghe.
 - Hover-only (non c'è hover sul telefono).
 - Testo < 12 px per informazioni essenziali.
+
+## Stato implementazione (app 1.1.0, Fase 2)
+
+- Token reali in `app-android/lib/ui.dart`: salvia `#5F8D6E`, testo salvia `#3D644B`,
+  bottoni `#4A7357` (bianco ≥ 4.5:1), carta `#F5F4EF`, notte `#141816`.
+- Font bundled in `assets/fonts`: Inter 400/500/600/700/800, Calistoga regular.
+  Calistoga solo per wordmark e numeri hero; Inter per tutto il resto.
+- Shell `screens/main_shell.dart`: Home / Movimenti / Gruppi / Profilo, `IndexedStack`.
+- `HomeScreen`: hero saldo per valuta, due azioni rapide (Nuovo gruppo, Unisciti),
+  tre gruppi recenti, "Vedi tutti"; skeleton e stato vuoto con CTA.
+- `ActivityScreen`: endpoint `/api/activity` (ultimi 40 movimenti, tutti i gruppi),
+  filtri Tutto/Spese/Pagamenti; tap → gruppo.
+- `GroupsScreen`: elenco completo, FAB Nuovo gruppo, ingresso con codice.
+- `ProfileScreen`: tema, esci da tutti i dispositivi, esci, versione, server.
+- `GroupScreen`: hero "Il tuo saldo nel gruppo", sezioni, CTA nella sezione Spese vuota.
+- Componenti: `HeroBalance`, `GroupTile`, `ActivityTile`, `Skeleton`, `EmptyState`.
+- Movimento: fade di pagina, 200–260 ms, aptica su tab/conferme; `motionDuration`
+  azzera le animazioni se il sistema chiede di ridurle.
+- Nota: i toast sono ancora gli SnackBar Material (tema scuro, flottanti); il
+  componente `BlanceToast` dedicato arriva con la Fase 3.

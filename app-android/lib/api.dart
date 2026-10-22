@@ -72,7 +72,8 @@ bool _isDnsFailure(Object e) {
 }
 
 Future<List<io.InternetAddress>> _dohResolve(String host) async {
-  final fresh = _dohCacheHost == host &&
+  final fresh =
+      _dohCacheHost == host &&
       _dohCache != null &&
       _dohCacheAt != null &&
       DateTime.now().difference(_dohCacheAt!) < const Duration(minutes: 10);
@@ -114,14 +115,19 @@ http.Client _dohClient(String host, List<io.InternetAddress> addrs) {
       Object? last;
       for (final ip in addrs) {
         try {
-          final plain =
-              await io.Socket.connect(ip, uri.port, timeout: const Duration(seconds: 15));
+          final plain = await io.Socket.connect(
+            ip,
+            uri.port,
+            timeout: const Duration(seconds: 15),
+          );
           return await io.SecureSocket.secure(plain, host: host);
         } catch (e) {
           last = e;
         }
       }
-      throw io.SocketException('DoH: nessun indirizzo raggiungibile per $host ($last)');
+      throw io.SocketException(
+        'DoH: nessun indirizzo raggiungibile per $host ($last)',
+      );
     }();
     return Future.value(io.ConnectionTask.fromSocket(task, () {}));
   };
@@ -202,7 +208,13 @@ class Api {
       // riprovo con il DNS cifrato di riserva.
       final fallback = _dohClient(uri.host, await _dohResolve(uri.host));
       try {
-        (status, bytes) = await _send(method, uri, headers, body, client: fallback);
+        (status, bytes) = await _send(
+          method,
+          uri,
+          headers,
+          body,
+          client: fallback,
+        );
       } finally {
         fallback.close();
       }
@@ -237,8 +249,8 @@ class Api {
       final req = http.Request(method, uri)..headers.addAll(headers);
       if (method != 'GET') req.body = jsonEncode(body ?? {});
       final streamed = await c.send(req).timeout(const Duration(seconds: 50));
-      final resp =
-          await http.Response.fromStream(streamed).timeout(const Duration(seconds: 50));
+      final resp = await http.Response.fromStream(streamed)
+          .timeout(const Duration(seconds: 50));
       return (resp.statusCode, resp.bodyBytes);
     } finally {
       if (own) c.close();
@@ -247,15 +259,21 @@ class Api {
 
   // ---------------------------------------------------------------- auth
   Future<User> register(String name, String email, String password) async {
-    final data = await _req('POST', '/api/register',
-        body: {'name': name, 'email': email, 'password': password}) as Map<String, dynamic>;
+    final data = await _req(
+      'POST',
+      '/api/register',
+      body: {'name': name, 'email': email, 'password': password},
+    ) as Map<String, dynamic>;
     await saveToken(data['token'] as String);
     return User.fromJson(data['user'] as Map<String, dynamic>);
   }
 
   Future<User> login(String email, String password) async {
-    final data = await _req('POST', '/api/login',
-        body: {'email': email, 'password': password}) as Map<String, dynamic>;
+    final data = await _req(
+      'POST',
+      '/api/login',
+      body: {'email': email, 'password': password},
+    ) as Map<String, dynamic>;
     await saveToken(data['token'] as String);
     return User.fromJson(data['user'] as Map<String, dynamic>);
   }
@@ -269,8 +287,7 @@ class Api {
 
   /// Revoca tutti i token dell'utente e tiene vivo solo questo dispositivo.
   Future<void> logoutAll() async {
-    final data =
-        await _req('POST', '/api/logout-all') as Map<String, dynamic>;
+    final data = await _req('POST', '/api/logout-all') as Map<String, dynamic>;
     await saveToken(data['token'] as String);
   }
 
@@ -287,12 +304,17 @@ class Api {
   Future<void> loadMeta() async {
     if (currenciesLoaded) return;
     final data = await _req('GET', '/api/meta') as Map<String, dynamic>;
-    final noRate = (data['no_rate_codes'] as List<dynamic>).map((e) => e as String).toSet();
+    final noRate = (data['no_rate_codes'] as List<dynamic>)
+        .map((e) => e as String)
+        .toSet();
     Meta.noRateCodes = noRate;
     final list = data['currencies'] as List<dynamic>;
     Meta.currencies = list.map((raw) {
       final c = raw as Map<String, dynamic>;
-      return CurrencyInfo.fromJson(c, hasAutoRate: !noRate.contains(c['code'] as String));
+      return CurrencyInfo.fromJson(
+        c,
+        hasAutoRate: !noRate.contains(c['code'] as String),
+      );
     }).toList();
     currenciesLoaded = true;
   }
@@ -307,15 +329,36 @@ class Api {
         .toList();
   }
 
+  /// Dashboard completa: gruppi e saldo totale per valuta.
+  Future<Dashboard> dashboard() async {
+    final data = await _req('GET', '/api/groups') as Map<String, dynamic>;
+    return Dashboard.fromJson(data);
+  }
+
+  /// Ultimi movimenti da tutti i gruppi dell'utente.
+  Future<List<ActivityItem>> activity({int limit = 40}) async {
+    final data =
+        await _req('GET', '/api/activity?limit=$limit') as Map<String, dynamic>;
+    return (data['items'] as List<dynamic>)
+        .map((e) => ActivityItem.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<GroupSummary> createGroup(String name, String currency) async {
-    final data = await _req('POST', '/api/groups',
-        body: {'name': name, 'base_currency': currency}) as Map<String, dynamic>;
+    final data = await _req(
+      'POST',
+      '/api/groups',
+      body: {'name': name, 'base_currency': currency},
+    ) as Map<String, dynamic>;
     return GroupSummary.fromJson(data);
   }
 
   Future<GroupSummary> joinGroup(String code) async {
-    final data =
-        await _req('POST', '/api/groups/join', body: {'code': code}) as Map<String, dynamic>;
+    final data = await _req(
+      'POST',
+      '/api/groups/join',
+      body: {'code': code},
+    ) as Map<String, dynamic>;
     return GroupSummary.fromJson(data);
   }
 
@@ -330,7 +373,8 @@ class Api {
   Future<void> deleteGroup(int id) => _req('DELETE', '/api/groups/$id');
 
   Future<String> regenerateInvite(int id) async {
-    final data = await _req('POST', '/api/groups/$id/invite') as Map<String, dynamic>;
+    final data =
+        await _req('POST', '/api/groups/$id/invite') as Map<String, dynamic>;
     return data['invite_code'] as String;
   }
 
@@ -346,16 +390,20 @@ class Api {
     String fxRate = '',
     Map<String, String> values = const {},
   }) async {
-    final data = await _req('POST', '/api/groups/$groupId/expenses', body: {
-      'description': description,
-      'amount': amount,
-      'paid_by': paidBy,
-      'members': members,
-      'split_method': splitMethod,
-      'currency': currency,
-      'fx_rate': fxRate,
-      'values': values,
-    }) as Map<String, dynamic>;
+    final data = await _req(
+      'POST',
+      '/api/groups/$groupId/expenses',
+      body: {
+        'description': description,
+        'amount': amount,
+        'paid_by': paidBy,
+        'members': members,
+        'split_method': splitMethod,
+        'currency': currency,
+        'fx_rate': fxRate,
+        'values': values,
+      },
+    ) as Map<String, dynamic>;
     return Expense.fromJson(data);
   }
 
@@ -370,12 +418,16 @@ class Api {
     required String amount,
     String note = '',
   }) async {
-    final data = await _req('POST', '/api/groups/$groupId/payments', body: {
-      'from_user': fromUser,
-      'to_user': toUser,
-      'amount': amount,
-      'note': note,
-    }) as Map<String, dynamic>;
+    final data = await _req(
+      'POST',
+      '/api/groups/$groupId/payments',
+      body: {
+        'from_user': fromUser,
+        'to_user': toUser,
+        'amount': amount,
+        'note': note,
+      },
+    ) as Map<String, dynamic>;
     return Payment.fromJson(data);
   }
 

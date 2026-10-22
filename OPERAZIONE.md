@@ -75,8 +75,9 @@ Mai lanciare DUE build contemporaneamente: si corrompe il NDK (successo).
 ## Test
 
 ```bash
-.venv/bin/python -m pytest tests/ -q           # suite locale (107 test)
-.venv/bin/python /tmp/opencode/e2e_phase1.py   # E2E Fase 1 contro produzione
+.venv/bin/python -m pytest tests/ -q           # suite locale (108 test)
+.venv/bin/python /tmp/opencode/e2e_phase1.py   # E2E produzione (Fase 1 + movimenti)
+cd app-android && flutter test                 # 14 test Dart (modelli e formati)
 ```
 
 ## Sicurezza sessioni e accessi (dalla 1.0.9)

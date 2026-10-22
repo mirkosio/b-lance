@@ -26,14 +26,11 @@ Future<void> setThemeMode(ThemeMode mode) async {
   themeMode.value = mode;
   try {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _themeKey,
-      switch (mode) {
-        ThemeMode.light => 'light',
-        ThemeMode.dark => 'dark',
-        _ => 'system',
-      },
-    );
+    await prefs.setString(_themeKey, switch (mode) {
+      ThemeMode.light => 'light',
+      ThemeMode.dark => 'dark',
+      _ => 'system',
+    });
   } catch (_) {
     // Vale solo per questa sessione.
   }
@@ -54,9 +51,7 @@ Future<void> showThemePicker(BuildContext context) async {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Theme.of(ctx)
-                    .colorScheme
-                    .onSurface
+                color: Theme.of(ctx).colorScheme.onSurface
                     .withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(4),
               ),
