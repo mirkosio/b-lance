@@ -73,8 +73,8 @@ Future<void> showAboutSheet(BuildContext context) {
               ),
               child: Text(
                 'Privacy: niente rubrica caricata. Gli inviti usano link, QR o '
-                '@handle. Se elimini l\'account il profilo diventa "Ex-membro": '
-                'email, password e handle spariscono, le spese restano nei '
+                'username. Se elimini l\'account il profilo diventa "Ex-membro": '
+                'email, password e username spariscono, le spese restano nei '
                 'gruppi per non rompere i saldi.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12.5, height: 1.5, color: muted),

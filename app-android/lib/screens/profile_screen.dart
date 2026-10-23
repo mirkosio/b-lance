@@ -52,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('Eliminare l\'account?'),
         content: const Text(
-          'Il tuo nome diventa "Ex-membro". Email, password e @handle '
+          'Il tuo nome diventa "Ex-membro". Email, password e username '
           'spariscono. Spese e pagamenti restano nei gruppi: i saldi non '
           'si toccano.\n\nNon si torna indietro.',
         ),
@@ -255,7 +255,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               ListTile(
                 leading: Icon(Icons.person_outline, color: accent),
-                title: const Text('Nome, colore e @handle'),
+                title: const Text('Nome, colore e username'),
                 subtitle: const Text('Come ti vedono gli altri membri'),
                 trailing: const Icon(Icons.chevron_right, size: 20),
                 onTap: _busy ? null : _editAccount,
@@ -382,7 +382,7 @@ class _EditAccountSheet extends StatefulWidget {
 
 class _EditAccountSheetState extends State<_EditAccountSheet> {
   late final _name = TextEditingController(text: widget.user.name);
-  late final _handle = TextEditingController(text: widget.user.handle ?? '');
+  late final _username = TextEditingController(text: widget.user.handle ?? '');
   late String _color = widget.user.color;
   String? _error;
   bool _busy = false;
@@ -390,7 +390,7 @@ class _EditAccountSheetState extends State<_EditAccountSheet> {
   @override
   void dispose() {
     _name.dispose();
-    _handle.dispose();
+    _username.dispose();
     super.dispose();
   }
 
@@ -400,11 +400,11 @@ class _EditAccountSheetState extends State<_EditAccountSheet> {
       setState(() => _error = 'Il nome non può essere vuoto');
       return;
     }
-    final handle = _handle.text.trim().replaceFirst('@', '').toLowerCase();
-    if (handle.isNotEmpty &&
-        !RegExp(r'^[a-z0-9_]{3,20}$').hasMatch(handle)) {
+    final username = _username.text.trim().replaceFirst('@', '').toLowerCase();
+    if (username.isNotEmpty &&
+        !RegExp(r'^[a-z0-9_]{3,20}$').hasMatch(username)) {
       setState(
-        () => _error = 'Handle: 3-20 caratteri, lettere minuscole, numeri o _',
+        () => _error = 'Username: 3-20 caratteri, lettere minuscole, numeri o _',
       );
       return;
     }
@@ -416,7 +416,7 @@ class _EditAccountSheetState extends State<_EditAccountSheet> {
       final user = await widget.api.updateMe(
         name: name,
         color: _color,
-        handle: handle,
+        handle: username,
         changeHandle: true,
       );
       if (!mounted) return;
@@ -475,10 +475,10 @@ class _EditAccountSheetState extends State<_EditAccountSheet> {
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: _handle,
+              controller: _username,
               autocorrect: false,
               decoration: const InputDecoration(
-                labelText: '@handle',
+                labelText: 'username',
                 prefixText: '@',
                 hintText: 'mirkosio',
                 helperText:

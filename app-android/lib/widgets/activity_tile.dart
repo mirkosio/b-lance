@@ -39,20 +39,23 @@ class ActivityTile extends StatelessWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: (isPayment ? sage : cat.color).withValues(
-                      alpha: 0.10,
-                    ),
+                    color: (item.voided
+                            ? muted
+                            : (isPayment ? sage : cat.color))
+                        .withValues(alpha: 0.10),
                     borderRadius: BorderRadius.circular(13),
                   ),
                   alignment: Alignment.center,
                   child: Icon(
                     isPayment ? Icons.swap_horiz : cat.icon,
                     size: 22,
-                    color: isPayment
-                        ? (Theme.of(context).brightness == Brightness.dark
-                              ? sage
-                              : sageInk)
-                        : cat.color,
+                    color: item.voided
+                        ? muted
+                        : (isPayment
+                              ? (Theme.of(context).brightness == Brightness.dark
+                                    ? sage
+                                    : sageInk)
+                              : cat.color),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -106,15 +109,15 @@ class ActivityTile extends StatelessWidget {
                       ),
                     ),
                     if (item.voided)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 2),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 2),
                         child: Text(
-                          'ANNULLATA',
+                          isPayment ? 'ANNULLATO' : 'ANNULLATA',
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.5,
-                            color: negColor,
+                            color: muted,
                           ),
                         ),
                       )

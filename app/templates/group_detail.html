@@ -28,7 +28,14 @@
   </div>
 </div>
 
-<div class="grid cols-2">
+<nav class="page-menu" aria-label="Sezioni del gruppo">
+  <a href="#saldi">Saldi</a>
+  <a href="#membri">Membri</a>
+  <a href="#spese">Spese</a>
+  <a href="#pagamenti">Pagamenti</a>
+</nav>
+
+<div class="grid cols-2" id="saldi">
   <!-- Saldi -->
   <div class="card">
     <div class="section-title">Saldi</div>
@@ -73,7 +80,7 @@
 </div>
 
 <!-- Membri e permessi -->
-<div class="card">
+<div class="card" id="membri">
   <div class="section-title">
     <span>Membri ({{ view.active_count() }})</span>
     {% if 'members_manage' in perms %}
@@ -151,12 +158,12 @@
   {% if 'members_manage' in perms %}
     <form method="post" action="/groups/{{ group.id }}/invite-handle"
           class="row" style="margin-top:10px">
-      <input type="text" name="handle" placeholder="@handle" autocapitalize="none"
+      <input type="text" name="handle" placeholder="username" autocapitalize="none"
              style="flex:1">
       <button class="btn ghost" type="submit">Invita</button>
     </form>
     <p class="muted small" style="margin:6px 0 0">
-      La persona deve avere un handle nel profilo. Nessuna rubrica caricata.
+      La persona deve avere un username nel profilo. Nessuna rubrica caricata.
     </p>
   {% endif %}
 </div>
@@ -250,7 +257,7 @@
 </div>
 
 <!-- Spese -->
-<div class="card">
+<div class="card" id="spese">
   <div class="section-title">Spese recenti</div>
   <form method="get" action="/groups/{{ group.id }}" class="row" style="margin-bottom:10px">
     <input type="text" name="q" value="{{ query }}" placeholder="Cerca per descrizione, persona o categoria"
@@ -260,14 +267,14 @@
   </form>
   {% if expenses %}
     {% for e in expenses %}
-      <div class="expense-item">
+      <div class="expense-item{% if e.voided_at %} is-voided{% endif %}">
         <div>
           <div class="desc">{{ e.description }}</div>
-          <div class="meta">{{ e.payer_name }} ha pagato · {{ category_label(e.category) }} · {{ e.created_at.strftime('%d/%m') }}</div>
+          <div class="meta">{{ e.payer_name }} ha pagato · {{ category_label(e.category) }} · {{ e.created_at.strftime('%d/%m') }}{% if e.voided_at %} · annullata{% endif %}</div>
         </div>
         <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-weight:700">{{ e.amount_minor | money(e.currency) }}</span>
-          {% if e.created_by == user.id or 'expense_manage' in perms %}
+          <span class="amount" style="font-weight:700">{{ e.amount_minor | money(e.currency) }}</span>
+          {% if not e.voided_at and (e.created_by == user.id or 'expense_manage' in perms) %}
             <form method="post" action="/groups/{{ group.id }}/expenses/{{ e.id }}/void" style="margin:0"
                   onsubmit="return confirm('Annullare questa spesa?')">
               <button class="btn sm ghost" type="submit">Annulla</button>
@@ -282,7 +289,7 @@
 </div>
 
 <!-- Pagamenti -->
-<div class="card">
+<div class="card" id="pagamenti">
   <div class="section-title">Registra pagamento</div>
   <p class="muted small">Un membro paga un altro (anche solo parte del debito).</p>
   <form method="post" action="/groups/{{ group.id }}/payments" id="payment-form">
@@ -318,17 +325,17 @@
   {% if payments %}
     <div style="margin-top:20px">
       {% for p in payments %}
-        <div class="expense-item">
+        <div class="expense-item{% if p.voided_at %} is-voided{% endif %}">
           <div>
             <div class="desc">{{ p.from_name }} → {{ p.to_name }}</div>
-            <div class="meta">{{ p.created_at.strftime('%d/%m') }}{% if p.note %} · {{ p.note }}{% endif %}</div>
+            <div class="meta">{{ p.created_at.strftime('%d/%m') }}{% if p.note %} · {{ p.note }}{% endif %}{% if p.voided_at %} · annullato{% endif %}</div>
           </div>
         <div style="display:flex;align-items:center;gap:12px">
-          <span style="font-weight:700">{{ p.amount_minor | money(group.base_currency) }}</span>
-          {% if p.from_user == user.id or p.to_user == user.id or 'payment_manage' in perms %}
+          <span class="amount" style="font-weight:700">{{ p.amount_minor | money(group.base_currency) }}</span>
+          {% if not p.voided_at and (p.from_user == user.id or p.to_user == user.id or 'payment_manage' in perms) %}
             <form method="post" action="/groups/{{ group.id }}/payments/{{ p.id }}/delete" style="margin:0"
-                  onsubmit="return confirm('Eliminare questo pagamento?')">
-              <button class="btn sm ghost" type="submit">Elimina</button>
+                  onsubmit="return confirm('Annullare questo pagamento?')">
+              <button class="btn sm ghost" type="submit">Annulla</button>
             </form>
           {% endif %}
         </div>

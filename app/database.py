@@ -132,6 +132,13 @@ def _migrate() -> None:
                 text("ALTER TABLE expenses ADD COLUMN updated_at TIMESTAMP")
             )
 
+    payment_columns = {c["name"] for c in inspect(engine).get_columns("payments")}
+    if "voided_at" not in payment_columns:
+        with engine.begin() as conn:
+            conn.execute(
+                text("ALTER TABLE payments ADD COLUMN voided_at TIMESTAMP")
+            )
+
 
 def init_db(retries: int = 5, delay: float = 2.0) -> None:
     """Crea le tabelle e applica le migrazioni MINORI.

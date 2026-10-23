@@ -41,9 +41,9 @@ Il nome viene da **balance**: il conto deve sempre tornare.
   intervallo 1/2/3/6. Il server crea la spesa alla scadenza.
 - **Export**: CSV dall'app, CSV e PDF dal sito.
 - **Inviti**: link, QR, condivisione nativa Android e aggiunta diretta tramite
-  `@handle`. Nessun caricamento della rubrica.
-- **Profilo e privacy**: nome, colore, `@handle`, cambio password, eliminazione
-  account con anonimizzazione ("Ex-membro"): email e handle spariscono, le
+  `username`. Nessun caricamento della rubrica.
+- **Profilo e privacy**: nome, colore, `username`, cambio password, eliminazione
+  account con anonimizzazione ("Ex-membro"): email e username spariscono, le
   spese restano per non rompere i saldi degli altri.
 - **Tema chiaro/scuro**, font Inter + Calistoga inclusi nell'app, motion
   discreto e rispetto di `reduce motion`.
@@ -132,7 +132,7 @@ App Links. La verifica dipende da `/.well-known/assetlinks.json` con package
 ## Test
 
 ```bash
-# backend (113 test)
+# backend (114 test)
 .venv/bin/python -m pytest tests/ -q
 
 # app (18 test)
@@ -142,7 +142,7 @@ cd app-android && flutter test
 I test backend usano SQLite e disattivano la rete BCE (`tests/conftest.py`) per
 essere deterministici. La suite copre: flusso completo, multi-valuta, split
 esatto/percentuale, annullamenti, permessi, sessioni, movimenti globali,
-account e anonimizzazione, handle, categorie, modifica spesa, ricorrenze,
+account e anonimizzazione, username, categorie, modifica spesa, ricorrenze,
 export CSV/PDF, assetlinks.
 
 ## Deploy

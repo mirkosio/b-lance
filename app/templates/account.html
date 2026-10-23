@@ -9,7 +9,7 @@
     <label>Nome</label>
     <input type="text" name="name" value="{{ user.name }}" required maxlength="60">
 
-    <label>@handle</label>
+    <label>username</label>
     <input type="text" name="handle" value="{{ user.handle or '' }}"
            placeholder="es. mirkosio" maxlength="20" autocapitalize="none">
     <p class="muted small">
@@ -49,7 +49,7 @@
 <div class="card">
   <div class="section-title">Elimina account</div>
   <p class="muted small">
-    Il nome diventa "Ex-membro", email, password e handle spariscono.
+    Il nome diventa "Ex-membro", email, password e username spariscono.
     Le spese restano nei gruppi e i saldi non cambiano.
   </p>
   <form method="post" action="/account/delete"

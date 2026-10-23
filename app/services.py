@@ -124,7 +124,9 @@ def compute_balances(db: Session, group: Group) -> GroupView:
     ).all()
 
     payments = db.scalars(
-        select(Payment).where(Payment.group_id == group.id)
+        select(Payment).where(
+            Payment.group_id == group.id, Payment.voided_at.is_(None)
+        )
     ).all()
 
     view = GroupView(group=group)

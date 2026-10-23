@@ -234,3 +234,52 @@ def test_health(client: TestClient) -> None:
     r = client.get("/health")
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
+
+
+def test_void_payment_keeps_history_and_reverses_balance(client: TestClient) -> None:
+    """Annullare un pagamento lo lascia in storico barrato ma fuori dai saldi."""
+    _register(client, "Marco", "marco@example.com")
+    group_id = _create_group(client)
+    page = client.get(f"/groups/{group_id}").text
+    import re
+
+    code = re.search(r"/join/([A-Z0-9]+)", page).group(1)
+    client.post("/logout")
+    _register(client, "Luca", "luca@example.com")
+    client.get(f"/join/{code}")
+
+    client.post(
+        f"/groups/{group_id}/expenses",
+        data={
+            "description": "Cena",
+            "amount": "20",
+            "paid_by": "1",
+            "split_method": "even",
+            "members": ["1", "2"],
+        },
+    )
+    client.post(
+        f"/groups/{group_id}/payments",
+        data={"from_user": "2", "to_user": "1", "amount": "10", "note": "contanti"},
+    )
+
+    page = client.get(f"/groups/{group_id}").text
+    assert "Nessun debito" in page
+    match = re.search(r"/groups/\d+/payments/(\d+)/delete", page)
+    assert match is not None
+    payment_id = match.group(1)
+
+    r = client.post(
+        f"/groups/{group_id}/payments/{payment_id}/delete",
+        follow_redirects=False,
+    )
+    assert r.status_code == 303, r.text
+
+    page = client.get(f"/groups/{group_id}").text
+    # Il pagamento resta nello storico, segnato come annullato.
+    assert "contanti" in page
+    assert "annullato" in page
+    assert "is-voided" in page
+    # Ma il suo effetto sui saldi è sparito.
+    assert "+€10.00" in page
+    assert "-€10.00" in page

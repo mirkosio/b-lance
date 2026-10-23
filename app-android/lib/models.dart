@@ -25,7 +25,7 @@ class User {
   );
 }
 
-/// Persona trovata cercando un @handle. Non contiene l'email.
+/// Persona trovata cercando uno username. Non contiene l'email.
 class PublicUser {
   const PublicUser({
     required this.id,
@@ -296,6 +296,8 @@ class Payment {
     required this.amountMinor,
     required this.currency,
     required this.note,
+    required this.voided,
+    this.voidedAt,
     this.createdAt,
   });
 
@@ -307,6 +309,8 @@ class Payment {
   final int amountMinor;
   final String currency;
   final String? note;
+  final bool voided;
+  final String? voidedAt;
   final String? createdAt;
 
   factory Payment.fromJson(Map<String, dynamic> j) => Payment(
@@ -318,6 +322,8 @@ class Payment {
     amountMinor: (j['amount_minor'] as num).toInt(),
     currency: j['currency'] as String? ?? 'EUR',
     note: j['note'] as String?,
+    voided: j['voided'] as bool? ?? (j['voided_at'] != null),
+    voidedAt: j['voided_at'] as String?,
     createdAt: j['created_at'] as String?,
   );
 }

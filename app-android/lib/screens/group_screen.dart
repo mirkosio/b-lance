@@ -140,8 +140,8 @@ class _GroupScreenState extends State<GroupScreen> {
     );
   }
 
-  Future<void> _inviteHandle() async {
-    final added = await showInviteByHandleSheet(
+  Future<void> _inviteUsername() async {
+    final added = await showInviteByUsernameSheet(
       context,
       api: widget.api,
       groupId: widget.groupId,
@@ -471,7 +471,11 @@ class _GroupScreenState extends State<GroupScreen> {
                                                 color: Theme.of(context)
                                                     .colorScheme
                                                     .onSurface
-                                                    .withValues(alpha: 0.66),
+                                                    .withValues(
+                                                      alpha: e.voided
+                                                          ? 0.42
+                                                          : 0.66,
+                                                    ),
                                               ),
                                             ),
                                           ],
@@ -496,19 +500,6 @@ class _GroupScreenState extends State<GroupScreen> {
                                                   : null,
                                             ),
                                           ),
-                                          if (e.voided)
-                                            const Padding(
-                                              padding: EdgeInsets.only(top: 2),
-                                              child: Text(
-                                                'ANNULLATA',
-                                                style: TextStyle(
-                                                  fontSize: 9.5,
-                                                  fontWeight: FontWeight.w800,
-                                                  letterSpacing: 0.5,
-                                                  color: negColor,
-                                                ),
-                                              ),
-                                            ),
                                         ],
                                       ),
                                     ],
@@ -545,8 +536,17 @@ class _GroupScreenState extends State<GroupScreen> {
                                       children: [
                                         Text(
                                           '${p.fromName} → ${p.toName}',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontWeight: FontWeight.w600,
+                                            decoration: p.voided
+                                                ? TextDecoration.lineThrough
+                                                : null,
+                                            color: p.voided
+                                                ? Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withValues(alpha: 0.45)
+                                                : null,
                                           ),
                                         ),
                                         if ((p.note ?? '').trim().isNotEmpty ||
@@ -554,6 +554,7 @@ class _GroupScreenState extends State<GroupScreen> {
                                           const SizedBox(height: 2),
                                           Text(
                                             [
+                                              if (p.voided) 'annullato',
                                               if ((p.note ?? '')
                                                   .trim()
                                                   .isNotEmpty)
@@ -577,8 +578,17 @@ class _GroupScreenState extends State<GroupScreen> {
                                   ),
                                   Text(
                                     '${formatMinor(p.amountMinor, expo)} ${p.currency}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w800,
+                                      decoration: p.voided
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                      color: p.voided
+                                          ? Theme.of(context)
+                                                .colorScheme
+                                                .onSurface
+                                                .withValues(alpha: 0.45)
+                                          : null,
                                     ),
                                   ),
                                   const SizedBox(width: 4),
@@ -708,9 +718,9 @@ class _GroupScreenState extends State<GroupScreen> {
                           if (canManageInvite) ...[
                             const SizedBox(width: 8),
                             OutlinedButton.icon(
-                              onPressed: _inviteHandle,
+                              onPressed: _inviteUsername,
                               icon: const Icon(Icons.alternate_email, size: 17),
-                              label: const Text('@handle'),
+                              label: const Text('username'),
                             ),
                           ],
                         ],

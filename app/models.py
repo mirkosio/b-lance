@@ -157,6 +157,8 @@ class Payment(Base):
     amount_minor: Mapped[int] = mapped_column(Integer)
     currency: Mapped[str] = mapped_column(String(3), default="EUR")
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Annullato invece di cancellato: resta nello storico barrato.
+    voided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     group: Mapped[Group] = relationship(back_populates="payments")

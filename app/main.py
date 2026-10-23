@@ -43,7 +43,16 @@ from .core.recurring import materialize_due
 from .core.splitting import SplitMethod, compute_shares
 from .database import get_db, init_db
 from .export import group_csv, group_pdf
-from .models import Expense, Group, GroupMember, Payment, RecurringExpense, Share, User
+from .models import (
+    Expense,
+    Group,
+    GroupMember,
+    Payment,
+    RecurringExpense,
+    Share,
+    User,
+    utcnow,
+)
 from .permissions import (
     ALL_PERMS,
     EDITABLE_ROLES,
@@ -587,7 +596,7 @@ def account_update(
     if not 1 <= len(clean_name) <= 60:
         error = "Il nome deve avere da 1 a 60 caratteri."
     elif clean_handle and not re.fullmatch(r"[a-z0-9_]{3,20}", clean_handle):
-        error = "Handle: 3-20 caratteri, lettere minuscole, numeri o _."
+        error = "Username: 3-20 caratteri, lettere minuscole, numeri o _."
     elif not re.fullmatch(r"#[0-9A-F]{6}([0-9A-F]{2})?", clean_color):
         error = "Colore non valido (es. #5F8D6E)."
     elif clean_handle and db.scalar(
@@ -699,7 +708,7 @@ def group_detail(
     expenses = db.scalars(
         select(Expense)
         .options(selectinload(Expense.shares))
-        .where(Expense.group_id == group_id, Expense.voided_at.is_(None))
+        .where(Expense.group_id == group_id)
         .order_by(Expense.created_at.desc())
     ).all()
     needle = q.strip().lower()
@@ -799,7 +808,7 @@ def invite_by_handle(
 
     clean = handle.strip().lower().lstrip("@")
     if not re.fullmatch(r"[a-z0-9_]{3,20}", clean):
-        return _back_with_err(request, "Handle non valido: 3-20 caratteri.")
+        return _back_with_err(request, "Username non valido: 3-20 caratteri.")
     target = db.scalar(select(User).where(User.handle == clean))
     if target is None:
         return _back_with_err(request, f"Nessuno con @{clean}.")
@@ -1037,7 +1046,10 @@ def delete_payment(
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
-    """Elimina un pagamento: solo se sei coinvolto o hai payment_manage."""
+    """Annulla un pagamento: solo se sei coinvolto o hai payment_manage.
+
+    Non si cancella: resta nello storico barrato e non entra nei saldi.
+    """
     group = _get_group_for_user(db, group_id, user)
     payment = db.get(Payment, payment_id)
     if payment is None or payment.group_id != group.id:
@@ -1049,7 +1061,7 @@ def delete_payment(
             status_code=403,
             detail="Puoi eliminare solo i pagamenti in cui sei coinvolto",
         )
-    db.delete(payment)
+    payment.voided_at = utcnow()
     db.commit()
     return RedirectResponse(f"/groups/{group.id}", status_code=303)
 

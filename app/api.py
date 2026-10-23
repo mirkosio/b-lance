@@ -323,7 +323,7 @@ def _clean_handle(raw: str | None) -> str | None:
     if not _HANDLE_RE.match(handle):
         raise HTTPException(
             400,
-            detail="L'handle deve avere 3-20 caratteri: lettere minuscole, numeri o _",
+            detail="Lo username deve avere 3-20 caratteri: lettere minuscole, numeri o _",
         )
     return handle
 
@@ -334,7 +334,7 @@ def api_update_me(
     user: User = Depends(require_api_user),
     db: Session = Depends(get_db),
 ):
-    """Aggiorna nome, colore e handle. Campi assenti = non toccare."""
+    """Aggiorna nome, colore e username. Campi assenti = non toccare."""
     if "name" in data.model_fields_set:
         name = (data.name or "").strip()
         if not 1 <= len(name) <= 60:
@@ -401,7 +401,7 @@ def api_search_users(
     user: User = Depends(require_api_user),
     db: Session = Depends(get_db),
 ):
-    """Cerca persone per @handle. Nessuna rubrica, solo handle pubblici."""
+    """Cerca persone per username. Nessuna rubrica, solo username pubblici."""
     needle = (q or "").strip().lower().lstrip("@")
     if len(needle) < 2:
         return {"users": []}
@@ -561,7 +561,7 @@ def api_activity(
                 "base_amount_minor": p.amount_minor,
                 "base_currency": p.currency,
                 "created_at": p.created_at.isoformat() if p.created_at else None,
-                "voided": False,
+                "voided": p.voided_at is not None,
             }
         )
 
@@ -657,6 +657,8 @@ def api_group_detail(
             "currency": p.currency,
             "note": p.note,
             "created_at": p.created_at.isoformat() if p.created_at else None,
+            "voided": p.voided_at is not None,
+            "voided_at": p.voided_at.isoformat() if p.voided_at else None,
         }
         for p in payments
     ]
@@ -984,14 +986,14 @@ def api_add_member_by_handle(
     user: User = Depends(require_api_user),
     db: Session = Depends(get_db),
 ):
-    """Aggiunge direttamente una persona al gruppo cercandola per @handle."""
+    """Aggiunge direttamente una persona al gruppo cercandola per username."""
     group, _actor = _require_perm(db, group_id, user, "members_manage")
     handle = _clean_handle(data.handle)
     if not handle:
-        raise HTTPException(400, detail="Scrivi un @handle")
+        raise HTTPException(400, detail="Scrivi uno username")
     target_user = db.scalar(select(User).where(User.handle == handle))
     if target_user is None:
-        raise HTTPException(404, detail=f"Nessuno con @{handle}")
+        raise HTTPException(404, detail=f"Nessuno con username @{handle}")
     existing = db.scalar(
         select(GroupMember).where(
             GroupMember.group_id == group.id,
@@ -1368,7 +1370,10 @@ def api_delete_payment(
     user: User = Depends(require_api_user),
     db: Session = Depends(get_db),
 ):
-    """Elimina un pagamento: solo se sei coinvolto o hai payment_manage."""
+    """Annulla un pagamento: solo se sei coinvolto o hai payment_manage.
+
+    Non si cancella: resta nello storico barrato e non entra nei saldi.
+    """
     group = _group_for_user(db, group_id, user)
     payment = db.get(Payment, payment_id)
     if payment is None or payment.group_id != group.id:
@@ -1380,6 +1385,6 @@ def api_delete_payment(
             status_code=403,
             detail="Puoi eliminare solo i pagamenti in cui sei coinvolto",
         )
-    db.delete(payment)
+    payment.voided_at = utcnow()
     db.commit()
     return {"ok": True}

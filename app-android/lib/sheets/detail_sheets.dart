@@ -225,19 +225,26 @@ class _ExpenseDetailState extends State<_ExpenseDetail> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: negColor.withValues(alpha: 0.08),
+                color: surface.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: negColor.withValues(alpha: 0.30)),
+                border: Border.all(color: surface.withValues(alpha: 0.16)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, size: 18, color: negColor),
+                  Icon(
+                    Icons.info_outline,
+                    size: 18,
+                    color: surface.withValues(alpha: 0.55),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Spesa annullata: resta nello storico ma non conta nei saldi.'
                       '${e.voidedAt != null ? '\nAnnullata il ${formatDateTime(e.voidedAt)}.' : ''}',
-                      style: const TextStyle(fontSize: 12.5, color: negColor),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: surface.withValues(alpha: 0.55),
+                      ),
                     ),
                   ),
                 ],
@@ -345,7 +352,7 @@ class _PaymentDetailState extends State<_PaymentDetail> {
 
   bool get _canDelete {
     final me = _meOf(widget.detail);
-    if (me == null) return false;
+    if (me == null || widget.payment.voided) return false;
     final involved =
         widget.payment.fromUser == me.userId ||
         widget.payment.toUser == me.userId;
@@ -357,10 +364,11 @@ class _PaymentDetailState extends State<_PaymentDetail> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Eliminare il pagamento?'),
+        title: const Text('Annullare il pagamento?'),
         content: Text(
           '${p.fromName} → ${p.toName}\n'
-          '${formatMinor(p.amountMinor, Meta.exponentOf(p.currency))} ${p.currency}',
+          '${formatMinor(p.amountMinor, Meta.exponentOf(p.currency))} ${p.currency}\n\n'
+          'Resta nello storico barrato e non conta più nei saldi.',
         ),
         actions: [
           TextButton(
@@ -373,7 +381,7 @@ class _PaymentDetailState extends State<_PaymentDetail> {
               minimumSize: const Size(100, 44),
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Elimina'),
+            child: const Text('Annulla pagamento'),
           ),
         ],
       ),
@@ -388,7 +396,7 @@ class _PaymentDetailState extends State<_PaymentDetail> {
       Navigator.pop(context);
       widget.onDone();
       messenger.showSnackBar(
-        const SnackBar(content: Text('Pagamento eliminato')),
+        const SnackBar(content: Text('Pagamento annullato')),
       );
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -424,15 +432,38 @@ class _PaymentDetailState extends State<_PaymentDetail> {
               ),
             ),
           ),
-          const Text(
-            'Pagamento',
-            style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'Pagamento',
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
+                ),
+              ),
+              if (p.voided) const _VoidedBadge(label: 'ANNULLATO'),
+            ],
           ),
           const SizedBox(height: 12),
           Text(
             '${formatMinor(p.amountMinor, Meta.exponentOf(p.currency))} ${p.currency}',
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.w800,
+              decoration: p.voided ? TextDecoration.lineThrough : null,
+              color: p.voided ? surface.withValues(alpha: 0.45) : null,
+            ),
           ),
+          if (p.voided) ...[
+            const SizedBox(height: 12),
+            Text(
+              'Annullato: resta nello storico barrato e non conta nei saldi.'
+              '${p.voidedAt != null ? '\nAnnullato il ${formatDateTime(p.voidedAt)}.' : ''}',
+              style: TextStyle(
+                fontSize: 12.5,
+                color: surface.withValues(alpha: 0.55),
+              ),
+            ),
+          ],
           const SizedBox(height: 18),
           _Row(label: 'Da', value: p.fromName),
           _Row(label: 'A', value: p.toName),
@@ -474,25 +505,29 @@ class _PaymentDetailState extends State<_PaymentDetail> {
 }
 
 class _VoidedBadge extends StatelessWidget {
-  const _VoidedBadge();
+  const _VoidedBadge({this.label = 'ANNULLATA'});
+
+  final String label;
 
   @override
   Widget build(BuildContext context) {
+    final muted = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.55);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: negColor.withValues(alpha: 0.10),
+        color: muted.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: negColor.withValues(alpha: 0.30)),
+        border: Border.all(color: muted.withValues(alpha: 0.30)),
       ),
-      child: const Text(
-        'ANNULLATA',
-        style: TextStyle(
+      child: Text(
+        label,
+        style: const TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.6,
-          color: negColor,
-        ),
+        ).copyWith(color: muted),
       ),
     );
   }

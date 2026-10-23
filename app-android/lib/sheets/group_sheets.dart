@@ -378,8 +378,8 @@ Future<void> showInviteSheet(
   );
 }
 
-/// Invito diretto cercando un @handle. Ritorna true se ha aggiunto qualcuno.
-Future<bool> showInviteByHandleSheet(
+/// Invito diretto cercando un username. Ritorna true se ha aggiunto qualcuno.
+Future<bool> showInviteByUsernameSheet(
   BuildContext context, {
   required Api api,
   required int groupId,
@@ -396,9 +396,9 @@ Future<bool> showInviteByHandleSheet(
     builder: (ctx) => StatefulBuilder(
       builder: (ctx, setD) {
         Future<void> submit() async {
-          final handle = controller.text.trim().replaceFirst('@', '');
-          if (handle.length < 3) {
-            setD(() => error = 'Scrivi un @handle (almeno 3 caratteri)');
+          final username = controller.text.trim().replaceFirst('@', '');
+          if (username.length < 3) {
+            setD(() => error = 'Scrivi un username (almeno 3 caratteri)');
             return;
           }
           setD(() {
@@ -406,7 +406,7 @@ Future<bool> showInviteByHandleSheet(
             error = null;
           });
           try {
-            await api.inviteByHandle(groupId, handle);
+            await api.inviteByHandle(groupId, username);
             if (!ctx.mounted) return;
             Navigator.pop(ctx, true);
           } on ApiException catch (e) {
@@ -435,12 +435,12 @@ Future<bool> showInviteByHandleSheet(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Invita con @handle',
+                  'Invita con username',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'La persona deve avere un handle nel suo profilo. '
+                  'La persona deve avere un username nel suo profilo. '
                   'Nessuna rubrica da caricare.',
                   style: TextStyle(
                     fontSize: 12.5,
@@ -455,7 +455,7 @@ Future<bool> showInviteByHandleSheet(
                   autocorrect: false,
                   textInputAction: TextInputAction.done,
                   decoration: InputDecoration(
-                    labelText: '@handle',
+                    labelText: 'username',
                     prefixText: '@',
                     hintText: 'mirkosio',
                     errorText: error,
@@ -473,7 +473,7 @@ Future<bool> showInviteByHandleSheet(
                         if (ctx.mounted) setD(() => results = found);
                       } catch (_) {
                         // La ricerca è un aiuto: se fallisce si può scrivere
-                        // l'handle a mano e premere Aggiungi.
+                        // l'username a mano e premere Aggiungi.
                       }
                     });
                   },

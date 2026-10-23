@@ -31,9 +31,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=4">
+  <link rel="stylesheet" href="/static/app.css?v=5">
 </head>
-<body>
+<body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
 
 <!-- Sprite di icone: disegnate a mano, stile outline, nessuna emoji -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -155,7 +155,7 @@
 </aside>
 
 <!-- Topbar (mobile) -->
-<header class="topbar">
+<header class="topbar appbar">
   <a href="/" class="brand">
     <span class="mark"><img src="/static/logo-mark-inverse.svg" alt=""></span>
     <span class="wm">b-<em>lance</em></span>
@@ -168,11 +168,17 @@
   </span>
 </header>
 {% else %}
-<header class="topbar">
+<header class="topbar publicnav">
   <a href="/" class="brand">
     <span class="mark"><img src="/static/logo-mark-inverse.svg" alt=""></span>
     <span class="wm">b-<em>lance</em></span>
   </a>
+  <nav class="public-links" aria-label="Sezioni del sito">
+    <a href="/#come-funziona">Come funziona</a>
+    <a href="/#funzioni">Funzioni</a>
+    <a href="/#app">App Android</a>
+    <a href="/about">Informazioni</a>
+  </nav>
   <span class="right">
     <button class="icon-btn" type="button" data-theme-toggle aria-label="Cambia tema">
       <svg width="19" height="19"><use href="#i-moon"></use></svg>
