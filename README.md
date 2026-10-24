@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="app/static/logo.svg" width="300" alt="b-lance">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="app/static/logo-lockup-dark.svg">
+    <img src="app/static/logo.svg" width="300" alt="b-lance">
+  </picture>
 </p>
 
 <h1 align="center">b-lance</h1>
