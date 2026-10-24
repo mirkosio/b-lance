@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import '../ui.dart';
 import 'logo_mark.dart';
 
-/// Attesa di marca: la pancia del marchio oscilla come un bilanciere,
-/// il puntino scorre sotto il wordmark. Circa 4 secondi per ciclo.
+/// Attesa di marca: il monogramma respira e oscilla appena,
+/// la barra scorre sotto il wordmark. Circa 4 secondi per ciclo.
 /// Con "riduci animazioni" resta fermo e leggibile.
 class BrandLoader extends StatefulWidget {
   const BrandLoader({super.key, required this.phase});
@@ -48,21 +48,9 @@ class _BrandLoaderState extends State<BrandLoader>
           children: [
             Transform.scale(
               scale: breathe,
-              child: Container(
-                width: 126,
-                height: 126,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: sage.withValues(
-                    alpha: theme.brightness == Brightness.dark ? 0.12 : 0.08,
-                  ),
-                  border: Border.all(color: sage.withValues(alpha: 0.16)),
-                ),
-                alignment: Alignment.center,
-                child: LogoMark(
-                  size: 78,
-                  ringRotation: reduce ? 0 : wave * 0.14,
-                ),
+              child: LogoMark(
+                size: 96,
+                ringRotation: reduce ? 0 : wave * 0.10,
               ),
             ),
             const SizedBox(height: 18),

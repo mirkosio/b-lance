@@ -48,8 +48,8 @@ Il nome viene da **balance**: il conto deve sempre tornare.
   spese restano per non rompere i saldi degli altri.
 - **Tema chiaro/scuro**, font Inter + Calistoga inclusi nell'app, motion
   discreto e rispetto di `reduce motion`.
-- **Avvio curato**: splash nativo con il marchio e loader animato (la pancia
-  del marchio oscilla come un bilanciere) durante il controllo della sessione.
+- **Avvio curato**: splash nativo con il badge e loader animato (il monogramma
+  respira e oscilla appena) durante il controllo della sessione.
   Niente indirizzi server o dettagli tecnici a schermo.
 
 ## Stack
@@ -124,7 +124,7 @@ flutter build apk --release
 ```
 
 L'APK esce in `app-android/build/app/outputs/flutter-apk/app-release.apk`.
-La versione corrente è **1.3.1** (`versionCode 15`).
+La versione corrente è **1.4.0** (`versionCode 16`).
 
 Link diretti: `https://b-lance.vercel.app/join/CODICE` aprono l'app tramite
 App Links. La verifica dipende da `/.well-known/assetlinks.json` con package

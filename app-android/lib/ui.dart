@@ -44,7 +44,7 @@ Color goldOn(BuildContext context) =>
     ? const Color(0xFFD8B56A)
     : const Color(0xFFA8823C);
 
-const kAppVersion = '1.3.1';
+const kAppVersion = '1.4.0';
 
 /// Durata coerente col motion 4/10, azzerata se il sistema chiede
 /// di ridurre le animazioni.

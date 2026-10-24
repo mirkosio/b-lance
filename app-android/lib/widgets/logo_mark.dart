@@ -1,11 +1,7 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
-import '../ui.dart';
-
-/// Marchio "b in equilibrio": asta intera, pancia divisa in due archi
-/// uguali e perno oro. Stessa geometria del file `app/static/logo-mark.svg`.
+/// Marchio "bl": monogramma Calistoga dentro un badge salvia.
+/// Stessa geometria del file `app/static/logo-mark.svg` (viewBox 64×64).
 class LogoMark extends StatelessWidget {
   const LogoMark({
     super.key,
@@ -16,30 +12,21 @@ class LogoMark extends StatelessWidget {
 
   final double size;
 
-  /// Su fondo salvia: tutto carta. Su fondo normale: inchiostro + salvia.
+  /// Badge carta con monogramma salvia scuro, per fondi salvia o scuri.
   final bool inverse;
 
-  /// Rotazione della sola pancia, in radianti (per il loader).
+  /// Rotazione del solo monogramma, in radianti (per il loader).
   final double ringRotation;
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
-    final stem = inverse ? paperLight : Theme.of(context).colorScheme.onSurface;
-    // Sul fondo scuro il marchio è tutto carta, come nel lockup web.
-    final ring = inverse || dark ? paperLight : sage;
-    final cap = inverse
-        ? const Color(0xFFF2D8A0)
-        : (dark ? const Color(0xFFD8B56A) : const Color(0xFFA8823C));
     return Semantics(
       label: 'b-lance',
       image: true,
       child: CustomPaint(
         size: Size.square(size),
         painter: _LogoPainter(
-          stem: stem,
-          ring: ring,
-          cap: cap,
+          inverse: inverse,
           ringRotation: ringRotation,
         ),
       ),
@@ -48,68 +35,114 @@ class LogoMark extends StatelessWidget {
 }
 
 class _LogoPainter extends CustomPainter {
-  const _LogoPainter({
-    required this.stem,
-    required this.ring,
-    required this.cap,
-    required this.ringRotation,
-  });
+  const _LogoPainter({required this.inverse, required this.ringRotation});
 
-  final Color stem;
-  final Color ring;
-  final Color cap;
+  final bool inverse;
   final double ringRotation;
+
+  static const _paper = Color(0xFFF5F4EF);
+  static const _sageTop = Color(0xFF6B9B7C);
+  static const _sageBottom = Color(0xFF47684F);
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Il viewBox SVG è "10 4 56 56": si disegna nel sistema 64 e si
-    // ritaglia quel riquadro, così SVG e app restano identici.
-    final s = size.width / 56;
+    final s = size.width / 64.0;
     canvas.save();
     canvas.scale(s);
-    canvas.translate(-10, -4);
 
-    final stemPaint = Paint()
-      ..color = stem
-      ..strokeWidth = 8.5
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(const Offset(18, 11.5), const Offset(18, 52.5), stemPaint);
+    final badge = RRect.fromRectAndRadius(
+      const Rect.fromLTWH(0, 0, 64, 64),
+      const Radius.circular(16),
+    );
+    final badgePaint = Paint();
+    if (inverse) {
+      badgePaint.color = _paper;
+    } else {
+      badgePaint.shader = const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [_sageTop, _sageBottom],
+      ).createShader(const Rect.fromLTWH(0, 0, 64, 64));
+    }
+    canvas.drawRRect(badge, badgePaint);
 
-    final lowerPaint = Paint()
-      ..color = stem
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 8
-      ..strokeCap = StrokeCap.round;
-    final upperPaint = Paint()
-      ..color = ring
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 8
-      ..strokeCap = StrokeCap.round;
-    final rect = Rect.fromCircle(center: const Offset(38, 36), radius: 16);
-    // Due archi da 170°, separati da due vuoti di 10° sulla diagonale.
-    // L'arco in basso a sinistra è dello stesso colore dell'asta: è la
-    // "b"; quello in alto a destra porta la salvia (o la carta, su scuro).
-    const start1 = 50 * math.pi / 180;
-    const start2 = 230 * math.pi / 180;
-    const sweep = 170 * math.pi / 180;
+    // Il monogramma ruota attorno al centro del badge, il badge resta fermo.
     canvas.save();
-    canvas.translate(38, 36);
+    canvas.translate(32, 32);
     canvas.rotate(ringRotation);
-    canvas.translate(-38, -36);
-    canvas.drawArc(rect, start1, sweep, false, lowerPaint);
-    canvas.drawArc(rect, start2, sweep, false, upperPaint);
+    canvas.translate(-32, -32);
+    canvas.translate(12.126, 51.447);
+    canvas.scale(0.05031);
+    final markPaint = Paint()
+      ..color = inverse ? _sageBottom : _paper
+      ..style = PaintingStyle.fill;
+    canvas.drawPath(_bPath, markPaint);
+    canvas.save();
+    canvas.translate(489, 0);
+    canvas.drawPath(_lPath, markPaint);
     canvas.restore();
-
-    final capPaint = Paint()..color = cap;
-    canvas.drawCircle(const Offset(18, 10.5), 3, capPaint);
+    canvas.restore();
 
     canvas.restore();
   }
 
   @override
   bool shouldRepaint(covariant _LogoPainter old) =>
-      old.stem != stem ||
-      old.ring != ring ||
-      old.cap != cap ||
-      old.ringRotation != ringRotation;
+      old.inverse != inverse || old.ringRotation != ringRotation;
 }
+
+Path _parseSvgPath(String d) {
+  final path = Path();
+  final tokens = RegExp(r'[MLQVHZ]|-?\d+(?:\.\d+)?')
+      .allMatches(d)
+      .map((m) => m.group(0)!)
+      .toList();
+  var i = 0;
+  var x = 0.0;
+  var y = 0.0;
+  double num() => double.parse(tokens[i++]);
+
+  while (i < tokens.length) {
+    final cmd = tokens[i++];
+    switch (cmd) {
+      case 'M':
+        x = num();
+        y = num();
+        path.moveTo(x, y);
+        break;
+      case 'L':
+        x = num();
+        y = num();
+        path.lineTo(x, y);
+        break;
+      case 'Q':
+        final x1 = num();
+        final y1 = num();
+        x = num();
+        y = num();
+        path.quadraticBezierTo(x1, y1, x, y);
+        break;
+      case 'V':
+        y = num();
+        path.lineTo(x, y);
+        break;
+      case 'H':
+        x = num();
+        path.lineTo(x, y);
+        break;
+      case 'Z':
+        path.close();
+        break;
+    }
+  }
+  return path;
+}
+
+// Tracciati Calistoga del monogramma, in unità font (1 em = 1000).
+const String _bData =
+    'M268.0 11Q239.0 11 201.0 7.0Q163.0 3 127.0 -4.5Q91.0 -12 67.0 -24V-646Q67.0 -669 53.0 -682.0Q39.0 -695 6.0 -695V-727Q29.0 -743 61.0 -755.5Q93.0 -768 125.5 -776.0Q158.0 -784 179.0 -784Q203.0 -784 213.0 -773.5Q223.0 -763 223.0 -738V-596L220.0 -501Q240.0 -522 268.0 -531.0Q296.0 -540 330.0 -540Q385.0 -540 433.0 -512.0Q481.0 -484 511.0 -427.5Q541.0 -371 541.0 -283Q541.0 -187 504.0 -121.5Q467.0 -56 405.0 -22.5Q343.0 11 268.0 11ZM271.0 -62Q298.0 -62 320.5 -79.5Q343.0 -97 356.0 -138.0Q369.0 -179 369.0 -249Q369.0 -359 338.0 -407.0Q307.0 -455 261.0 -455Q239.0 -455 223.0 -444V-81Q242.0 -62 271.0 -62Z';
+const String _lData =
+    'M52.0 0Q41.0 -12 35.0 -25.0Q29.0 -38 29.0 -54Q58.0 -54 71.0 -66.5Q84.0 -79 84.0 -109V-640Q84.0 -663 71.0 -676.5Q58.0 -690 16.0 -690V-730Q41.0 -744 74.5 -754.5Q108.0 -765 141.0 -771.5Q174.0 -778 196.0 -778Q219.0 -778 229.5 -768.0Q240.0 -758 240.0 -733V-109Q240.0 -78 252.5 -66.0Q265.0 -54 295.0 -54Q295.0 -38 288.5 -25.0Q282.0 -12 271.0 0Z';
+
+final Path _bPath = _parseSvgPath(_bData);
+final Path _lPath = _parseSvgPath(_lData);

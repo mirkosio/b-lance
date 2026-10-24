@@ -116,11 +116,12 @@ Altri minori: nessuna anteprima del gruppo quando si entra con un codice (l'endp
 (include cambio password, export CSV/PDF, account, handle, ricorrenze, assetlinks).
 Le funzioni che richiedono credenziali esterne non sono dichiarate come testate.
 
-**Marchio e contenuti (24/10/2026):** marchio "b in equilibrio" (asta intera,
-pancia divisa in due archi uguali, perno oro) in `app/static/logo*.svg`;
-lockup integrato con trattino oro; icone PWA e launcher Android rigenerate
-dallo stesso disegno; sidebar desktop a sezioni; pagina `/about`, scheda
-Informazioni nell'app e README aggiornati.
+**Marchio e contenuti (24/10/2026):** marchio monogramma "bl" in Calistoga
+dentro badge salvia, con wordmark testuale `b-lance`; SVG 64×64 e lockup
+196×64; icone PWA e launcher Android rigenerate dallo stesso disegno; sidebar
+desktop a sezioni, solo testo, comprimibile con stato ricordato e drawer su
+mobile con focus trap; pagina `/about`, scheda Informazioni nell'app e README
+aggiornati.
 
 ---
 

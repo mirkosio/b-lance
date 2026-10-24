@@ -2,10 +2,9 @@
 {% block title %}Registrati — b-lance{% endblock %}
 {% block content %}
 <div class="card" style="max-width:430px;margin:26px auto">
-  <div style="text-align:center;margin-bottom:8px">
-    <span class="mark" style="display:inline-grid;place-items:center;width:52px;height:52px;border-radius:16px;background:var(--primary-deep);box-shadow:0 3px 10px rgba(71,104,79,.3)">
-      <img src="/static/logo-mark-inverse.svg?v=2" alt="">
-    </span>
+  <div class="auth-brand">
+    <img class="brand-badge" src="/static/logo-mark.svg?v=4" width="46" height="46" alt="">
+    <span class="wm" aria-hidden="true"><b>b</b><span class="hy">-</span><em>lance</em></span>
   </div>
   <h1 class="section-title" style="justify-content:center">Crea account</h1>
   {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}

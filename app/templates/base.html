@@ -14,6 +14,13 @@
       }
       document.documentElement.dataset.theme = t;
     } catch (e) { document.documentElement.dataset.theme = 'light'; }
+    // Ricorda la sidebar compressa già prima del paint (solo desktop).
+    try {
+      if (window.matchMedia('(min-width: 960px)').matches &&
+          localStorage.getItem('bl-sidebar-collapsed') === '1') {
+        document.documentElement.classList.add('sb-collapsed');
+      }
+    } catch (e) {}
   </script>
 
   <!-- PWA -->
@@ -24,14 +31,14 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="b-lance">
-  <link rel="apple-touch-icon" href="/static/icons/icon-192.png?v=2">
-  <link rel="icon" type="image/png" sizes="64x64" href="/static/icons/favicon-64.png?v=2">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png?v=4">
+  <link rel="icon" type="image/png" sizes="64x64" href="/static/icons/favicon-64.png?v=4">
   <meta name="description" content="Dividi le spese con amici: weekend, gite, vacanze. Preciso al centesimo.">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=14">
+  <link rel="stylesheet" href="/static/app.css?v=16">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
 <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -115,50 +122,35 @@
 </svg>
 
 {% if user %}
-<!-- Sidebar (desktop) -->
-<aside class="sidebar">
-  <a href="/" class="brand brand-lockup" aria-label="b-lance">
-    <img class="brand-light" src="/static/logo.svg?v=2" alt="">
-    <img class="brand-dark" src="/static/logo-lockup-dark.svg?v=2" alt="">
-  </a>
+<!-- Sidebar: menu a sezioni. Su desktop si comprime, su mobile è un drawer. -->
+<aside class="sidebar" id="sidebar" aria-label="Menu principale" tabindex="-1">
+  <div class="sidebar-head">
+    <a href="/" class="brand" aria-label="b-lance">
+      <img class="brand-badge" src="/static/logo-mark.svg?v=4" alt="">
+      <span class="wm" aria-hidden="true"><b>b</b><span class="hy">-</span><em>lance</em></span>
+    </a>
+    <button class="sidebar-toggle" type="button" data-sidebar-close aria-label="Chiudi menu" aria-controls="sidebar">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+  </div>
 
   <nav class="side-nav" aria-label="Sezioni">
     <div class="side-label">Panoramica</div>
-    <a class="side-link {% if request.url.path == '/' %}active{% endif %}" href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>
-      <svg width="20" height="20"><use href="#i-home"></use></svg> Home
-    </a>
-    <a class="side-link" href="/#saldi">
-      <svg width="20" height="20"><use href="#i-scale"></use></svg> Saldi
-    </a>
-    <a class="side-link" href="/#gruppi">
-      <svg width="20" height="20"><use href="#i-users"></use></svg> I tuoi gruppi
-    </a>
+    <a class="side-link {% if request.url.path == '/' %}active{% endif %}" href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Home</a>
+    <a class="side-link" href="/#saldi">Saldi</a>
+    <a class="side-link" href="/#gruppi">I tuoi gruppi</a>
 
     <div class="side-label">Strumenti</div>
-    <a class="side-link cta" href="/groups/new">
-      <svg width="20" height="20"><use href="#i-plus"></use></svg> Nuovo gruppo
-    </a>
-    <a class="side-link" href="/about#come-funziona">
-      <svg width="20" height="20"><use href="#i-bolt"></use></svg> Come funziona
-    </a>
-    <a class="side-link" href="/about#app">
-      <svg width="20" height="20"><use href="#i-phone"></use></svg> App Android
-    </a>
-    <a class="side-link" href="/about#faq">
-      <svg width="20" height="20"><use href="#i-info"></use></svg> FAQ
-    </a>
+    <a class="side-link cta" href="/groups/new">Nuovo gruppo</a>
+    <a class="side-link" href="/about#come-funziona">Come funziona</a>
+    <a class="side-link" href="/about#app">App Android</a>
+    <a class="side-link" href="/about#faq">FAQ</a>
 
     <div class="side-label">Account</div>
-    <a class="side-link" href="/about#privacy">
-      <svg width="20" height="20"><use href="#i-lock"></use></svg> Privacy
-    </a>
-    <button class="side-link" type="button" data-theme-toggle>
-      <svg width="20" height="20"><use href="#i-moon"></use></svg> Tema chiaro / scuro
-    </button>
+    <a class="side-link" href="/about#privacy">Privacy</a>
+    <button class="side-link" type="button" data-theme-toggle>Tema chiaro / scuro</button>
     <form method="post" action="/logout" class="side-form">
-      <button class="side-link" type="submit">
-        <svg width="20" height="20"><use href="#i-logout"></use></svg> Esci
-      </button>
+      <button class="side-link" type="submit">Esci</button>
     </form>
   </nav>
 
@@ -172,11 +164,19 @@
   </a>
 </aside>
 
+<button class="sidebar-reopen" type="button" data-sidebar-open aria-label="Apri menu" aria-controls="sidebar" aria-expanded="false">
+  <img src="/static/logo-mark.svg?v=4" alt="">
+</button>
+<div class="sidebar-scrim" data-sidebar-close aria-hidden="true"></div>
+
 <!-- Topbar (mobile) -->
 <header class="topbar appbar">
-  <a href="/" class="brand brand-lockup" aria-label="b-lance">
-    <img class="brand-light" src="/static/logo.svg?v=2" alt="">
-    <img class="brand-dark" src="/static/logo-lockup-dark.svg?v=2" alt="">
+  <button class="icon-btn menu-btn" type="button" data-sidebar-open aria-label="Apri menu" aria-controls="sidebar" aria-expanded="false">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+  <a href="/" class="brand" aria-label="b-lance">
+    <img class="brand-badge" src="/static/logo-mark.svg?v=4" alt="">
+    <span class="wm" aria-hidden="true"><b>b</b><span class="hy">-</span><em>lance</em></span>
   </a>
   <span class="right">
     <button class="icon-btn" type="button" data-theme-toggle aria-label="Cambia tema">
@@ -189,9 +189,9 @@
 </header>
 {% else %}
 <header class="topbar publicnav">
-  <a href="/" class="brand brand-lockup" aria-label="b-lance">
-    <img class="brand-light" src="/static/logo.svg?v=2" alt="">
-    <img class="brand-dark" src="/static/logo-lockup-dark.svg?v=2" alt="">
+  <a href="/" class="brand" aria-label="b-lance">
+    <img class="brand-badge" src="/static/logo-mark.svg?v=4" alt="">
+    <span class="wm" aria-hidden="true"><b>b</b><span class="hy">-</span><em>lance</em></span>
   </a>
   <nav class="public-links" aria-label="Sezioni del sito">
     <a href="/#come-funziona">Come funziona</a>
@@ -216,37 +216,12 @@
 
 <footer>b-lance — dividiamo, regoliamo, bilanci in equilibrio. · <a href="/about">Informazioni</a></footer>
 
-{% if user %}
-<!-- Bottom nav (mobile) -->
-<nav class="bottomnav" aria-label="Navigazione principale">
-  <a class="bn-item {% if request.url.path == '/' %}active{% endif %}" href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>
-    <svg width="22" height="22"><use href="#i-home"></use></svg> Home
-  </a>
-  <a class="bn-item center" href="/groups/new">
-    <span class="bubble"><svg width="22" height="22"><use href="#i-plus"></use></svg></span>
-    Nuovo
-  </a>
-  <a class="bn-item" href="/account">
-    <svg width="22" height="22"><use href="#i-info"></use></svg> Account
-  </a>
-  <form method="post" action="/logout" style="margin:0;flex:1;display:flex">
-    <button class="bn-item" type="submit">
-      <svg width="22" height="22"><use href="#i-logout"></use></svg> Esci
-    </button>
-  </form>
-</nav>
-{% else %}
-<nav class="bottomnav" aria-label="Navigazione principale">
-  <a class="bn-item {% if request.url.path == '/' %}active{% endif %}" href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>
-    <svg width="22" height="22"><use href="#i-home"></use></svg> Home
-  </a>
-  <a class="bn-item" href="/login">
-    <svg width="22" height="22"><use href="#i-login"></use></svg> Accedi
-  </a>
-  <a class="bn-item center" href="/register">
-    <span class="bubble"><svg width="22" height="22"><use href="#i-plus"></use></svg></span>
-    Registrati
-  </a>
+{% if not user %}
+<!-- Navigazione pubblica mobile: solo testo, niente icone decorative. -->
+<nav class="bottomnav guest-nav" aria-label="Navigazione principale">
+  <a class="bn-item {% if request.url.path == '/' %}active{% endif %}" href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Home</a>
+  <a class="bn-item" href="/login">Accedi</a>
+  <a class="bn-item strong" href="/register">Registrati</a>
 </nav>
 {% endif %}
 
@@ -304,6 +279,147 @@
     p.delete('err'); p.delete('ok');
     history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p.toString() : ''));
   }
+})();
+</script>
+
+<script>
+// Menu adattivo: sidebar comprimibile su desktop, drawer su mobile.
+(function () {
+  var sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+  var root = document.documentElement;
+  var openers = Array.prototype.slice.call(document.querySelectorAll('[data-sidebar-open]'));
+  var closers = Array.prototype.slice.call(document.querySelectorAll('[data-sidebar-close]'));
+  var media = window.matchMedia('(min-width: 960px)');
+  var storageKey = 'bl-sidebar-collapsed';
+  var lastTrigger = null;
+  var toggle = sidebar.querySelector('.sidebar-toggle');
+  var behind = [
+    document.querySelector('main.wrap'),
+    document.querySelector('footer'),
+    document.querySelector('.topbar.appbar'),
+  ].filter(Boolean);
+
+  function isDesktop() { return media.matches; }
+  function isCollapsed() { return root.classList.contains('sb-collapsed'); }
+  function isOpen() { return root.classList.contains('sb-open'); }
+
+  function focusable() {
+    return Array.prototype.filter.call(
+      sidebar.querySelectorAll('a[href], button:not([disabled])'),
+      function (el) { return el.getClientRects().length > 0; }
+    );
+  }
+
+  function syncAria() {
+    var expanded = isDesktop() ? !isCollapsed() : isOpen();
+    openers.forEach(function (btn) {
+      btn.setAttribute('aria-expanded', String(expanded));
+    });
+    if (toggle) toggle.setAttribute('aria-expanded', String(expanded));
+  }
+
+  function syncInert() {
+    sidebar.inert = isDesktop() ? isCollapsed() : !isOpen();
+    var modal = !isDesktop() && isOpen();
+    behind.forEach(function (el) { el.inert = modal; });
+  }
+
+  function openDesktop() {
+    root.classList.remove('sb-collapsed');
+    try { localStorage.setItem(storageKey, '0'); } catch (e) {}
+    syncInert();
+    syncAria();
+    if (toggle) toggle.focus();
+  }
+
+  function closeDesktop() {
+    root.classList.add('sb-collapsed');
+    try { localStorage.setItem(storageKey, '1'); } catch (e) {}
+    syncInert();
+    syncAria();
+    var reopen = document.querySelector('.sidebar-reopen');
+    if (reopen) reopen.focus();
+  }
+
+  function openMobile(trigger) {
+    lastTrigger = trigger || null;
+    root.classList.add('sb-open');
+    syncInert();
+    syncAria();
+    // Focalizza il pannello: il lettore schermo annuncia "Menu principale",
+    // poi Tab porta al primo link.
+    sidebar.focus({ preventScroll: true });
+  }
+
+  function closeMobile(returnFocus) {
+    root.classList.remove('sb-open');
+    syncInert();
+    syncAria();
+    if (returnFocus !== false && lastTrigger) lastTrigger.focus();
+    lastTrigger = null;
+  }
+
+  openers.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      if (isDesktop()) openDesktop();
+      else openMobile(btn);
+    });
+  });
+
+  closers.forEach(function (el) {
+    el.addEventListener('click', function () {
+      if (isDesktop()) closeDesktop();
+      else closeMobile(true);
+    });
+  });
+
+  // Su mobile il drawer si chiude quando si sceglie una voce: le ancore
+  // della stessa pagina non devono restare coperte dal pannello.
+  sidebar.addEventListener('click', function (e) {
+    if (isDesktop() || !isOpen()) return;
+    if (e.target.closest('a[href]')) closeMobile(false);
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !isDesktop() && isOpen()) {
+      e.preventDefault();
+      closeMobile(true);
+      return;
+    }
+    if (e.key !== 'Tab' || isDesktop() || !isOpen()) return;
+    var items = focusable();
+    if (!items.length) return;
+    var first = items[0];
+    var last = items[items.length - 1];
+    var active = document.activeElement;
+    if (e.shiftKey) {
+      if (active === first || active === sidebar) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else if (active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
+
+  function syncViewport() {
+    if (isDesktop()) root.classList.remove('sb-open');
+    syncInert();
+    syncAria();
+  }
+
+  if (isDesktop()) {
+    try {
+      if (localStorage.getItem(storageKey) === '1') {
+        root.classList.add('sb-collapsed');
+      }
+    } catch (e) {}
+  }
+  syncViewport();
+  if (media.addEventListener) media.addEventListener('change', syncViewport);
+  else if (media.addListener) media.addListener(syncViewport);
 })();
 </script>
 

@@ -13,21 +13,24 @@ Adattato al brand b-lance: la palette e i font decisi dal proprietario **vincono
 
 ## Brand
 
-- Wordmark: `b-lance`, minuscolo, tight. Il **marchio è la prima lettera**:
-  la `b` è il simbolo, il trattino è oro, `lance` è salvia. Mai "B-Lance",
-  mai "Blance" nell'interfaccia.
-- Marchio: **b in equilibrio**. Asta intera in inchiostro; pancia circolare
-  divisa in due archi uguali da due tagli diagonali; perno oro in cima all'asta.
-  Il vuoto diagonale è la divisione della spesa, il perno è il punto che tiene
-  insieme il conto. Due parti, un unico saldo.
-- File: `app/static/logo-mark.svg` (marchio, viewBox `10 4 56 56`),
-  `logo-mark-inverse.svg` (su salvia), `logo.svg` e `logo-lockup-dark.svg`
-  (lockup integrato 170×64). La stessa geometria è in
+- Wordmark: `b-lance`, minuscolo, tight. Il nome resta **testo**: `b` in
+  inchiostro, trattino oro, `lance` salvia. Mai "B-Lance", mai "Blance"
+  nell'interfaccia.
+- Marchio: **monogramma "bl" in Calistoga**, con la `l` serrata contro la
+  pancia della `b`, dentro un badge quadrato salvia con angoli al 25% e
+  gradiente dosato `#6B9B7C → #47684F`. Il monogramma è carta `#F5F4EF` e
+  occupa il 62,5% del badge. Niente perno oro, niente anelli.
+- File: `app/static/logo-mark.svg` (badge 64×64),
+  `logo-mark-inverse.svg` (badge carta, monogramma salvia scuro),
+  `logo.svg` e `logo-lockup-dark.svg` (lockup 196×64: badge + wordmark
+  completo `b-lance`). La stessa geometria è in
   `app-android/lib/widgets/logo_mark.dart` e nelle icone generate da
   `scripts/gen_brand_assets.py`.
-- Icona app: fondo salvia con gradiente dosato + marchio carta + perno oro
-  chiaro; niente lettera "B" di sistema, niente viola.
-- Il lockup non ripete la `b` nel wordmark: il simbolo la sostituisce.
+- Icona app: badge salvia con monogramma carta; foreground adattivo
+  trasparente su fondo `#5F8D6E`, maskable full-bleed. Niente lettera "B" di
+  sistema, niente viola.
+- Il lockup ripete la `b` nel wordmark: il badge è un monogramma, il nome
+  resta leggibile come testo.
 
 ## Colori (token)
 
@@ -86,6 +89,12 @@ La sidebar è un menu a sezioni, non una lista di tre voci. Struttura:
 - **Account**: Privacy, Tema chiaro/scuro, Esci.
 - In fondo, scheda utente che porta direttamente al profilo.
 
+Le voci sono **solo testo**, senza icone decorative: i simboli generici non
+aggiungevano significato. L'attivo ha una barra salvia a sinistra. La sidebar
+si comprime con il pulsante in alto e ricorda lo stato; da compressa resta il
+badge in alto a sinistra per riaprirla. Sotto 960px diventa un drawer con
+pulsante Menu nella topbar, scrim, chiusura con Esc o tocco fuori, focus trap e
+ritorno del focus; il contenuto dietro è `inert`. Tutti i controlli sono 44×44.
 Niente menu a tendina nascosto: le azioni principali restano visibili. La
 sidebar scorre se l'altezza dello schermo è ridotta.
 
