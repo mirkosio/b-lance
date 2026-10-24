@@ -5,8 +5,6 @@
   </picture>
 </p>
 
-<h1 align="center">b-lance</h1>
-
 <p align="center"><b>Dividi le spese, non le amicizie.</b><br>
 App Android nativa + sito web per tenere i conti di gruppo, al centesimo.</p>
 
