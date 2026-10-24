@@ -26,7 +26,8 @@ class LogoMark extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
     final stem = inverse ? paperLight : Theme.of(context).colorScheme.onSurface;
-    final ring = inverse ? paperLight : (dark ? const Color(0xFF85B395) : sage);
+    // Sul fondo scuro il marchio è tutto carta, come nel lockup web.
+    final ring = inverse || dark ? paperLight : sage;
     final cap = inverse
         ? const Color(0xFFF2D8A0)
         : (dark ? const Color(0xFFD8B56A) : const Color(0xFFA8823C));
@@ -74,13 +75,20 @@ class _LogoPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round;
     canvas.drawLine(const Offset(18, 11.5), const Offset(18, 52.5), stemPaint);
 
-    final ringPaint = Paint()
+    final lowerPaint = Paint()
+      ..color = stem
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 8
+      ..strokeCap = StrokeCap.round;
+    final upperPaint = Paint()
       ..color = ring
       ..style = PaintingStyle.stroke
       ..strokeWidth = 8
       ..strokeCap = StrokeCap.round;
     final rect = Rect.fromCircle(center: const Offset(38, 36), radius: 16);
     // Due archi da 170°, separati da due vuoti di 10° sulla diagonale.
+    // L'arco in basso a sinistra è dello stesso colore dell'asta: è la
+    // "b"; quello in alto a destra porta la salvia (o la carta, su scuro).
     const start1 = 50 * math.pi / 180;
     const start2 = 230 * math.pi / 180;
     const sweep = 170 * math.pi / 180;
@@ -88,8 +96,8 @@ class _LogoPainter extends CustomPainter {
     canvas.translate(38, 36);
     canvas.rotate(ringRotation);
     canvas.translate(-38, -36);
-    canvas.drawArc(rect, start1, sweep, false, ringPaint);
-    canvas.drawArc(rect, start2, sweep, false, ringPaint);
+    canvas.drawArc(rect, start1, sweep, false, lowerPaint);
+    canvas.drawArc(rect, start2, sweep, false, upperPaint);
     canvas.restore();
 
     final capPaint = Paint()..color = cap;
