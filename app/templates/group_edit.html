@@ -8,19 +8,19 @@
 
 <div class="card" style="max-width:470px">
   <form method="post" action="/groups/{{ group.id }}/edit">
-    <label>Nome</label>
-    <input type="text" name="name" required maxlength="160" value="{{ group.name }}">
+    <label for="group-edit-name">Nome</label>
+    <input type="text" id="group-edit-name" name="name" required maxlength="160" value="{{ group.name }}">
 
-    <label>Tipo</label>
-    <select name="kind">
+    <label for="group-edit-kind">Tipo</label>
+    <select id="group-edit-kind" name="kind">
       {% for k, label in [("other", "Altro"), ("trip", "Viaggio"), ("home", "Casa / roommate"), ("event", "Evento")] %}
         <option value="{{ k }}" {% if group.kind == k %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
 
-    <label>Valuta del gruppo</label>
+    <label for="{% if locked %}group-edit-currency-locked{% else %}group-edit-currency-change{% endif %}">Valuta del gruppo</label>
     {% if locked %}
-      <select name="base_currency" disabled>
+      <select id="group-edit-currency-locked" name="base_currency" disabled>
         <option>{{ group.base_currency }}</option>
       </select>
       <p class="muted small" style="margin:6px 0 0">
@@ -28,7 +28,7 @@
         {{ group.base_currency }}. Cambiarla renderebbe incoerenti i saldi.
       </p>
     {% else %}
-      <select name="base_currency">
+      <select id="group-edit-currency-change" name="base_currency">
         {% for c in currencies %}
           <option value="{{ c.code }}" {% if c.code == group.base_currency %}selected{% endif %}>
             {{ c.code }} — {{ c.name }}

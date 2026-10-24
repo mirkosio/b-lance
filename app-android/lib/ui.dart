@@ -28,7 +28,17 @@ const textDark = Color(0xFFEFF3EE);
 const posColor = Color(0xFF3B7A52);
 const negColor = Color(0xFFA0432F);
 
-const kAppVersion = '1.2.0';
+/// Verde/terracotta leggibili anche sui fondi scuri.
+Color posOn(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark
+    ? const Color(0xFF6FBF90)
+    : posColor;
+Color negOn(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark
+    ? const Color(0xFFDD8B70)
+    : negColor;
+
+const kAppVersion = '1.3.0';
 
 /// Durata coerente col motion 4/10, azzerata se il sistema chiede
 /// di ridurre le animazioni.
@@ -259,7 +269,7 @@ ThemeData _theme({
           size: 23,
           color: states.contains(WidgetState.selected)
               ? accent
-              : ink.withValues(alpha: 0.55),
+              : ink.withValues(alpha: 0.7),
         ),
       ),
     ),
@@ -289,7 +299,7 @@ ThemeData darkTheme() => _theme(
   border: const Color(0xFF2A322D),
 );
 
-/// Colore secondario leggibile (>= 3:1 sui fondi) per testi piccoli.
+/// Colore secondario leggibile (>= 4.5:1 sui fondi) per testi piccoli.
 Color mutedOn(BuildContext context) =>
     Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
 

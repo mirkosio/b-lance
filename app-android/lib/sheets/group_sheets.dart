@@ -271,7 +271,6 @@ class _NewGroupSheetState extends State<_NewGroupSheet> {
   }
 }
 
-
 /// Invito con QR, codice e condivisione nativa.
 Future<void> showInviteSheet(
   BuildContext context, {
@@ -293,7 +292,8 @@ Future<void> showInviteSheet(
             height: 4,
             margin: const EdgeInsets.only(bottom: 16),
             decoration: BoxDecoration(
-              color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.15),
+              color: Theme.of(ctx).colorScheme.onSurface
+                  .withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -308,7 +308,7 @@ Future<void> showInviteSheet(
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 13,
-              color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6),
+              color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 18),
@@ -317,9 +317,7 @@ Future<void> showInviteSheet(
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: Theme.of(ctx).dividerColor,
-              ),
+              border: Border.all(color: Theme.of(ctx).dividerColor),
             ),
             child: QrImageView(
               data: link,
@@ -364,9 +362,9 @@ Future<void> showInviteSheet(
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: link));
               if (ctx.mounted) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('Link copiato')),
-                );
+                ScaffoldMessenger.of(
+                  ctx,
+                ).showSnackBar(const SnackBar(content: Text('Link copiato')));
               }
             },
             icon: const Icon(Icons.link, size: 19),
@@ -445,7 +443,7 @@ Future<bool> showInviteByUsernameSheet(
                   style: TextStyle(
                     fontSize: 12.5,
                     color: Theme.of(ctx).colorScheme.onSurface
-                        .withValues(alpha: 0.6),
+                        .withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -467,15 +465,18 @@ Future<bool> showInviteByUsernameSheet(
                       setD(() => results = const []);
                       return;
                     }
-                    debounce = Timer(const Duration(milliseconds: 300), () async {
-                      try {
-                        final found = await api.searchUsers(needle);
-                        if (ctx.mounted) setD(() => results = found);
-                      } catch (_) {
-                        // La ricerca è un aiuto: se fallisce si può scrivere
-                        // l'username a mano e premere Aggiungi.
-                      }
-                    });
+                    debounce = Timer(
+                      const Duration(milliseconds: 300),
+                      () async {
+                        try {
+                          final found = await api.searchUsers(needle);
+                          if (ctx.mounted) setD(() => results = found);
+                        } catch (_) {
+                          // La ricerca è un aiuto: se fallisce si può scrivere
+                          // l'username a mano e premere Aggiungi.
+                        }
+                      },
+                    );
                   },
                   onSubmitted: (_) => busy ? null : submit(),
                 ),

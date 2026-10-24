@@ -3,7 +3,7 @@
 {% block content %}
 <div class="card">
   <div class="section-title">
-    <span>{{ group.name }} <span class="chip">{{ group.base_currency }}</span></span>
+    <h1 class="group-heading">{{ group.name }} <span class="chip">{{ group.base_currency }}</span></h1>
     <span style="display:flex;gap:8px">
       <a class="btn sm ghost" href="/groups/{{ group.id }}/export.csv">CSV</a>
       <a class="btn sm ghost" href="/groups/{{ group.id }}/export.pdf">PDF</a>
@@ -34,6 +34,52 @@
   <a href="#spese">Spese</a>
   <a href="#pagamenti">Pagamenti</a>
 </nav>
+
+{% if welcome %}
+  {% set has_people = view.active_count() > 1 %}
+  {% set has_expenses = view.total_expenses_minor() > 0 %}
+  <section class="onboarding" data-onboard-group="{{ group.id }}" aria-labelledby="guide-title">
+    <div class="onboard-head">
+      <div>
+        <span class="eyebrow">Guida rapida · primo gruppo</span>
+        <h2 id="guide-title">Tre passaggi e sei dentro.</h2>
+      </div>
+      <button class="btn sm ghost" type="button" data-onboard-skip>Salta guida</button>
+    </div>
+    <ol class="onboard-steps">
+      <li class="done">
+        <span class="onboard-num" aria-hidden="true">1</span>
+        <div><b>Gruppo creato</b><span>Questo è il tuo spazio per i conti.</span></div>
+      </li>
+      <li class="{% if has_people %}done{% else %}current{% endif %}">
+        <span class="onboard-num" aria-hidden="true">2</span>
+        <div><b>Invita le persone</b><span>Link, QR o username. Nessuna rubrica caricata.</span></div>
+        {% if not has_people %}<a class="btn sm ghost" href="#membri">Invita ora</a>{% endif %}
+      </li>
+      <li class="{% if has_expenses %}done{% elif has_people %}current{% endif %}">
+        <span class="onboard-num" aria-hidden="true">3</span>
+        <div><b>Aggiungi la prima spesa</b><span>Dividi in parti uguali, per quote o importi esatti.</span></div>
+        {% if has_people and not has_expenses %}<a class="btn sm ghost" href="#spese">Aggiungi spesa</a>{% endif %}
+      </li>
+    </ol>
+  </section>
+  <script>
+    (function () {
+      var box = document.querySelector('[data-onboard-group="{{ group.id }}"]');
+      if (!box) return;
+      var key = 'bl_onboard_group_{{ group.id }}';
+      try { if (localStorage.getItem(key) === 'skip') box.hidden = true; } catch (e) {}
+      var skip = box.querySelector('[data-onboard-skip]');
+      if (skip) skip.addEventListener('click', function () {
+        box.hidden = true;
+        try { localStorage.setItem(key, 'skip'); } catch (e) {}
+      });
+      if (!box.hidden && history.replaceState) {
+        history.replaceState(null, '', location.pathname + location.hash);
+      }
+    })();
+  </script>
+{% endif %}
 
 <div class="grid cols-2" id="saldi">
   <!-- Saldi -->
@@ -106,8 +152,8 @@
           <summary class="muted small" style="cursor:pointer">Permessi</summary>
           <div style="margin-top:12px;max-width:420px">
             <form method="post" action="/groups/{{ group.id }}/members/{{ m.user_id }}">
-              <label>Ruolo</label>
-              <select name="role">
+              <label for="member-role-{{ m.user_id }}">Ruolo</label>
+              <select id="member-role-{{ m.user_id }}" name="role">
                 <option value="member" {% if m.role == 'member' %}selected{% endif %}>Membro</option>
                 {% if perms|length == perm_defs|length %}
                   <option value="admin" {% if m.role == 'admin' %}selected{% endif %}>Admin (tutti i permessi)</option>
@@ -158,7 +204,8 @@
   {% if 'members_manage' in perms %}
     <form method="post" action="/groups/{{ group.id }}/invite-handle"
           class="row" style="margin-top:10px">
-      <input type="text" name="handle" placeholder="username" autocapitalize="none"
+      <label class="sr-only" for="invite-handle">Username da invitare</label>
+      <input type="text" id="invite-handle" name="handle" placeholder="username" autocapitalize="none"
              style="flex:1">
       <button class="btn ghost" type="submit">Invita</button>
     </form>
@@ -172,11 +219,11 @@
 <div class="card">
   <div class="section-title">Aggiungi spesa</div>
   <form method="post" action="/groups/{{ group.id }}/expenses" id="expense-form">
-    <label>Descrizione</label>
-    <input type="text" name="description" required placeholder="Es. Cena, benzina, biglietti">
+    <label for="exp-description">Descrizione</label>
+    <input type="text" id="exp-description" name="description" required placeholder="Es. Cena, benzina, biglietti">
 
-    <label>Categoria</label>
-    <select name="category">
+    <label for="exp-category">Categoria</label>
+    <select id="exp-category" name="category">
       {% for code, label in categories.items() %}
         <option value="{{ code }}" {% if code == 'other' %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
@@ -184,11 +231,11 @@
 
     <div class="row">
       <div>
-        <label>Importo</label>
+        <label for="exp-amount">Importo</label>
         <input type="text" name="amount" id="exp-amount" required inputmode="decimal" placeholder="0,00">
       </div>
       <div>
-        <label>Valuta</label>
+        <label for="exp-currency">Valuta</label>
         <select name="currency" id="exp-currency">
           {% for c in currencies %}
             <option value="{{ c.code }}" {% if c.code == group.base_currency %}selected{% endif %}>
@@ -201,7 +248,7 @@
 
     <!-- Tasso di cambio: appare solo se la valuta != base del gruppo -->
     <div id="fx-row" style="display:none">
-      <label>Tasso di cambio (1 {{ group.base_currency }} = ? della valuta della spesa)</label>
+      <label for="exp-fx">Tasso di cambio (1 {{ group.base_currency }} = ? della valuta della spesa)</label>
       <input type="text" name="fx_rate" id="exp-fx" inputmode="decimal" placeholder="Es. 36.5">
       <p class="muted small" id="fx-auto" style="margin:6px 0 0">
         Lascia vuoto se la valuta è fra quelle note (calcolato automaticamente).
@@ -214,8 +261,8 @@
 
     <div class="row">
       <div>
-        <label>Chi ha pagato</label>
-        <select name="paid_by" required>
+        <label for="exp-paid-by">Chi ha pagato</label>
+        <select id="exp-paid-by" name="paid_by" required>
           {% for m in view.members if m.active %}
             <option value="{{ m.user_id }}" {% if m.user_id == user.id %}selected{% endif %}>{{ m.name }}</option>
           {% endfor %}
@@ -223,8 +270,8 @@
       </div>
     </div>
 
-    <label>Chi divide</label>
-    <div class="people-picker" id="people-picker">
+    <div class="field-label" id="split-people-label">Chi divide</div>
+    <div class="people-picker" id="people-picker" role="group" aria-labelledby="split-people-label">
       {% for m in view.members if m.active %}
         <label class="pp on" data-uid="{{ m.user_id }}">
           <input type="checkbox" name="members" value="{{ m.user_id }}" checked>
@@ -234,8 +281,8 @@
       {% endfor %}
     </div>
 
-    <label>Come dividiamo</label>
-    <div class="seg" id="split-seg">
+    <div class="field-label" id="split-method-label">Come dividiamo</div>
+    <div class="seg" id="split-seg" role="radiogroup" aria-labelledby="split-method-label">
       {% for method in split_methods %}
         <span>
           <input type="radio" name="split_method" value="{{ method.value }}" id="m-{{ method.value }}"
@@ -258,13 +305,50 @@
 
 <!-- Spese -->
 <div class="card" id="spese">
-  <div class="section-title">Spese recenti</div>
-  <form method="get" action="/groups/{{ group.id }}" class="row" style="margin-bottom:10px">
-    <input type="text" name="q" value="{{ query }}" placeholder="Cerca per descrizione, persona o categoria"
-           style="flex:1">
-    <button class="btn sm ghost" type="submit">Cerca</button>
-    {% if query %}<a class="btn sm ghost" href="/groups/{{ group.id }}">Pulisci</a>{% endif %}
+  <div class="section-title">
+    <span>Spese recenti <span class="chip">{{ expenses|length }}</span></span>
+  </div>
+  <form method="get" action="/groups/{{ group.id }}#spese" class="filterbar">
+    <div class="filter-field filter-grow">
+      <label for="exp-q">Cerca</label>
+      <input type="search" id="exp-q" name="q" value="{{ query }}"
+             placeholder="Spesa o persona">
+    </div>
+    <div class="filter-field">
+      <label for="exp-cat">Categoria</label>
+      <select id="exp-cat" name="categoria">
+        <option value="">Tutte</option>
+        {% for code, label in categories.items() %}
+          <option value="{{ code }}" {% if category_filter == code %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-field">
+      <label for="exp-member">Membro</label>
+      <select id="exp-member" name="membro">
+        <option value="">Tutti</option>
+        {% for m in view.members %}
+          <option value="{{ m.user_id }}" {% if member_filter == m.user_id %}selected{% endif %}>{{ m.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="filter-field">
+      <label for="exp-from">Dal</label>
+      <input type="date" id="exp-from" name="da" value="{{ date_from }}">
+    </div>
+    <div class="filter-field">
+      <label for="exp-to">Al</label>
+      <input type="date" id="exp-to" name="a" value="{{ date_to }}">
+    </div>
+    <div class="filter-actions">
+      <button class="btn sm" type="submit">Applica</button>
+      {% if filters_active %}<a class="btn sm ghost" href="/groups/{{ group.id }}#spese">Azzera</a>{% endif %}
+    </div>
   </form>
+  {% if filters_active %}
+    <p class="muted small filter-note">Filtri attivi. Categoria: solo spese. Membro e periodo: spese e pagamenti.</p>
+  {% endif %}
+
   {% if expenses %}
     {% for e in expenses %}
       <div class="expense-item{% if e.voided_at %} is-voided{% endif %}">
@@ -283,6 +367,11 @@
         </div>
       </div>
     {% endfor %}
+  {% elif filters_active %}
+    <div class="empty">
+      <p>Nessuna spesa con questi filtri.</p>
+      <a class="btn sm ghost" href="/groups/{{ group.id }}#spese">Azzera i filtri</a>
+    </div>
   {% else %}
     <div class="empty">Nessuna spesa. Aggiungi la prima qui sopra.</div>
   {% endif %}
@@ -295,26 +384,26 @@
   <form method="post" action="/groups/{{ group.id }}/payments" id="payment-form">
     <div class="row">
       <div>
-        <label>Da</label>
-        <select name="from_user" required>
+        <label for="pay-from">Da</label>
+        <select id="pay-from" name="from_user" required>
           {% for m in view.members if m.active %}<option value="{{ m.user_id }}">{{ m.name }}</option>{% endfor %}
         </select>
       </div>
       <div>
-        <label>A</label>
-        <select name="to_user" required>
+        <label for="pay-to">A</label>
+        <select id="pay-to" name="to_user" required>
           {% for m in view.members if m.active %}<option value="{{ m.user_id }}">{{ m.name }}</option>{% endfor %}
         </select>
       </div>
     </div>
     <div class="row">
       <div>
-        <label>Importo</label>
-        <input type="text" name="amount" required inputmode="decimal" placeholder="0,00">
+        <label for="pay-amount">Importo</label>
+        <input type="text" id="pay-amount" name="amount" required inputmode="decimal" placeholder="0,00">
       </div>
       <div>
-        <label>Nota (opzionale)</label>
-        <input type="text" name="note" placeholder="Es. bonifico, contanti">
+        <label for="pay-note">Nota (opzionale)</label>
+        <input type="text" id="pay-note" name="note" placeholder="Es. bonifico, contanti">
       </div>
     </div>
     <div style="margin-top:14px">
@@ -412,14 +501,21 @@ function rebuildSplitInputs() {
   var unit = method === 'exact' ? '' : '%';
   var namePrefix = method === 'exact' ? 'exact_' : 'pct_';
 
+  function esc(value) {
+    return String(value).replace(/[&<>"']/g, function (c) {
+      return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
+    });
+  }
   var html = '<p class="muted small" style="margin:0 0 6px">' + label + '</p>';
   ids.forEach(function (uid) {
     var idx = memberIds.indexOf(parseInt(uid, 10));
     var name = idx >= 0 ? membersData[idx] : uid;
+    var safeName = esc(name);
     html +=
       '<div class="row" style="margin-bottom:6px;align-items:center">' +
-      '<span style="flex:1">' + name + '</span>' +
+      '<span style="flex:1">' + safeName + '</span>' +
       '<input style="flex:1" type="text" inputmode="decimal" ' +
+      'aria-label="' + esc(label + ' per ' + name) + '" ' +
       'name="' + namePrefix + uid + '" placeholder="0' + (method === 'exact' ? ',00' : '') + '">' +
       '<span class="muted small" style="width:24px">' + unit + '</span>' +
       '</div>';
@@ -468,5 +564,30 @@ function copyInvite() {
       else alert('Link copiato!');
     });
 }
+
+// --- Menu di sezione: evidenzia dove sei, senza cambiare la pagina ---
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.page-menu a'));
+  if (!links.length) return;
+  var sections = links.map(function (a) {
+    return document.querySelector(a.getAttribute('href'));
+  });
+  function update() {
+    var y = window.scrollY + 130;
+    var current = 0;
+    sections.forEach(function (section, i) {
+      if (section && section.offsetTop <= y) current = i;
+    });
+    links.forEach(function (a, i) {
+      var on = i === current;
+      a.classList.toggle('active', on);
+      if (on) a.setAttribute('aria-current', 'location');
+      else a.removeAttribute('aria-current');
+    });
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();
 </script>
 {% endblock %}

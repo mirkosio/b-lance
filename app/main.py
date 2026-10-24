@@ -14,6 +14,7 @@ import asyncio
 import logging
 import secrets
 from contextlib import asynccontextmanager
+from datetime import date
 from pathlib import Path
 from urllib.parse import quote, urlsplit
 
@@ -689,7 +690,15 @@ def create_group(
     db.flush()
     db.add(GroupMember(group_id=group.id, user_id=user.id, role="owner"))
     db.commit()
-    return RedirectResponse(f"/groups/{group.id}", status_code=303)
+    return RedirectResponse(f"/groups/{group.id}?welcome=1", status_code=303)
+
+
+def _parse_day(value: str) -> date | None:
+    """Data ISO da query string; valori non validi diventano 'nessun filtro'."""
+    try:
+        return date.fromisoformat(value.strip()) if value.strip() else None
+    except ValueError:
+        return None
 
 
 @app.get("/groups/{group_id}")
@@ -697,6 +706,11 @@ def group_detail(
     request: Request,
     group_id: int,
     q: str = Query(""),
+    welcome: str = Query(""),
+    category: str = Query("", alias="categoria"),
+    member_raw: str = Query("", alias="membro"),
+    date_from: str = Query("", alias="da"),
+    date_to: str = Query("", alias="a"),
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
@@ -716,14 +730,43 @@ def group_detail(
         e.payer_name = next(
             (m.name for m in view.members if m.user_id == e.paid_by), "?"
         )
-    if needle:
-        expenses = [
-            e
-            for e in expenses
-            if needle in e.description.lower()
+
+    category_key = category.strip().lower()
+    category_filter = category_key if category_key in CATEGORIES else ""
+    try:
+        member_id = int(member_raw) if member_raw.strip() else None
+    except ValueError:
+        member_id = None
+    member_filter = (
+        member_id if any(m.user_id == member_id for m in view.members) else None
+    )
+    day_from = _parse_day(date_from)
+    day_to = _parse_day(date_to)
+    if day_from and day_to and day_from > day_to:
+        day_from, day_to = day_to, day_from
+
+    def expense_matches(e: Expense) -> bool:
+        if needle and not (
+            needle in e.description.lower()
             or needle in e.payer_name.lower()
+            or needle in category_label(e.category).lower()
             or needle in e.category.lower()
-        ]
+        ):
+            return False
+        if category_filter and e.category != category_filter:
+            return False
+        if member_filter and e.paid_by != member_filter and not any(
+            s.user_id == member_filter for s in e.shares
+        ):
+            return False
+        created = e.created_at.date() if e.created_at else None
+        if day_from and (created is None or created < day_from):
+            return False
+        if day_to and (created is None or created > day_to):
+            return False
+        return True
+
+    expenses = [e for e in expenses if expense_matches(e)]
 
     payments = db.scalars(
         select(Payment)
@@ -733,14 +776,31 @@ def group_detail(
     for p in payments:
         p.from_name = next((m.name for m in view.members if m.user_id == p.from_user), "?")
         p.to_name = next((m.name for m in view.members if m.user_id == p.to_user), "?")
-    if needle:
-        payments = [
-            p
-            for p in payments
-            if needle in (p.note or "").lower()
+
+    def payment_matches(p: Payment) -> bool:
+        if needle and not (
+            needle in (p.note or "").lower()
             or needle in p.from_name.lower()
             or needle in p.to_name.lower()
-        ]
+        ):
+            return False
+        if (
+            member_filter
+            and p.from_user != member_filter
+            and p.to_user != member_filter
+        ):
+            return False
+        created = p.created_at.date() if p.created_at else None
+        if day_from and (created is None or created < day_from):
+            return False
+        if day_to and (created is None or created > day_to):
+            return False
+        return True
+
+    payments = [p for p in payments if payment_matches(p)]
+    filters_active = bool(
+        needle or category_filter or member_filter or day_from or day_to
+    )
 
     return templates.TemplateResponse(
         request,
@@ -753,6 +813,12 @@ def group_detail(
             "expenses": expenses,
             "payments": payments,
             "query": q.strip(),
+            "welcome": bool(welcome.strip()),
+            "category_filter": category_filter,
+            "member_filter": member_filter,
+            "date_from": day_from.isoformat() if day_from else "",
+            "date_to": day_to.isoformat() if day_to else "",
+            "filters_active": filters_active,
             "split_methods": list(SplitMethod),
             "currencies": sorted_currencies(),
             # Permessi di CHI STA GUARDANDO la pagina (per mostrare/nascondere).

@@ -103,7 +103,7 @@ def _three_members(client: TestClient) -> int:
         follow_redirects=False,
     )
     assert r.status_code == 303, r.text
-    group_id = int(r.headers["location"].rstrip("/").split("/")[-1])
+    group_id = int(r.headers["location"].split("?")[0].rstrip("/").split("/")[-1])
     code = re.search(r"/join/([A-Z0-9]+)", client.get(f"/groups/{group_id}").text).group(1)
 
     _as(client, "Luca", "luca@example.com")

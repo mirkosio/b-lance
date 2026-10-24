@@ -2,24 +2,25 @@
 {% block title %}Account — b-lance{% endblock %}
 {% block content %}
 <div class="card">
-  <div class="section-title">Il tuo account</div>
+  <h1 class="section-title">Il tuo account</h1>
   {% if error or err %}<p class="error">{{ error or err }}</p>{% endif %}
   {% if ok %}<p class="muted small">Salvato.</p>{% endif %}
   <form method="post" action="/account">
-    <label>Nome</label>
-    <input type="text" name="name" value="{{ user.name }}" required maxlength="60">
+    <label for="account-name">Nome</label>
+    <input type="text" id="account-name" name="name" value="{{ user.name }}" required maxlength="60" autocomplete="name">
 
-    <label>username</label>
-    <input type="text" name="handle" value="{{ user.handle or '' }}"
-           placeholder="es. mirkosio" maxlength="20" autocapitalize="none">
-    <p class="muted small">
+    <label for="account-handle">username</label>
+    <input type="text" id="account-handle" name="handle" value="{{ user.handle or '' }}"
+           placeholder="es. mirkosio" maxlength="20" autocapitalize="none"
+           aria-describedby="account-handle-help">
+    <p class="muted small" id="account-handle-help">
       Serve per farti invitare nei gruppi senza condividere la rubrica.
       3-20 caratteri: lettere minuscole, numeri o _.
     </p>
 
-    <label>Colore avatar</label>
+    <label for="account-color">Colore avatar</label>
     <div class="row" style="align-items:center">
-      <input type="color" name="color" value="{{ user.color }}" style="max-width:90px">
+      <input type="color" id="account-color" name="color" value="{{ user.color }}" style="max-width:90px">
       <span class="muted small">Scegli un colore riconoscibile.</span>
     </div>
 
@@ -30,12 +31,12 @@
 </div>
 
 <div class="card">
-  <div class="section-title">Password</div>
+  <h2 class="section-title">Password</h2>
   <form method="post" action="/account/password">
-    <label>Password attuale</label>
-    <input type="password" name="current" required autocomplete="current-password">
-    <label>Nuova password</label>
-    <input type="password" name="new" required minlength="6" autocomplete="new-password">
+    <label for="account-current">Password attuale</label>
+    <input type="password" id="account-current" name="current" required autocomplete="current-password">
+    <label for="account-new">Nuova password</label>
+    <input type="password" id="account-new" name="new" required minlength="6" autocomplete="new-password">
     <div style="margin-top:14px">
       <button class="btn ghost block" type="submit">Cambia password</button>
     </div>
@@ -47,7 +48,7 @@
 </div>
 
 <div class="card">
-  <div class="section-title">Elimina account</div>
+  <h2 class="section-title">Elimina account</h2>
   <p class="muted small">
     Il nome diventa "Ex-membro", email, password e username spariscono.
     Le spese restano nei gruppi e i saldi non cambiano.

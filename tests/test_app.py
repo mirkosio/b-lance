@@ -46,7 +46,7 @@ def _create_group(client: TestClient, name: str = "Viaggio") -> int:
         follow_redirects=False,
     )
     assert r.status_code == 303, r.text
-    return int(r.headers["location"].rstrip("/").split("/")[-1])
+    return int(r.headers["location"].split("?")[0].rstrip("/").split("/")[-1])
 
 
 def test_register_login_and_dashboard(client: TestClient) -> None:
@@ -283,3 +283,66 @@ def test_void_payment_keeps_history_and_reverses_balance(client: TestClient) -> 
     # Ma il suo effetto sui saldi è sparito.
     assert "+€10.00" in page
     assert "-€10.00" in page
+
+
+def test_group_filters_category_member_and_period(client: TestClient) -> None:
+    """I filtri si combinano e restano nella query string."""
+    _register(client, "Marco", "marco@example.com")
+    group_id = _create_group(client)
+    for description, category, amount in (
+        ("Cena", "food", "10"),
+        ("Treno", "transport", "20"),
+    ):
+        r = client.post(
+            f"/groups/{group_id}/expenses",
+            data={
+                "description": description,
+                "category": category,
+                "amount": amount,
+                "paid_by": "1",
+                "split_method": "even",
+                "members": ["1"],
+            },
+            follow_redirects=False,
+        )
+        assert r.status_code == 303, r.text
+
+    page = client.get(f"/groups/{group_id}?categoria=food").text
+    assert "Cena</div>" in page
+    assert "Treno</div>" not in page
+    assert "Filtri attivi" in page
+
+    page = client.get(
+        f"/groups/{group_id}?categoria=transport&membro=1"
+    ).text
+    assert "Treno</div>" in page
+    assert "Cena</div>" not in page
+
+    page = client.get(f"/groups/{group_id}?da=2099-01-01").text
+    assert "Nessuna spesa con questi filtri." in page
+    assert "Azzera i filtri" in page
+
+    # Parametri sporchi: niente 422/JSON, si torna alla pagina.
+    page = client.get(
+        f"/groups/{group_id}?membro=abc&welcome=abc&da=non-data"
+    )
+    assert page.status_code == 200
+    assert "Cena</div>" in page.text
+
+
+def test_onboarding_cards_only_on_first_access(client: TestClient) -> None:
+    """La guida non blocca: appare al primo accesso e si può saltare."""
+    _register(client, "Marco", "marco@example.com")
+
+    dashboard = client.get("/").text
+    assert "Tre passaggi e sei dentro." in dashboard
+    assert "bl_onboard_dashboard" in dashboard
+
+    group_id = _create_group(client)
+    first = client.get(f"/groups/{group_id}?welcome=1").text
+    assert "Guida rapida · primo gruppo" in first
+    assert f"bl_onboard_group_{group_id}" in first
+    assert "Salta guida" in first
+
+    again = client.get(f"/groups/{group_id}").text
+    assert "Guida rapida · primo gruppo" not in again

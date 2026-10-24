@@ -8,19 +8,19 @@
 
 <div class="card" style="max-width:470px">
   <form method="post" action="/groups/new">
-    <label>Nome</label>
-    <input type="text" name="name" required autofocus placeholder="Es. Weekend a Rimini">
+    <label for="group-name">Nome</label>
+    <input type="text" id="group-name" name="name" required autofocus placeholder="Es. Weekend a Rimini">
 
-    <label>Tipo</label>
-    <select name="kind">
+    <label for="group-kind">Tipo</label>
+    <select id="group-kind" name="kind">
       <option value="other">Altro</option>
       <option value="trip">Viaggio</option>
       <option value="home">Casa / roommate</option>
       <option value="event">Evento</option>
     </select>
 
-    <label>Valuta del gruppo</label>
-    <select name="base_currency">
+    <label for="group-currency">Valuta del gruppo</label>
+    <select id="group-currency" name="base_currency">
       {% for c in currencies %}
         <option value="{{ c.code }}" {% if c.code == 'EUR' %}selected{% endif %}>
           {{ c.code }} — {{ c.name }}

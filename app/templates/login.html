@@ -7,14 +7,14 @@
       <img src="/static/logo-mark-inverse.svg" alt="">
     </span>
   </div>
-  <div class="section-title" style="justify-content:center">Accedi</div>
-  {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+  <h1 class="section-title" style="justify-content:center">Accedi</h1>
+  {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
   <form method="post" action="/login">
     <input type="hidden" name="next" value="{{ next|default('') }}">
-    <label>Email</label>
-    <input type="email" name="email" required autofocus placeholder="tu@email.com">
-    <label>Password</label>
-    <input type="password" name="password" required placeholder="La tua password">
+    <label for="login-email">Email</label>
+    <input type="email" id="login-email" name="email" required autofocus autocomplete="email" placeholder="tu@email.com">
+    <label for="login-password">Password</label>
+    <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="La tua password">
     <div style="margin-top:18px">
       <button class="btn block" type="submit">
         <svg width="17" height="17"><use href="#i-login"></use></svg> Entra

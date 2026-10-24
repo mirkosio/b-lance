@@ -119,7 +119,10 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
   String _plainMajor(int minor, int exponent) {
     // formatMinor usa la virgola e i punti delle migliaia: qui serve il
     // numero "grezzo" da rimettere in un campo di testo.
-    return formatMinor(minor, exponent).replaceAll('.', '').replaceAll(',', '.');
+    return formatMinor(
+      minor,
+      exponent,
+    ).replaceAll('.', '').replaceAll(',', '.');
   }
 
   @override
@@ -162,8 +165,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
       return;
     }
     final fx = _fx.text.trim().replaceAll(',', '.');
-    if (_needManualRate &&
-        (fx.isEmpty || double.tryParse(fx) == null)) {
+    if (_needManualRate && (fx.isEmpty || double.tryParse(fx) == null)) {
       _snack(
         'Scrivi il tasso: 1 $_currency vale quanti ${widget.detail.baseCurrency}?',
       );
@@ -400,7 +402,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
               style: TextStyle(
                 fontSize: 12.5,
                 color: Theme.of(context).colorScheme.onSurface
-                    .withValues(alpha: 0.55),
+                    .withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 6),
@@ -462,9 +464,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                 contentPadding: EdgeInsets.zero,
                 value: _recurring,
                 title: const Text('Ripeti nel tempo'),
-                subtitle: const Text(
-                  'Creo la spesa a ogni scadenza.',
-                ),
+                subtitle: const Text('Creo la spesa a ogni scadenza.'),
                 onChanged: (v) => setState(() => _recurring = v),
               ),
               if (_recurring)
@@ -473,9 +473,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
                     Expanded(
                       child: DropdownButtonFormField<int>(
                         initialValue: _interval,
-                        decoration: const InputDecoration(
-                          labelText: 'Ogni',
-                        ),
+                        decoration: const InputDecoration(labelText: 'Ogni'),
                         items: const [
                           DropdownMenuItem(value: 1, child: Text('1')),
                           DropdownMenuItem(value: 2, child: Text('2')),

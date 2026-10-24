@@ -50,7 +50,7 @@ def _group_with_code(client: TestClient) -> tuple[int, str]:
         follow_redirects=False,
     )
     assert r.status_code == 303, r.text
-    group_id = int(r.headers["location"].rstrip("/").split("/")[-1])
+    group_id = int(r.headers["location"].split("?")[0].rstrip("/").split("/")[-1])
     page = client.get(f"/groups/{group_id}").text
     code = re.search(r"/join/([A-Z0-9]+)", page).group(1)
     return group_id, code

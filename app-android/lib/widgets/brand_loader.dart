@@ -35,7 +35,7 @@ class _BrandLoaderState extends State<BrandLoader>
     final reduce = MediaQuery.disableAnimationsOf(context);
     final theme = Theme.of(context);
     final accent = theme.brightness == Brightness.dark ? sage : sageInk;
-    final muted = theme.colorScheme.onSurface.withValues(alpha: 0.6);
+    final muted = theme.colorScheme.onSurface.withValues(alpha: 0.7);
 
     return AnimatedBuilder(
       animation: _controller,
@@ -53,10 +53,10 @@ class _BrandLoaderState extends State<BrandLoader>
                 height: 126,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: sage.withValues(alpha: theme.brightness == Brightness.dark ? 0.12 : 0.08),
-                  border: Border.all(
-                    color: sage.withValues(alpha: 0.16),
+                  color: sage.withValues(
+                    alpha: theme.brightness == Brightness.dark ? 0.12 : 0.08,
                   ),
+                  border: Border.all(color: sage.withValues(alpha: 0.16)),
                 ),
                 alignment: Alignment.center,
                 child: LogoMark(
@@ -130,7 +130,7 @@ class _BrandLoaderState extends State<BrandLoader>
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12.5,
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.45),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.68),
                 ),
               ),
             ),

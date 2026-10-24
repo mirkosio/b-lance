@@ -50,7 +50,7 @@ def _setup(client: TestClient) -> tuple[int, TestClient]:
         follow_redirects=False,
     )
     assert r.status_code == 303, r.text
-    group_id = int(r.headers["location"].rstrip("/").split("/")[-1])
+    group_id = int(r.headers["location"].split("?")[0].rstrip("/").split("/")[-1])
 
     db = SessionLocal()
     code = db.get(Group, group_id).invite_code

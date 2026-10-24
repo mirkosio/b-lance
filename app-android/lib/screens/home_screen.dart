@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api.dart';
 import '../models.dart';
 import '../sheets/group_sheets.dart';
+import '../sheets/onboarding_sheet.dart';
 import '../ui.dart';
 import '../widgets/group_tile.dart';
 import '../widgets/hero_balance.dart';
@@ -34,6 +36,10 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   late Future<Dashboard> _future = widget.api.dashboard();
+  bool _onboardingChecked = false;
+  bool _onboardingOpen = false;
+
+  static const _onboardingKey = 'onboarding_seen_v1';
 
   @override
   void didUpdateWidget(covariant HomeScreen oldWidget) {
@@ -59,6 +65,23 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
     ).push(appRoute(context, (_) => GroupScreen(api: widget.api, groupId: id)));
     if (mounted) widget.onChanged();
+  }
+
+  Future<void> _maybeOnboarding(bool empty) async {
+    if (_onboardingChecked) return;
+    _onboardingChecked = true;
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    if (!empty) {
+      await prefs.setBool(_onboardingKey, true);
+      return;
+    }
+    if (prefs.getBool(_onboardingKey) ?? false) return;
+    _onboardingOpen = true;
+    final create = await showOnboardingSheet(context);
+    _onboardingOpen = false;
+    await prefs.setBool(_onboardingKey, true);
+    if (create == true && mounted) await _newGroup();
   }
 
   Future<void> _newGroup() async {
@@ -171,6 +194,11 @@ class _HomeScreenState extends State<HomeScreen> {
             final data = snap.data!;
             final groups = data.groups;
             final recent = groups.take(3).toList();
+            if (!_onboardingChecked && !_onboardingOpen) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) _maybeOnboarding(groups.isEmpty);
+              });
+            }
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
@@ -268,40 +296,45 @@ class _QuickAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          hapticTap();
-          onTap();
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
-          child: Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: sage.withValues(alpha: dark ? 0.22 : 0.13),
-                  borderRadius: BorderRadius.circular(12),
+    return Semantics(
+      button: true,
+      label: label,
+      excludeSemantics: true,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () {
+            hapticTap();
+            onTap();
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 16),
+            child: Row(
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: sage.withValues(alpha: dark ? 0.22 : 0.13),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(icon, size: 20, color: dark ? sage : sageInk),
                 ),
-                alignment: Alignment.center,
-                child: Icon(icon, size: 20, color: dark ? sage : sageInk),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 2,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13.5,
-                    height: 1.2,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13.5,
+                      height: 1.2,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

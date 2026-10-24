@@ -44,7 +44,7 @@ def _group_id(client: TestClient) -> int:
         follow_redirects=False,
     )
     assert r.status_code == 303, r.text
-    return int(r.headers["location"].rstrip("/").split("/")[-1])
+    return int(r.headers["location"].split("?")[0].rstrip("/").split("/")[-1])
 
 
 def test_get_retries_once_when_db_is_waking_up(

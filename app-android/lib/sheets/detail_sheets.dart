@@ -204,7 +204,7 @@ class _ExpenseDetailState extends State<_ExpenseDetail> {
               fontSize: 32,
               fontWeight: FontWeight.w800,
               decoration: e.voided ? TextDecoration.lineThrough : null,
-              color: e.voided ? surface.withValues(alpha: 0.45) : null,
+              color: e.voided ? surface.withValues(alpha: 0.68) : null,
             ),
           ),
           if (converted)
@@ -215,7 +215,7 @@ class _ExpenseDetailState extends State<_ExpenseDetail> {
                 ' al tasso del giorno',
                 style: TextStyle(
                   fontSize: 13,
-                  color: surface.withValues(alpha: 0.55),
+                  color: surface.withValues(alpha: 0.7),
                 ),
               ),
             ),
@@ -234,7 +234,7 @@ class _ExpenseDetailState extends State<_ExpenseDetail> {
                   Icon(
                     Icons.info_outline,
                     size: 18,
-                    color: surface.withValues(alpha: 0.55),
+                    color: surface.withValues(alpha: 0.7),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -243,7 +243,7 @@ class _ExpenseDetailState extends State<_ExpenseDetail> {
                       '${e.voidedAt != null ? '\nAnnullata il ${formatDateTime(e.voidedAt)}.' : ''}',
                       style: TextStyle(
                         fontSize: 12.5,
-                        color: surface.withValues(alpha: 0.55),
+                        color: surface.withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -450,7 +450,7 @@ class _PaymentDetailState extends State<_PaymentDetail> {
               fontSize: 32,
               fontWeight: FontWeight.w800,
               decoration: p.voided ? TextDecoration.lineThrough : null,
-              color: p.voided ? surface.withValues(alpha: 0.45) : null,
+              color: p.voided ? surface.withValues(alpha: 0.68) : null,
             ),
           ),
           if (p.voided) ...[
@@ -460,7 +460,7 @@ class _PaymentDetailState extends State<_PaymentDetail> {
               '${p.voidedAt != null ? '\nAnnullato il ${formatDateTime(p.voidedAt)}.' : ''}',
               style: TextStyle(
                 fontSize: 12.5,
-                color: surface.withValues(alpha: 0.55),
+                color: surface.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -511,9 +511,8 @@ class _VoidedBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final muted = Theme.of(
-      context,
-    ).colorScheme.onSurface.withValues(alpha: 0.55);
+    final muted = Theme.of(context).colorScheme.onSurface
+        .withValues(alpha: 0.7);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
@@ -553,7 +552,7 @@ class _Row extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 color: Theme.of(context).colorScheme.onSurface
-                    .withValues(alpha: 0.55),
+                    .withValues(alpha: 0.7),
               ),
             ),
           ),

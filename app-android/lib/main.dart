@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'api.dart';
 import 'screens/login_screen.dart';
@@ -28,6 +29,9 @@ class BlanceApp extends StatelessWidget {
         theme: lightTheme(),
         darkTheme: darkTheme(),
         themeMode: mode,
+        locale: const Locale('it'),
+        supportedLocales: const [Locale('it'), Locale('en')],
+        localizationsDelegates: GlobalMaterialLocalizations.delegates,
         home: const _Gate(),
       ),
     );
@@ -137,7 +141,7 @@ class _GateState extends State<_Gate> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.cloud_off, size: 40, color: negColor),
+                  Icon(Icons.cloud_off, size: 40, color: negOn(context)),
                   const SizedBox(height: 14),
                   const Text(
                     'Non riesco a collegarmi',
@@ -155,7 +159,7 @@ class _GateState extends State<_Gate> {
                     style: TextStyle(
                       fontSize: 13.5,
                       color: Theme.of(context).colorScheme.onSurface
-                          .withValues(alpha: 0.6),
+                          .withValues(alpha: 0.7),
                     ),
                   ),
                   const SizedBox(height: 20),

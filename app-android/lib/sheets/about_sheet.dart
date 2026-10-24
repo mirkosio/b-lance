@@ -10,7 +10,7 @@ Future<void> showAboutSheet(BuildContext context) {
     isScrollControlled: true,
     useSafeArea: true,
     builder: (ctx) {
-      final muted = Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.6);
+      final muted = Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.7);
       return SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
         child: Column(
@@ -21,7 +21,8 @@ Future<void> showAboutSheet(BuildContext context) {
               height: 4,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                color: Theme.of(ctx).colorScheme.onSurface.withValues(alpha: 0.15),
+                color: Theme.of(ctx).colorScheme.onSurface
+                    .withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(4),
               ),
             ),

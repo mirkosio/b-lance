@@ -39,11 +39,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
   String _query = '';
   String _category = '';
 
-  Future<List<ActivityItem>> _load() => widget.api.activity(
-    limit: 100,
-    q: _query,
-    category: _category,
-  );
+  Future<List<ActivityItem>> _load() =>
+      widget.api.activity(limit: 100, q: _query, category: _category);
 
   @override
   void didUpdateWidget(covariant ActivityScreen oldWidget) {
@@ -253,7 +250,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       backgroundColor: Colors.transparent,
       side: BorderSide(
         color: selected
-            ? sage.withValues(alpha: 0.45)
+            ? sage.withValues(alpha: 0.68)
             : Theme.of(context).dividerColor,
       ),
       onSelected: (_) {
@@ -282,7 +279,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
       backgroundColor: Colors.transparent,
       side: BorderSide(
         color: selected
-            ? sage.withValues(alpha: 0.45)
+            ? sage.withValues(alpha: 0.68)
             : Theme.of(context).dividerColor,
       ),
       onSelected: (_) {

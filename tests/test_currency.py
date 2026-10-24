@@ -149,7 +149,7 @@ def _mk_group(client, base="EUR"):
     r = client.post("/groups/new", data={"name": "G", "kind": "trip", "base_currency": base},
                     follow_redirects=False)
     assert r.status_code == 303
-    return int(r.headers["location"].rstrip("/").split("/")[-1])
+    return int(r.headers["location"].split("?")[0].rstrip("/").split("/")[-1])
 
 
 def test_group_invalid_currency_rejected(client):

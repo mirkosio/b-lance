@@ -286,7 +286,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ListTile(
                 leading: Icon(Icons.password_outlined, color: accent),
                 title: const Text('Cambia password'),
-                subtitle: const Text('Gli altri dispositivi verranno disconnessi'),
+                subtitle: const Text(
+                  'Gli altri dispositivi verranno disconnessi',
+                ),
                 trailing: const Icon(Icons.chevron_right, size: 20),
                 onTap: _busy ? null : _changePassword,
               ),
@@ -307,7 +309,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const Divider(indent: 16, endIndent: 16),
               ListTile(
-                leading: const Icon(Icons.logout, color: negColor),
+                leading: Icon(Icons.logout, color: negOn(context)),
                 title: const Text('Esci'),
                 trailing: const Icon(Icons.chevron_right, size: 20),
                 onTap: _logout,
@@ -336,7 +338,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const Divider(indent: 16, endIndent: 16),
               ListTile(
                 enabled: !_busy,
-                leading: const Icon(Icons.person_remove_outlined, color: negColor),
+                leading: Icon(
+                  Icons.person_remove_outlined,
+                  color: negOn(context),
+                ),
                 title: const Text('Elimina account'),
                 subtitle: const Text(
                   'Anonimizza il profilo, lascia intatte le spese',
@@ -404,7 +409,8 @@ class _EditAccountSheetState extends State<_EditAccountSheet> {
     if (username.isNotEmpty &&
         !RegExp(r'^[a-z0-9_]{3,20}$').hasMatch(username)) {
       setState(
-        () => _error = 'Username: 3-20 caratteri, lettere minuscole, numeri o _',
+        () =>
+            _error = 'Username: 3-20 caratteri, lettere minuscole, numeri o _',
       );
       return;
     }
@@ -468,10 +474,7 @@ class _EditAccountSheetState extends State<_EditAccountSheet> {
             TextField(
               controller: _name,
               textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(
-                labelText: 'Nome',
-                errorText: _error,
-              ),
+              decoration: InputDecoration(labelText: 'Nome', errorText: _error),
             ),
             const SizedBox(height: 12),
             TextField(
@@ -516,7 +519,11 @@ class _EditAccountSheetState extends State<_EditAccountSheet> {
                         ),
                       ),
                       child: _color.toUpperCase() == c
-                          ? const Icon(Icons.check, size: 19, color: Colors.white)
+                          ? const Icon(
+                              Icons.check,
+                              size: 19,
+                              color: Colors.white,
+                            )
                           : null,
                     ),
                   ),
@@ -558,7 +565,6 @@ class _MenuCard extends StatelessWidget {
   }
 }
 
-
 class _ChangePasswordSheet extends StatefulWidget {
   const _ChangePasswordSheet({required this.api});
 
@@ -585,7 +591,9 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
 
   Future<void> _save() async {
     if (_next.text.length < 6) {
-      setState(() => _error = 'La nuova password deve avere almeno 6 caratteri');
+      setState(
+        () => _error = 'La nuova password deve avere almeno 6 caratteri',
+      );
       return;
     }
     if (_next.text != _confirm.text) {
@@ -597,10 +605,7 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
       _error = null;
     });
     try {
-      await widget.api.changePassword(
-        current: _current.text,
-        next: _next.text,
-      );
+      await widget.api.changePassword(current: _current.text, next: _next.text);
       if (!mounted) return;
       Navigator.pop(context, true);
     } on ApiException catch (e) {

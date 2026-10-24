@@ -31,9 +31,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=5">
+  <link rel="stylesheet" href="/static/app.css?v=12">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
+<a class="skip-link" href="#main">Salta al contenuto</a>
 
 <!-- Sprite di icone: disegnate a mano, stile outline, nessuna emoji -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -114,13 +115,13 @@
     <span class="mark"><img src="/static/logo-mark-inverse.svg" alt=""></span>
     <span class="wm">b-<em>lance</em></span>
   </a>
-  <a class="side-link {% if request.url.path == '/' %}active{% endif %}" href="/">
+  <a class="side-link {% if request.url.path == '/' %}active{% endif %}" href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>
     <svg width="20" height="20"><use href="#i-home"></use></svg> Home
   </a>
   <a class="side-link cta" href="/groups/new">
     <svg width="20" height="20"><use href="#i-plus"></use></svg> Nuovo gruppo
   </a>
-  <a class="side-link {% if request.url.path == '/about' %}active{% endif %}" href="/about">
+  <a class="side-link {% if request.url.path == '/about' %}active{% endif %}" href="/about" {% if request.url.path == '/about' %}aria-current="page"{% endif %}>
     <svg width="20" height="20"><use href="#i-info"></use></svg> Informazioni
   </a>
   <div class="side-user" id="usermenu" role="button" tabindex="0"
@@ -177,6 +178,7 @@
     <a href="/#come-funziona">Come funziona</a>
     <a href="/#funzioni">Funzioni</a>
     <a href="/#app">App Android</a>
+    <a href="/#faq">FAQ</a>
     <a href="/about">Informazioni</a>
   </nav>
   <span class="right">
@@ -189,7 +191,7 @@
 </header>
 {% endif %}
 
-<main class="wrap">
+<main class="wrap" id="main" tabindex="-1">
   {% block content %}{% endblock %}
 </main>
 
@@ -198,7 +200,7 @@
 {% if user %}
 <!-- Bottom nav (mobile) -->
 <nav class="bottomnav" aria-label="Navigazione principale">
-  <a class="bn-item {% if request.url.path == '/' %}active{% endif %}" href="/">
+  <a class="bn-item {% if request.url.path == '/' %}active{% endif %}" href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>
     <svg width="22" height="22"><use href="#i-home"></use></svg> Home
   </a>
   <a class="bn-item center" href="/groups/new">
@@ -216,7 +218,7 @@
 </nav>
 {% else %}
 <nav class="bottomnav" aria-label="Navigazione principale">
-  <a class="bn-item {% if request.url.path == '/' %}active{% endif %}" href="/">
+  <a class="bn-item {% if request.url.path == '/' %}active{% endif %}" href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>
     <svg width="22" height="22"><use href="#i-home"></use></svg> Home
   </a>
   <a class="bn-item" href="/login">
@@ -230,7 +232,7 @@
 {% endif %}
 
 <!-- Contenitore toast: gli errori arrivano qui, non come pagina nera -->
-<div class="toasts" id="toasts" aria-live="polite"></div>
+<div class="toasts" id="toasts" role="status" aria-live="polite"></div>
 
 <script>
 (function () {

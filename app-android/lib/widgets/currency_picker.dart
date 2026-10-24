@@ -111,7 +111,7 @@ class _CurrencyPickerState extends State<_CurrencyPicker> {
                         'Nessuna valuta trovata',
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface
-                              .withValues(alpha: 0.55),
+                              .withValues(alpha: 0.7),
                         ),
                       ),
                     )

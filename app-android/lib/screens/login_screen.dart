@@ -97,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       _register ? 'Crea il tuo account' : 'Bentornato',
                       style: TextStyle(
                         color: Theme.of(context).colorScheme.onSurface
-                            .withValues(alpha: 0.6),
+                            .withValues(alpha: 0.7),
                         fontSize: 14.5,
                       ),
                     ),
@@ -116,18 +116,18 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.info_outline,
                             size: 18,
-                            color: negColor,
+                            color: negOn(context),
                           ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               widget.notice!,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 13,
-                                color: negColor,
+                                color: negOn(context),
                               ),
                             ),
                           ),

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../api.dart';
 import '../categories.dart';
 import '../export_csv.dart';
+import '../filters.dart';
 import '../models.dart';
 import '../sheets/detail_sheets.dart';
 import '../sheets/expense_sheet.dart';
@@ -26,6 +27,11 @@ class GroupScreen extends StatefulWidget {
 class _GroupScreenState extends State<GroupScreen> {
   late Future<GroupDetail> _future;
   late Future<List<RecurringRule>> _rulesFuture;
+  final _searchController = TextEditingController();
+  String _search = '';
+  String? _filterCategory;
+  int? _filterMember;
+  DateTimeRange? _filterRange;
 
   @override
   void initState() {
@@ -34,11 +40,227 @@ class _GroupScreenState extends State<GroupScreen> {
     _rulesFuture = widget.api.recurringRules(widget.groupId);
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   void _reload() {
     setState(() {
       _future = widget.api.groupDetail(widget.groupId);
       _rulesFuture = widget.api.recurringRules(widget.groupId);
     });
+  }
+
+  bool get _filtersActive =>
+      _search.trim().isNotEmpty ||
+      _filterCategory != null ||
+      _filterMember != null ||
+      _filterRange != null;
+
+  void _clearFilters() {
+    _searchController.clear();
+    setState(() {
+      _search = '';
+      _filterCategory = null;
+      _filterMember = null;
+      _filterRange = null;
+    });
+  }
+
+  Future<void> _pickCategory() async {
+    final code = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (ctx) => ListView(
+        shrinkWrap: true,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 4, 20, 8),
+            child: Text(
+              'Filtra per categoria',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.clear_all),
+            title: const Text('Tutte le categorie'),
+            onTap: () => Navigator.pop(ctx, ''),
+          ),
+          for (final c in categories)
+            ListTile(
+              leading: Icon(c.icon, color: c.color),
+              title: Text(c.label),
+              selected: _filterCategory == c.code,
+              onTap: () => Navigator.pop(ctx, c.code),
+            ),
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+    if (code == null || !mounted) return;
+    setState(() => _filterCategory = code.isEmpty ? null : code);
+  }
+
+  Future<void> _pickMember(GroupDetail d) async {
+    final id = await showModalBottomSheet<int>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (ctx) => ListView(
+        shrinkWrap: true,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(20, 4, 20, 8),
+            child: Text(
+              'Filtra per membro',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.clear_all),
+            title: const Text('Tutti i membri'),
+            onTap: () => Navigator.pop(ctx, 0),
+          ),
+          for (final m in d.members.where((m) => m.active))
+            ListTile(
+              leading: CircleAvatar(
+                radius: 13,
+                backgroundColor: parseHexColor(m.color),
+                child: Text(
+                  m.name.isEmpty ? '?' : m.name.characters.first.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              title: Text(m.isMe ? '${m.name} (tu)' : m.name),
+              selected: _filterMember == m.userId,
+              onTap: () => Navigator.pop(ctx, m.userId),
+            ),
+          const SizedBox(height: 12),
+        ],
+      ),
+    );
+    if (id == null || !mounted) return;
+    setState(() => _filterMember = id == 0 ? null : id);
+  }
+
+  Future<void> _pickPeriod() async {
+    final now = DateTime.now();
+    final range = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(now.year + 1, 12, 31),
+      initialDateRange: _filterRange,
+      helpText: 'Filtra per periodo',
+      saveText: 'Applica',
+      cancelText: 'Annulla',
+      confirmText: 'Applica',
+    );
+    if (range == null || !mounted) return;
+    setState(() => _filterRange = range);
+  }
+
+  String _shortDay(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}';
+
+  String _periodLabel() {
+    final r = _filterRange;
+    if (r == null) return 'Periodo';
+    return '${_shortDay(r.start)} – ${_shortDay(r.end)}';
+  }
+
+  String _memberLabel(GroupDetail d) {
+    if (_filterMember == null) return 'Membro';
+    for (final m in d.members) {
+      if (m.userId == _filterMember) return m.name;
+    }
+    return 'Membro';
+  }
+
+  Widget _buildFilters(
+    GroupDetail d, {
+    required int expenseCount,
+    required int paymentCount,
+  }) {
+    final active = _filtersActive;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: _searchController,
+          onChanged: (v) => setState(() => _search = v),
+          textInputAction: TextInputAction.search,
+          decoration: InputDecoration(
+            labelText: 'Cerca spese e pagamenti',
+            isDense: true,
+            prefixIcon: const Icon(Icons.search, size: 20),
+            suffixIcon: _search.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Pulisci ricerca',
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _search = '');
+                    },
+                    icon: const Icon(Icons.close, size: 19),
+                  ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            FilterChip(
+              avatar: const Icon(Icons.category_outlined, size: 17),
+              label: Text(
+                _filterCategory == null
+                    ? 'Categoria'
+                    : categoryInfo(_filterCategory).label,
+              ),
+              selected: _filterCategory != null,
+              onSelected: (_) => _pickCategory(),
+            ),
+            FilterChip(
+              avatar: const Icon(Icons.person_outline, size: 17),
+              label: Text(_memberLabel(d)),
+              selected: _filterMember != null,
+              onSelected: (_) => _pickMember(d),
+            ),
+            FilterChip(
+              avatar: const Icon(Icons.date_range_outlined, size: 17),
+              label: Text(_periodLabel()),
+              selected: _filterRange != null,
+              onSelected: (_) => _pickPeriod(),
+            ),
+            if (active)
+              ActionChip(
+                avatar: const Icon(Icons.close, size: 16),
+                label: const Text('Azzera filtri'),
+                onPressed: _clearFilters,
+              ),
+          ],
+        ),
+        if (active)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              '$expenseCount spese · $paymentCount pagamenti con i filtri attivi',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurface
+                    .withValues(alpha: 0.7),
+              ),
+            ),
+          ),
+      ],
+    );
   }
 
   void _snack(String msg) {
@@ -248,6 +470,21 @@ class _GroupScreenState extends State<GroupScreen> {
           }
         }
         final canManageInvite = d.isOwner || d.perms.contains('members_manage');
+        final filteredExpenses = filterExpenses(
+          d.expenses,
+          query: _search,
+          category: _filterCategory,
+          memberId: _filterMember,
+          from: _filterRange?.start,
+          to: _filterRange?.end,
+        );
+        final filteredPayments = filterPayments(
+          d.payments,
+          query: _search,
+          memberId: _filterMember,
+          from: _filterRange?.start,
+          to: _filterRange?.end,
+        );
         return Scaffold(
           appBar: AppBar(
             title: Text(
@@ -334,11 +571,11 @@ class _GroupScreenState extends State<GroupScreen> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.w800,
                                   color: m.netMinor > 0
-                                      ? posColor
+                                      ? posOn(context)
                                       : m.netMinor < 0
-                                      ? negColor
+                                      ? negOn(context)
                                       : Theme.of(context).colorScheme.onSurface
-                                            .withValues(alpha: 0.66),
+                                            .withValues(alpha: 0.7),
                                 ),
                               ),
                             ],
@@ -397,98 +634,85 @@ class _GroupScreenState extends State<GroupScreen> {
                           : sageInk,
                     ),
                   ),
-                  child: d.expenses.isEmpty
-                      ? EmptyState(
+                  child: Column(
+                    children: [
+                      _buildFilters(
+                        d,
+                        expenseCount: filteredExpenses.length,
+                        paymentCount: filteredPayments.length,
+                      ),
+                      const SizedBox(height: 6),
+                      if (filteredExpenses.isEmpty)
+                        EmptyState(
                           compact: true,
                           icon: Icons.receipt_long_outlined,
-                          title: 'Nessuna spesa',
-                          message: 'Aggiungi la prima spesa del gruppo.',
-                          action: OutlinedButton.icon(
-                            onPressed: () {
-                              hapticConfirm();
-                              showExpenseSheet(
+                          title: _filtersActive
+                              ? 'Nessun risultato'
+                              : 'Nessuna spesa',
+                          message: _filtersActive
+                              ? 'Prova a cambiare o azzerare i filtri.'
+                              : 'Aggiungi la prima spesa del gruppo.',
+                          action: _filtersActive
+                              ? OutlinedButton.icon(
+                                  onPressed: _clearFilters,
+                                  icon: const Icon(
+                                    Icons.filter_alt_off_outlined,
+                                    size: 18,
+                                  ),
+                                  label: const Text('Azzera filtri'),
+                                )
+                              : OutlinedButton.icon(
+                                  onPressed: () {
+                                    hapticConfirm();
+                                    showExpenseSheet(
+                                      context,
+                                      api: widget.api,
+                                      detail: d,
+                                      onDone: _reload,
+                                    );
+                                  },
+                                  icon: const Icon(Icons.add, size: 18),
+                                  label: const Text('Aggiungi spesa'),
+                                ),
+                        )
+                      else
+                        for (final e in filteredExpenses)
+                          Semantics(
+                            button: true,
+                            excludeSemantics: true,
+                            label:
+                                'Spesa ${e.description}, '
+                                '${formatMinor(e.amountMinor, Meta.exponentOf(e.currency))} '
+                                '${e.currency}, pagata da ${e.payerName}, '
+                                '${categoryInfo(e.category).label}'
+                                '${e.createdAt != null ? ', ${formatDateTime(e.createdAt)}' : ''}'
+                                '${e.voided ? ', annullata' : ''}',
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: () => showExpenseDetail(
                                 context,
                                 api: widget.api,
                                 detail: d,
+                                expense: e,
                                 onDone: _reload,
-                              );
-                            },
-                            icon: const Icon(Icons.add, size: 18),
-                            label: const Text('Aggiungi spesa'),
-                          ),
-                        )
-                      : Column(
-                          children: [
-                            for (final e in d.expenses)
-                              InkWell(
-                                borderRadius: BorderRadius.circular(10),
-                                onTap: () => showExpenseDetail(
-                                  context,
-                                  api: widget.api,
-                                  detail: d,
-                                  expense: e,
-                                  onDone: _reload,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 7,
                                 ),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 7,
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              e.description,
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                decoration: e.voided
-                                                    ? TextDecoration.lineThrough
-                                                    : null,
-                                                color: e.voided
-                                                    ? Theme.of(context)
-                                                          .colorScheme
-                                                          .onSurface
-                                                          .withValues(
-                                                            alpha: 0.45,
-                                                          )
-                                                    : null,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              '${categoryInfo(e.category).label}'
-                                              ' · ${e.payerName}'
-                                              '${e.createdAt != null ? ' · ${formatDateTime(e.createdAt)}' : ''}'
-                                              '${e.voided ? ' · annullata' : ''}'
-                                              '${e.currency != d.baseCurrency ? ' · vale ${formatMinor(e.baseAmountMinor, expo)} ${d.baseCurrency}' : ''}',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Theme.of(context)
-                                                    .colorScheme
-                                                    .onSurface
-                                                    .withValues(
-                                                      alpha: e.voided
-                                                          ? 0.42
-                                                          : 0.66,
-                                                    ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      Column(
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.end,
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            '${formatMinor(e.amountMinor, Meta.exponentOf(e.currency))} ${e.currency}',
+                                            e.description,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
-                                              fontWeight: FontWeight.w800,
+                                              fontWeight: FontWeight.w600,
                                               decoration: e.voided
                                                   ? TextDecoration.lineThrough
                                                   : null,
@@ -496,111 +720,165 @@ class _GroupScreenState extends State<GroupScreen> {
                                                   ? Theme.of(context)
                                                         .colorScheme
                                                         .onSurface
-                                                        .withValues(alpha: 0.45)
+                                                        .withValues(alpha: 0.68)
                                                   : null,
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                ),
-                if (d.payments.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  SectionCard(
-                    title: 'Pagamenti',
-                    child: Column(
-                      children: [
-                        for (final p in d.payments)
-                          InkWell(
-                            borderRadius: BorderRadius.circular(10),
-                            onTap: () => showPaymentDetail(
-                              context,
-                              api: widget.api,
-                              detail: d,
-                              payment: p,
-                              onDone: _reload,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 7),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          '${p.fromName} → ${p.toName}',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            decoration: p.voided
-                                                ? TextDecoration.lineThrough
-                                                : null,
-                                            color: p.voided
-                                                ? Theme.of(context)
-                                                      .colorScheme
-                                                      .onSurface
-                                                      .withValues(alpha: 0.45)
-                                                : null,
-                                          ),
-                                        ),
-                                        if ((p.note ?? '').trim().isNotEmpty ||
-                                            p.createdAt != null) ...[
                                           const SizedBox(height: 2),
                                           Text(
-                                            [
-                                              if (p.voided) 'annullato',
-                                              if ((p.note ?? '')
-                                                  .trim()
-                                                  .isNotEmpty)
-                                                p.note!.trim(),
-                                              if (p.createdAt != null)
-                                                formatDateTime(p.createdAt),
-                                            ].join(' · '),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
+                                            '${categoryInfo(e.category).label}'
+                                            ' · ${e.payerName}'
+                                            '${e.createdAt != null ? ' · ${formatDateTime(e.createdAt)}' : ''}'
+                                            '${e.voided ? ' · annullata' : ''}'
+                                            '${e.currency != d.baseCurrency ? ' · vale ${formatMinor(e.baseAmountMinor, expo)} ${d.baseCurrency}' : ''}',
                                             style: TextStyle(
                                               fontSize: 12,
                                               color: Theme.of(context)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withValues(alpha: 0.66),
+                                                  .withValues(
+                                                    alpha: e.voided ? 0.7 : 0.7,
+                                                  ),
                                             ),
                                           ),
                                         ],
+                                      ),
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          '${formatMinor(e.amountMinor, Meta.exponentOf(e.currency))} ${e.currency}',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                            decoration: e.voided
+                                                ? TextDecoration.lineThrough
+                                                : null,
+                                            color: e.voided
+                                                ? Theme.of(context)
+                                                      .colorScheme
+                                                      .onSurface
+                                                      .withValues(alpha: 0.68)
+                                                : null,
+                                          ),
+                                        ),
                                       ],
                                     ),
-                                  ),
-                                  Text(
-                                    '${formatMinor(p.amountMinor, expo)} ${p.currency}',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w800,
-                                      decoration: p.voided
-                                          ? TextDecoration.lineThrough
-                                          : null,
-                                      color: p.voided
-                                          ? Theme.of(context)
-                                                .colorScheme
-                                                .onSurface
-                                                .withValues(alpha: 0.45)
-                                          : null,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                    ],
+                  ),
+                ),
+                if (filteredPayments.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  SectionCard(
+                    title: 'Pagamenti',
+                    child: Column(
+                      children: [
+                        for (final p in filteredPayments)
+                          Semantics(
+                            button: true,
+                            excludeSemantics: true,
+                            label:
+                                'Pagamento da ${p.fromName} a ${p.toName}, '
+                                '${formatMinor(p.amountMinor, expo)} ${p.currency}'
+                                '${p.note != null && p.note!.trim().isNotEmpty ? ', ${p.note!.trim()}' : ''}'
+                                '${p.createdAt != null ? ', ${formatDateTime(p.createdAt)}' : ''}'
+                                '${p.voided ? ', annullato' : ''}',
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: () => showPaymentDetail(
+                                context,
+                                api: widget.api,
+                                detail: d,
+                                payment: p,
+                                onDone: _reload,
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 7,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            '${p.fromName} → ${p.toName}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                              decoration: p.voided
+                                                  ? TextDecoration.lineThrough
+                                                  : null,
+                                              color: p.voided
+                                                  ? Theme.of(context)
+                                                        .colorScheme
+                                                        .onSurface
+                                                        .withValues(alpha: 0.68)
+                                                  : null,
+                                            ),
+                                          ),
+                                          if ((p.note ?? '')
+                                                  .trim()
+                                                  .isNotEmpty ||
+                                              p.createdAt != null) ...[
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              [
+                                                if (p.voided) 'annullato',
+                                                if ((p.note ?? '')
+                                                    .trim()
+                                                    .isNotEmpty)
+                                                  p.note!.trim(),
+                                                if (p.createdAt != null)
+                                                  formatDateTime(p.createdAt),
+                                              ].join(' · '),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withValues(alpha: 0.7),
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Icon(
-                                    Icons.chevron_right,
-                                    size: 17,
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onSurface
-                                        .withValues(alpha: 0.45),
-                                  ),
-                                ],
+                                    Text(
+                                      '${formatMinor(p.amountMinor, expo)} ${p.currency}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                        decoration: p.voided
+                                            ? TextDecoration.lineThrough
+                                            : null,
+                                        color: p.voided
+                                            ? Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withValues(alpha: 0.68)
+                                            : null,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      size: 17,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface
+                                          .withValues(alpha: 0.7),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -622,7 +900,9 @@ class _GroupScreenState extends State<GroupScreen> {
                           children: [
                             for (final r in rules)
                               Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                ),
                                 child: Row(
                                   children: [
                                     Icon(
@@ -647,7 +927,7 @@ class _GroupScreenState extends State<GroupScreen> {
                                                   : Theme.of(ctx)
                                                         .colorScheme
                                                         .onSurface
-                                                        .withValues(alpha: 0.45),
+                                                        .withValues(alpha: 0.7),
                                             ),
                                           ),
                                           Text(
@@ -659,7 +939,7 @@ class _GroupScreenState extends State<GroupScreen> {
                                               color: Theme.of(ctx)
                                                   .colorScheme
                                                   .onSurface
-                                                  .withValues(alpha: 0.6),
+                                                  .withValues(alpha: 0.7),
                                             ),
                                           ),
                                         ],

@@ -137,7 +137,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
               style: TextStyle(
                 fontSize: 12.5,
                 color: Theme.of(context).colorScheme.onSurface
-                    .withValues(alpha: 0.55),
+                    .withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 14),
