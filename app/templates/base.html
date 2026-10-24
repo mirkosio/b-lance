@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=13">
+  <link rel="stylesheet" href="/static/app.css?v=14">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
 <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -163,7 +163,7 @@
   </nav>
 
   <a class="side-user" href="/account">
-    <span class="avatar" style="background:{{ user.color }}">{{ user.name[0]|upper }}</span>
+    <span class="avatar" style="background:{{ user.color }}" aria-hidden="true">{{ user.name[0]|upper }}</span>
     <div style="min-width:0">
       <b>{{ user.name }}</b>
       <span>Profilo e impostazioni</span>
@@ -182,7 +182,9 @@
     <button class="icon-btn" type="button" data-theme-toggle aria-label="Cambia tema">
       <svg width="19" height="19"><use href="#i-moon"></use></svg>
     </button>
-    <a class="avatar" href="/account" style="background:{{ user.color }}" title="{{ user.name }}">{{ user.name[0]|upper }}</a>
+    <a class="avatar-link" href="/account" aria-label="Profilo di {{ user.name }}">
+      <span class="avatar" style="background:{{ user.color }}" aria-hidden="true">{{ user.name[0]|upper }}</span>
+    </a>
   </span>
 </header>
 {% else %}

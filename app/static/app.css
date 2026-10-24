@@ -501,7 +501,7 @@ select option { background: #fff; color: var(--text); }
   display: inline-grid;
   place-items: center;
   width: 44px;
-  height: 40px;
+  height: 44px;
   border-radius: 11px;
   border: 1px solid var(--border);
   background: var(--card);
@@ -985,6 +985,16 @@ body.landing footer { margin-left: 0; }
 .balance-row:last-of-type { border-bottom: 0; }
 .person { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .person > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.avatar-link {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+.avatar-link:hover { background: var(--bg-soft); text-decoration: none; }
+.avatar-link:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
 
 .avatar {
   width: 34px;
