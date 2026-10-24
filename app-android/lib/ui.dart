@@ -38,7 +38,13 @@ Color negOn(BuildContext context) =>
     ? const Color(0xFFDD8B70)
     : negColor;
 
-const kAppVersion = '1.3.0';
+/// Oro del perno e del trattino nel wordmark.
+Color goldOn(BuildContext context) =>
+    Theme.of(context).brightness == Brightness.dark
+    ? const Color(0xFFD8B56A)
+    : const Color(0xFFA8823C);
+
+const kAppVersion = '1.3.1';
 
 /// Durata coerente col motion 4/10, azzerata se il sistema chiede
 /// di ridurre le animazioni.

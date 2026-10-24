@@ -116,10 +116,11 @@ Altri minori: nessuna anteprima del gruppo quando si entra con un codice (l'endp
 (include cambio password, export CSV/PDF, account, handle, ricorrenze, assetlinks).
 Le funzioni che richiedono credenziali esterne non sono dichiarate come testate.
 
-**Marchio e contenuti (23/10/2026):** nuovo marchio "split b" (asta intera,
-pancia divisa in due archi uguali) in `app/static/logo*.svg`; icone PWA e
-launcher Android rigenerate dallo stesso disegno; pagina `/about`, scheda
-Informazioni nell'app e README riscritto sullo stato reale.
+**Marchio e contenuti (24/10/2026):** marchio "b in equilibrio" (asta intera,
+pancia divisa in due archi uguali, perno oro) in `app/static/logo*.svg`;
+lockup integrato con trattino oro; icone PWA e launcher Android rigenerate
+dallo stesso disegno; sidebar desktop a sezioni; pagina `/about`, scheda
+Informazioni nell'app e README aggiornati.
 
 ---
 

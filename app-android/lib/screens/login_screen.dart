@@ -217,7 +217,7 @@ class _Wordmark extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text.rich(
       TextSpan(
-        text: 'b-',
+        text: 'b',
         style: TextStyle(
           fontFamily: 'Calistoga',
           fontSize: size,
@@ -226,6 +226,10 @@ class _Wordmark extends StatelessWidget {
           color: Theme.of(context).colorScheme.onSurface,
         ),
         children: [
+          TextSpan(
+            text: '-',
+            style: TextStyle(color: goldOn(context)),
+          ),
           TextSpan(
             text: 'lance',
             style: TextStyle(

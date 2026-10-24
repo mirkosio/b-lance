@@ -70,8 +70,12 @@ class _BrandLoaderState extends State<BrandLoader>
               TextSpan(
                 children: [
                   TextSpan(
-                    text: 'b-',
+                    text: 'b',
                     style: TextStyle(color: theme.colorScheme.onSurface),
+                  ),
+                  TextSpan(
+                    text: '-',
+                    style: TextStyle(color: goldOn(context)),
                   ),
                   TextSpan(
                     text: 'lance',

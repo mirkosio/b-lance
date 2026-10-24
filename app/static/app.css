@@ -132,6 +132,10 @@ main:focus { outline: none; }
   background: var(--chrome);
   border-right: 1px solid var(--border);
   z-index: 30;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
 
 /* Wordmark compatto: b-lance, tutto attaccato, minuscolo */
@@ -164,6 +168,16 @@ main:focus { outline: none; }
 }
 .brand em { font-style: normal; color: var(--primary-deep); }
 :root[data-theme="dark"] .brand em { color: var(--primary); }
+
+/* Lockup completo: il marchio è la "b", il trattino oro chiude il wordmark. */
+.brand-lockup { display: block; padding: 4px 8px 18px; }
+.brand-lockup img { display: block; width: 156px; height: auto; }
+.brand-lockup .brand-dark { display: none; }
+:root[data-theme="dark"] .brand-lockup .brand-light { display: none; }
+:root[data-theme="dark"] .brand-lockup .brand-dark { display: block; }
+
+.side-nav { display: flex; flex-direction: column; gap: 4px; }
+.side-form { margin: 0; }
 
 .side-label {
   font-size: 0.68rem;
@@ -203,7 +217,7 @@ button.side-link {
 }
 button.side-link:hover { background: var(--bg-soft); }
 
-/* Area utente + menu a tendina (stile app bancaria) */
+/* Area utente: link diretto al profilo, niente menu nascosto. */
 .side-user {
   margin-top: auto;
   position: relative;
@@ -217,45 +231,11 @@ button.side-link:hover { background: var(--bg-soft); }
   cursor: pointer;
   transition: border-color 150ms ease;
 }
-.side-user:hover { border-color: rgba(95, 141, 110, 0.5); }
+.side-user:hover { border-color: rgba(95, 141, 110, 0.5); text-decoration: none; }
 .side-user .avatar { flex: 0 0 auto; }
 .side-user b { font-size: 0.92rem; display: block; line-height: 1.2; }
 .side-user span { font-size: 0.78rem; color: var(--muted); }
-.side-user .chev { margin-left: auto; color: var(--muted); transition: transform 200ms ease; }
-.side-user.open .chev { transform: rotate(180deg); }
-
-.menu-pop {
-  position: absolute;
-  bottom: calc(100% + 8px);
-  left: 0;
-  right: 0;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.16);
-  padding: 6px;
-  display: none;
-  z-index: 40;
-}
-.menu-pop.open { display: block; animation: pop-in 150ms ease; }
-@keyframes pop-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.menu-pop button, .menu-pop a {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 10px 10px;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text);
-  border-radius: 9px;
-  cursor: pointer;
-  text-align: left;
-}
-.menu-pop button:hover, .menu-pop a:hover { background: var(--bg-soft); text-decoration: none; }
+.side-user .chev { margin-left: auto; color: var(--muted); }
 
 .topbar {
   position: sticky;
@@ -271,7 +251,12 @@ button.side-link:hover { background: var(--bg-soft); }
 }
 .topbar .brand { padding: 0; font-size: 1.2rem; }
 .topbar .brand .mark { width: 30px; height: 30px; border-radius: 9px; }
+.topbar .brand-lockup img { width: 136px; }
 .topbar .right { display: flex; align-items: center; gap: 10px; }
+@media (max-width: 520px) {
+  .topbar .brand-lockup img { width: 122px; }
+  .topbar.publicnav .right .btn.ghost { display: none; }
+}
 .public-links { display: none; }
 @media (min-width: 960px) {
   .topbar.publicnav { padding-left: clamp(24px, 4vw, 56px); padding-right: clamp(24px, 4vw, 56px); }
@@ -372,6 +357,9 @@ footer {
 p a, footer a { text-decoration: underline; text-underline-offset: 2px; }
 .wm-accent { font-style: normal; color: var(--primary-deep); }
 :root[data-theme="dark"] .wm-accent { color: var(--primary); }
+
+/* Ancore della sidebar: non finire sotto la topbar sticky. */
+#saldi, #gruppi, #come-funziona, #privacy, #app, #faq { scroll-margin-top: 80px; }
 
 @media (min-width: 960px) {
   .sidebar { display: flex; }
@@ -908,7 +896,7 @@ body.landing footer { margin-left: 0; }
   .page-menu a:hover { color: var(--text); background: var(--bg-soft); }
   .page-menu a.active { color: var(--primary-deep); background: var(--primary-soft); }
   :root[data-theme="dark"] .page-menu a.active { color: var(--primary); }
-  #saldi, #membri, #spese, #pagamenti { scroll-margin-top: 76px; }
+  #saldi, #gruppi, #membri, #spese, #pagamenti { scroll-margin-top: 76px; }
 }
 .pagehead h1 {
   margin: 0;

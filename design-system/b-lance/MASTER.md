@@ -13,17 +13,21 @@ Adattato al brand b-lance: la palette e i font decisi dal proprietario **vincono
 
 ## Brand
 
-- Wordmark: `b-lance`, minuscolo, tight. `b-` in inchiostro, `lance` in salvia.
-- Mai "B-Lance", mai "Blance" nell'interfaccia.
-- Marchio: **split b**. Asta intera in inchiostro; pancia circolare in salvia
-  divisa in due archi uguali da due tagli diagonali. È la divisione della spesa
-  che resta in equilibrio: due parti, un unico conto.
-- File: `app/static/logo-mark.svg` (marchio), `logo-mark-inverse.svg` (su salvia),
-  `logo.svg` e `logo-lockup-dark.svg` (lockup). La stessa geometria è in
+- Wordmark: `b-lance`, minuscolo, tight. Il **marchio è la prima lettera**:
+  la `b` è il simbolo, il trattino è oro, `lance` è salvia. Mai "B-Lance",
+  mai "Blance" nell'interfaccia.
+- Marchio: **b in equilibrio**. Asta intera in inchiostro; pancia circolare
+  divisa in due archi uguali da due tagli diagonali; perno oro in cima all'asta.
+  Il vuoto diagonale è la divisione della spesa, il perno è il punto che tiene
+  insieme il conto. Due parti, un unico saldo.
+- File: `app/static/logo-mark.svg` (marchio, viewBox `10 4 56 56`),
+  `logo-mark-inverse.svg` (su salvia), `logo.svg` e `logo-lockup-dark.svg`
+  (lockup integrato 170×64). La stessa geometria è in
   `app-android/lib/widgets/logo_mark.dart` e nelle icone generate da
   `scripts/gen_brand_assets.py`.
-- Icona app: fondo salvia con gradiente dosato + marchio carta; niente lettera
-  "B" di sistema, niente viola.
+- Icona app: fondo salvia con gradiente dosato + marchio carta + perno oro
+  chiaro; niente lettera "B" di sistema, niente viola.
+- Il lockup non ripete la `b` nel wordmark: il simbolo la sostituisce.
 
 ## Colori (token)
 
@@ -72,6 +76,18 @@ Bottom nav, 4 voci, sempre visibile tranne login/onboarding:
 4. **Profilo** — @handle, nome/colore, tema, lingua, sicurezza, elimina account, esci.
 
 Dentro un gruppo: header con **saldo tuo nel gruppo**, poi sezioni Saldi / Chi paga a chi / Spese / Pagamenti / Inviti. FAB "Spesa"; "Pagamento" secondario.
+
+### Navigazione desktop (sidebar)
+
+La sidebar è un menu a sezioni, non una lista di tre voci. Struttura:
+
+- **Panoramica**: Home, Saldi, I tuoi gruppi.
+- **Strumenti**: Nuovo gruppo (CTA), Come funziona, App Android, FAQ.
+- **Account**: Privacy, Tema chiaro/scuro, Esci.
+- In fondo, scheda utente che porta direttamente al profilo.
+
+Niente menu a tendina nascosto: le azioni principali restano visibili. La
+sidebar scorre se l'altezza dello schermo è ridotta.
 
 ## Componenti
 

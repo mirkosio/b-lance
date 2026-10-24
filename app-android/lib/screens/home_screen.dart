@@ -108,10 +108,14 @@ class _HomeScreenState extends State<HomeScreen> {
           TextSpan(
             children: [
               TextSpan(
-                text: 'b-',
+                text: 'b',
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.onSurface,
                 ),
+              ),
+              TextSpan(
+                text: '-',
+                style: TextStyle(color: goldOn(context)),
               ),
               TextSpan(
                 text: 'lance',

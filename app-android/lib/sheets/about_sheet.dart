@@ -30,7 +30,7 @@ Future<void> showAboutSheet(BuildContext context) {
             const SizedBox(height: 12),
             Text.rich(
               TextSpan(
-                text: 'b-',
+                text: 'b',
                 style: TextStyle(
                   fontFamily: 'Calistoga',
                   fontSize: 30,
@@ -38,6 +38,10 @@ Future<void> showAboutSheet(BuildContext context) {
                   color: Theme.of(ctx).colorScheme.onSurface,
                 ),
                 children: [
+                  TextSpan(
+                    text: '-',
+                    style: TextStyle(color: goldOn(ctx)),
+                  ),
                   TextSpan(
                     text: 'lance',
                     style: TextStyle(

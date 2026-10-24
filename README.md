@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="app/static/logo-mark.svg" width="96" alt="Marchio b-lance">
+  <img src="app/static/logo.svg" width="300" alt="b-lance">
 </p>
 
 <h1 align="center">b-lance</h1>
@@ -123,7 +123,7 @@ flutter build apk --release
 ```
 
 L'APK esce in `app-android/build/app/outputs/flutter-apk/app-release.apk`.
-La versione corrente è **1.3.0** (`versionCode 14`).
+La versione corrente è **1.3.1** (`versionCode 15`).
 
 Link diretti: `https://b-lance.vercel.app/join/CODICE` aprono l'app tramite
 App Links. La verifica dipende da `/.well-known/assetlinks.json` con package

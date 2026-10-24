@@ -2,8 +2,9 @@
 
 Uso: .venv/bin/python scripts/gen_brand_assets.py
 
-Il marchio è lo "split b": asta intera + pancia divisa in due archi uguali.
-Qui si rasterizza per PWA e per il launcher Android, senza dipendenze SVG.
+Il marchio è il "b in equilibrio": asta intera, pancia divisa in due archi
+uguali e perno oro. Qui si rasterizza per PWA e per il launcher Android,
+senza dipendenze SVG.
 """
 
 from __future__ import annotations
@@ -21,6 +22,7 @@ SAGE_BOTTOM = (71, 104, 79)
 PAPER = (245, 244, 239)
 INK = (36, 43, 39)
 SAGE = (95, 141, 110)
+GOLD_LIGHT = (242, 216, 160)
 SS = 4  # supersampling
 
 
@@ -47,21 +49,26 @@ def _rounded_gradient(size: int, radius_ratio: float = 0.25) -> Image.Image:
     return grad
 
 
-def _mark(size: int, stem: tuple[int, int, int], ring: tuple[int, int, int]) -> Image.Image:
+def _mark(
+    size: int,
+    stem: tuple[int, int, int],
+    ring: tuple[int, int, int],
+    cap: tuple[int, int, int] = GOLD_LIGHT,
+) -> Image.Image:
     size *= SS
     layer = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     d = ImageDraw.Draw(layer)
 
     # Pancia: due archi uguali, separati da due tagli diagonali.
-    cx = 35 / 64 * size
+    cx = 38 / 64 * size
     cy = 36 / 64 * size
-    r = 13 / 64 * size
-    width = round(7 / 64 * size)
+    r = 16 / 64 * size
+    width = round(8 / 64 * size)
     bbox = [cx - r, cy - r, cx + r, cy + r]
     d.ellipse(bbox, outline=(*ring, 255), width=width)
 
     # Maschera per i due vuoti diagonali (45° e 225°).
-    gap = max(1, round(4.3 / 64 * size))
+    gap = max(1, round(3.0 / 64 * size))
     mask = Image.new("L", (size, size), 255)
     md = ImageDraw.Draw(mask)
     diag = size
@@ -77,15 +84,30 @@ def _mark(size: int, stem: tuple[int, int, int], ring: tuple[int, int, int]) -> 
         )
     layer.putalpha(ImageChops.multiply(layer.getchannel("A"), mask))
 
-    # Asta: sopra la pancia, così i tagli non la intaccano.
-    sx0, sy0 = _scale_box(15, 8.5, size // SS)
-    sx1, sy1 = _scale_box(23, 55.5, size // SS)
+    # Asta: sopra la pancia, così i tagli non la intaccano. Il rettangolo
+    # arrotondato riproduce il cap tondo della linea SVG.
+    sx0, sy0 = _scale_box(13.75, 7.25, size // SS)
+    sx1, sy1 = _scale_box(22.25, 56.75, size // SS)
     d.rounded_rectangle(
         [sx0, sy0, sx1, sy1],
-        radius=round(4 / 64 * size),
+        radius=round(4.25 / 64 * size),
         fill=(*stem, 255),
     )
-    return layer
+
+    # Perno oro in cima all'asta.
+    px, py = _scale_box(18, 10.5, size // SS)
+    pr = round(3 / 64 * size)
+    d.ellipse([px - pr, py - pr, px + pr, py + pr], fill=(*cap, 255))
+
+    # Stesso ritaglio del viewBox SVG "10 4 56 56": il marchio resta
+    # centrato anche quando viene composto nell'icona.
+    box = (
+        round(10 / 64 * size),
+        round(4 / 64 * size),
+        round(66 / 64 * size),
+        round(60 / 64 * size),
+    )
+    return layer.crop(box)
 
 
 def _icon(size: int, *, maskable: bool = False, transparent: bool = False) -> Image.Image:
@@ -97,7 +119,7 @@ def _icon(size: int, *, maskable: bool = False, transparent: bool = False) -> Im
     else:
         base = _rounded_gradient(size)
     # Nei maskable il marchio sta nel 62% centrale (safe zone).
-    factor = 0.62 if maskable else 0.78
+    factor = 0.62 if maskable else 0.74
     mark_size = max(1, int(size * factor))
     mark = _mark(mark_size, PAPER, PAPER)
     offset = ((canvas_size - mark.width) // 2, (canvas_size - mark.height) // 2)

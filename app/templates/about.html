@@ -1,25 +1,13 @@
 {% extends "base.html" %}
 {% block title %}Informazioni — b-lance{% endblock %}
 {% block content %}
-{% if not user %}
-<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px">
-  <a href="/" class="brand" style="padding:0">
-    <span class="mark"><img src="/static/logo-mark-inverse.svg" alt=""></span>
-    <span class="wm">b-<em>lance</em></span>
-  </a>
-  <a class="btn sm ghost" href="/">Apri b-lance</a>
-</div>
-{% endif %}
 <section class="card">
-  <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-    <img class="mk-light" src="/static/logo-mark.svg" width="64" height="64" alt="Marchio b-lance">
-    <img class="mk-dark" src="/static/logo-mark-inverse.svg" width="64" height="64" alt="">
-    <div>
-      <h1 class="section-title" style="margin:0;font-size:1.45rem">
-        <span class="wm">b-<em class="wm-accent">lance</em></span>
-      </h1>
-      <p class="muted" style="margin:2px 0 0">Dividi le spese, non le amicizie.</p>
-    </div>
+  <div>
+    <h1 class="section-title" style="margin:0">
+      <img class="mk-light" src="/static/logo.svg?v=2" width="230" style="max-width:100%;height:auto" alt="b-lance">
+      <img class="mk-dark" src="/static/logo-lockup-dark.svg?v=2" width="230" style="max-width:100%;height:auto" alt="b-lance">
+    </h1>
+    <p class="muted" style="margin:6px 0 0">Dividi le spese, non le amicizie.</p>
   </div>
   <p style="margin-top:16px">
     b-lance è un'app per tenere i conti di gruppo senza fogli Excel e senza
@@ -29,7 +17,7 @@
 </section>
 
 <div class="grid cols-2">
-  <div class="card">
+  <div class="card" id="come-funziona">
     <div class="section-title">Come funziona</div>
     <p class="muted small">
       Gli importi sono in unità minori intere: niente float, niente centesimi
@@ -51,7 +39,7 @@
       non cambia se il cambio cambia.
     </p>
   </div>
-  <div class="card">
+  <div class="card" id="privacy">
     <div class="section-title">Privacy</div>
     <p class="muted small">
       Niente rubrica caricata: gli inviti usano un link, un QR o un username.
@@ -60,12 +48,12 @@
       saldi degli altri.
     </p>
   </div>
-  <div class="card">
+  <div class="card" id="app">
     <div class="section-title">L'app nativa</div>
     <p class="muted small">
       L'app Android è Flutter nativo, non una scorza web. Funziona con App
       Links, condivisione nativa dei file e tema chiaro/scuro. La versione
-      corrente è <b>1.2.0</b>.
+      corrente è <b>1.3.1</b>.
     </p>
     <p class="muted small">
       <a class="btn sm ghost" href="https://github.com/mirkosio/b-lance/releases/latest" rel="noopener">
