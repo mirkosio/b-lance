@@ -1,17 +1,35 @@
-# blance
+# b-lance — app Android nativa
 
-A new Flutter project.
+App Flutter nativa (nessuna TWA, nessuna WebView) per b-lance. Parla con la
+stessa API del sito tramite token Bearer.
 
-## Getting Started
+## Build
 
-This project is a starting point for a Flutter application.
+```bash
+cd app-android
+/home/mirkosio/flutter/bin/flutter pub get
+/home/mirkosio/flutter/bin/flutter test
+/home/mirkosio/flutter/bin/flutter analyze
+/home/mirkosio/flutter/bin/flutter build apk --release \
+  --dart-define=API_URL=https://b-lance.vercel.app
+```
 
-A few resources to get you started if this is your first Flutter project:
+L'APK esce in `build/app/outputs/flutter-apk/app-release.apk`.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Marchio
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Il simbolo è disegnato in `lib/widgets/logo_mark.dart`: una sola lettera b/l,
+asta e piede carta per la `l`, anello salvia per la `b`, badge nero. La stessa
+geometria vive in `../app/static/logo-mark.svg`; le icone si rigenerano con
+`../scripts/gen_brand_assets.py`.
+
+## Struttura
+
+- `lib/screens/`: Home, Movimenti, Gruppi, Profilo, Gruppo, Login.
+- `lib/sheets/`: spese, pagamenti, inviti, informazioni, onboarding.
+- `lib/widgets/`: marchio, loader, hero saldo, card e skeleton.
+- `lib/api.dart`: client HTTP, DoH di riserva, gestione errori.
+- `lib/models.dart`: modelli e parsing JSON.
+- `test/`: modelli, formati, dashboard, filtri e Fase 3.
+
+Versione corrente: **1.4.1** (`versionCode 17`).

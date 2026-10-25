@@ -97,9 +97,9 @@ mano: cambia la geometria e rigenera.
 ## Test
 
 ```bash
-.venv/bin/python -m pytest tests/ -q           # suite locale (113 test)
+.venv/bin/python -m pytest tests/ -q           # suite locale (118 test)
 .venv/bin/python /tmp/opencode/e2e_phase1.py   # E2E produzione (Fase 1 + movimenti)
-cd app-android && flutter test                 # 18 test Dart (modelli, formati, Fase 3)
+cd app-android && flutter test                 # 25 test Dart (modelli, formati, Fase 3)
 ```
 
 ## Sicurezza sessioni e accessi (dalla 1.0.9)

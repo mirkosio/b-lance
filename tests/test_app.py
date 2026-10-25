@@ -236,6 +236,28 @@ def test_health(client: TestClient) -> None:
     assert r.json()["status"] == "ok"
 
 
+def test_robots_and_sitemap(client: TestClient) -> None:
+    robots = client.get("/robots.txt")
+    assert robots.status_code == 200
+    assert "Sitemap:" in robots.text
+    assert "Disallow: /groups/" in robots.text
+
+    sitemap = client.get("/sitemap.xml")
+    assert sitemap.status_code == 200
+    assert "<urlset" in sitemap.text
+    assert "/about" in sitemap.text
+
+
+def test_service_worker_controls_the_whole_site(client: TestClient) -> None:
+    worker = client.get("/static/sw.js")
+    assert worker.status_code == 200
+    assert worker.headers["service-worker-allowed"] == "/"
+
+    home = client.get("/")
+    assert home.status_code == 200
+    assert "navigator.serviceWorker.register('/static/sw.js', { scope: '/' })" in home.text
+
+
 def test_void_payment_keeps_history_and_reverses_balance(client: TestClient) -> None:
     """Annullare un pagamento lo lascia in storico barrato ma fuori dai saldi."""
     _register(client, "Marco", "marco@example.com")

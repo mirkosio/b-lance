@@ -15,22 +15,21 @@ Adattato al brand b-lance: la palette e i font decisi dal proprietario **vincono
 
 - Wordmark: `b-lance`, minuscolo, tight. Il nome resta **testo**: `b` in
   inchiostro, trattino oro, `lance` salvia. Mai "B-Lance", mai "Blance"
-  nell'interfaccia.
-- Marchio: **monogramma "bl" in Calistoga**, con la `l` serrata contro la
-  pancia della `b`, dentro un badge quadrato salvia con angoli al 25% e
-  gradiente dosato `#6B9B7C → #47684F`. Il monogramma è carta `#F5F4EF` e
-  occupa il 62,5% del badge. Niente perno oro, niente anelli.
+  nell'interfaccia. Nell'app e nel sito il wordmark **non** accompagna il
+  simbolo: resta nel README, nei lockup e nei materiali estesi.
+- Marchio: **una sola lettera b/l**. L'asta verticale e il piede bianchi
+  (`#F5F4EF`) sono la `l`; l'anello salvia (`#7FAF8F → #47684F`) è la `b`;
+  il contatore è nero, il badge è nero (`#0A0E0B`) con bordo `#35473B` e
+  angoli al 25%. Niente lettera dentro la lettera, niente doppio monogramma.
 - File: `app/static/logo-mark.svg` (badge 64×64),
-  `logo-mark-inverse.svg` (badge carta, monogramma salvia scuro),
-  `logo.svg` e `logo-lockup-dark.svg` (lockup 196×64: badge + wordmark
-  completo `b-lance`). La stessa geometria è in
-  `app-android/lib/widgets/logo_mark.dart` e nelle icone generate da
-  `scripts/gen_brand_assets.py`.
-- Icona app: badge salvia con monogramma carta; foreground adattivo
-  trasparente su fondo `#5F8D6E`, maskable full-bleed. Niente lettera "B" di
+  `logo-mark-inverse.svg` (badge carta, anello salvia, l scura),
+  `logo.svg` e `logo-lockup-dark.svg` (lockup 196×64: simbolo + wordmark
+  completo `b-lance`, solo per README e materiali estesi). La stessa
+  geometria è in `app-android/lib/widgets/logo_mark.dart` e nelle icone
+  generate da `scripts/gen_brand_assets.py`.
+- Icona app: badge nero con anello salvia e l carta; foreground adattivo
+  trasparente su fondo `#0A0E0B`, maskable full-bleed. Niente lettera "B" di
   sistema, niente viola.
-- Il lockup ripete la `b` nel wordmark: il badge è un monogramma, il nome
-  resta leggibile come testo.
 
 ## Colori (token)
 
@@ -128,7 +127,7 @@ sidebar scorre se l'altezza dello schermo è ridotta.
 - Hover-only (non c'è hover sul telefono).
 - Testo < 12 px per informazioni essenziali.
 
-## Stato implementazione (app 1.2.0, Fase 3)
+## Stato implementazione (app 1.4.1, Fase 3)
 
 - Token reali in `app-android/lib/ui.dart`: salvia `#5F8D6E`, testo salvia `#3D644B`,
   bottoni `#4A7357` (bianco ≥ 4.5:1), carta `#F5F4EF`, notte `#141816`.
@@ -141,6 +140,8 @@ sidebar scorre se l'altezza dello schermo è ridotta.
   (endpoint `/api/activity`); tap → gruppo.
 - `GroupsScreen`: elenco completo, FAB Nuovo gruppo, ingresso con codice.
 - `ProfileScreen`: nome/colore/`@handle`, tema, sicurezza, elimina account, versione.
+- Marchio: simbolo b/l in AppBar, login, scheda Informazioni e loader; nessun
+  wordmark accanto al simbolo. Il lockup resta fuori dall'interfaccia.
 - `GroupScreen`: hero saldo, categorie con icone, ricorrenti, QR/share, invito `@handle`,
   export CSV; sezioni e CTA nella sezione Spese vuota.
 - `ExpenseSheet`: categorie, modifica spesa precompilata, ricorrenza

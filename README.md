@@ -48,9 +48,12 @@ Il nome viene da **balance**: il conto deve sempre tornare.
   spese restano per non rompere i saldi degli altri.
 - **Tema chiaro/scuro**, font Inter + Calistoga inclusi nell'app, motion
   discreto e rispetto di `reduce motion`.
-- **Avvio curato**: splash nativo con il badge e loader animato (il monogramma
+- **Avvio curato**: splash nativo con il marchio e loader animato (il simbolo
   respira e oscilla appena) durante il controllo della sessione.
   Niente indirizzi server o dettagli tecnici a schermo.
+- **Marchio b/l**: una sola lettera, non due. L'asta e il piede bianchi sono
+  la `l`; l'anello salvia è la `b`, su badge nero. Nell'interfaccia compare
+  solo il simbolo; il wordmark `b-lance` resta nel README e nei lockup.
 
 ## Stack
 
@@ -124,7 +127,7 @@ flutter build apk --release
 ```
 
 L'APK esce in `app-android/build/app/outputs/flutter-apk/app-release.apk`.
-La versione corrente è **1.4.0** (`versionCode 16`).
+La versione corrente è **1.4.1** (`versionCode 17`).
 
 Link diretti: `https://b-lance.vercel.app/join/CODICE` aprono l'app tramite
 App Links. La verifica dipende da `/.well-known/assetlinks.json` con package
@@ -133,7 +136,7 @@ App Links. La verifica dipende da `/.well-known/assetlinks.json` con package
 ## Test
 
 ```bash
-# backend (116 test)
+# backend (118 test)
 .venv/bin/python -m pytest tests/ -q
 
 # app (25 test)

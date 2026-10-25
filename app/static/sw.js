@@ -10,7 +10,7 @@
  * - POST e mutate: mai toccate (niente cache di form).
  */
 
-const VERSION = "blance-v7";
+const VERSION = "blance-v8";
 const PAGE_CACHE = `${VERSION}-pages`;
 
 self.addEventListener("install", (event) => {

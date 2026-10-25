@@ -116,12 +116,25 @@ Altri minori: nessuna anteprima del gruppo quando si entra con un codice (l'endp
 (include cambio password, export CSV/PDF, account, handle, ricorrenze, assetlinks).
 Le funzioni che richiedono credenziali esterne non sono dichiarate come testate.
 
-**Marchio e contenuti (24/10/2026):** marchio monogramma "bl" in Calistoga
-dentro badge salvia, con wordmark testuale `b-lance`; SVG 64×64 e lockup
-196×64; icone PWA e launcher Android rigenerate dallo stesso disegno; sidebar
-desktop a sezioni, solo testo, comprimibile con stato ricordato e drawer su
-mobile con focus trap; pagina `/about`, scheda Informazioni nell'app e README
-aggiornati.
+**Marchio e contenuti (25/10/2026):** nuovo marchio b/l in una sola lettera:
+asta e piede carta sono la `l`, anello salvia è la `b`, badge nero. Nell'app e
+nel sito compare solo il simbolo; il wordmark resta nei lockup e nel README.
+SVG 64×64, lockup 196×64, icone PWA e launcher Android rigenerati dalla stessa
+geometria. Sidebar desktop a sezioni, comprimibile con stato ricordato e drawer
+su mobile con focus trap; pagina `/about`, scheda Informazioni nell'app e
+README aggiornati.
+
+**Audit tecnico (25/10/2026):**
+- Service worker: era registrato sotto `/static/` e controllava solo gli asset.
+  Ora la registrazione usa `scope: '/'`, il server invia
+  `Service-Worker-Allowed: /` (sia FastAPI sia `vercel.json`) e le vecchie
+  registrazioni `/static/` vengono rimosse. Cache portata a `blance-v8`.
+- Aggiunti `robots.txt` e `sitemap.xml` con test automatici.
+- Aggiunto il test del header del service worker e della registrazione con
+  scope globale.
+- Restano aperti i blocchi esterni: Firebase, Sentry, provider email e i18n.
+- Verifica: **118 test backend**, **25 test Flutter**, `flutter analyze` pulito,
+  header e scope del service worker verificati in produzione.
 
 ---
 

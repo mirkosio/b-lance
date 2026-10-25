@@ -422,9 +422,23 @@
 
 <script>
   // Registra il service worker per l'installazione come app (PWA).
+  // Lo script vive sotto /static, ma con scope "/" controlla anche le pagine.
+  // Il server invia Service-Worker-Allowed: / (vedi vercel.json e main.py).
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/static/sw.js')
+      var oldScope = new URL('/static/', location.origin).href;
+      navigator.serviceWorker.getRegistrations()
+        .then(function (regs) {
+          // Pulizia delle vecchie registrazioni limitate a /static/.
+          return Promise.all(regs.filter(function (reg) {
+            return reg.scope === oldScope;
+          }).map(function (reg) {
+            return reg.unregister();
+          }));
+        })
+        .then(function () {
+          return navigator.serviceWorker.register('/static/sw.js', { scope: '/' });
+        })
         .then(function (reg) {
           // Controlla subito se è uscita una versione nuova del worker:
           // così gli aggiornamenti al sito arrivano senza aspettare.

@@ -5,8 +5,8 @@ import 'package:flutter/material.dart';
 import '../ui.dart';
 import 'logo_mark.dart';
 
-/// Attesa di marca: il monogramma respira e oscilla appena,
-/// la barra scorre sotto il wordmark. Circa 4 secondi per ciclo.
+/// Attesa di marca: il marchio respira e oscilla appena,
+/// la barra scorre sotto il simbolo. Circa 4 secondi per ciclo.
 /// Con "riduci animazioni" resta fermo e leggibile.
 class BrandLoader extends StatefulWidget {
   const BrandLoader({super.key, required this.phase});
