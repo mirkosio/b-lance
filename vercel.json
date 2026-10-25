@@ -2,6 +2,15 @@
   "rewrites": [
     { "source": "/(.*)", "destination": "/api/index/$1" }
   ],
+  "headers": [
+    {
+      "source": "/static/sw.js",
+      "headers": [
+        { "key": "Service-Worker-Allowed", "value": "/" },
+        { "key": "Cache-Control", "value": "no-cache, must-revalidate" }
+      ]
+    }
+  ],
   "functions": {
     "api/index.py": {
       "maxDuration": 60
