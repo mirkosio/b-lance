@@ -8,6 +8,7 @@ import '../sheets/onboarding_sheet.dart';
 import '../ui.dart';
 import '../widgets/group_tile.dart';
 import '../widgets/hero_balance.dart';
+import '../widgets/logo_mark.dart';
 import '../widgets/skeleton.dart';
 import 'group_screen.dart';
 
@@ -100,36 +101,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 16,
-        title: Text.rich(
-          TextSpan(
-            children: [
-              TextSpan(
-                text: 'b',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-              ),
-              TextSpan(
-                text: '-',
-                style: TextStyle(color: goldOn(context)),
-              ),
-              TextSpan(
-                text: 'lance',
-                style: TextStyle(color: dark ? sage : sageInk),
-              ),
-            ],
-          ),
-          style: const TextStyle(
-            fontFamily: 'Calistoga',
-            fontSize: 26,
-            height: 1,
-            letterSpacing: -0.4,
-          ),
-        ),
+        title: const LogoMark(size: 32),
         actions: [
           Tooltip(
             message: 'Profilo',

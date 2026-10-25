@@ -146,6 +146,8 @@ async def service_worker_no_cache(request: Request, call_next):
     response = await call_next(request)
     if request.url.path == "/static/sw.js":
         response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        # Il worker vive sotto /static, ma deve controllare tutto il sito.
+        response.headers["Service-Worker-Allowed"] = "/"
     return response
 
 
@@ -398,6 +400,32 @@ def _require_perm(
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok", "app": "b-lance"}
+
+
+@app.get("/robots.txt")
+def robots(request: Request) -> Response:
+    base = str(request.base_url).rstrip("/")
+    body = (
+        "User-agent: *\n"
+        "Allow: /\n"
+        "Disallow: /account\n"
+        "Disallow: /groups/\n"
+        f"Sitemap: {base}/sitemap.xml\n"
+    )
+    return Response(body, media_type="text/plain; charset=utf-8")
+
+
+@app.get("/sitemap.xml")
+def sitemap(request: Request) -> Response:
+    base = str(request.base_url).rstrip("/")
+    urls = ["/", "/about", "/login", "/register"]
+    items = "".join(f"<url><loc>{base}{path}</loc></url>" for path in urls)
+    body = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+        f"{items}</urlset>"
+    )
+    return Response(body, media_type="application/xml; charset=utf-8")
 
 
 @app.get("/")

@@ -34,7 +34,6 @@ class _BrandLoaderState extends State<BrandLoader>
   Widget build(BuildContext context) {
     final reduce = MediaQuery.disableAnimationsOf(context);
     final theme = Theme.of(context);
-    final accent = theme.brightness == Brightness.dark ? sage : sageInk;
     final muted = theme.colorScheme.onSurface.withValues(alpha: 0.7);
 
     return AnimatedBuilder(
@@ -53,32 +52,7 @@ class _BrandLoaderState extends State<BrandLoader>
                 ringRotation: reduce ? 0 : wave * 0.10,
               ),
             ),
-            const SizedBox(height: 18),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: 'b',
-                    style: TextStyle(color: theme.colorScheme.onSurface),
-                  ),
-                  TextSpan(
-                    text: '-',
-                    style: TextStyle(color: goldOn(context)),
-                  ),
-                  TextSpan(
-                    text: 'lance',
-                    style: TextStyle(color: accent),
-                  ),
-                ],
-              ),
-              style: const TextStyle(
-                fontFamily: 'Calistoga',
-                fontSize: 38,
-                height: 1,
-                letterSpacing: -0.5,
-              ),
-            ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 16),
             Text(
               'Dividi le spese, non le amicizie.',
               style: TextStyle(fontSize: 12.5, color: muted),

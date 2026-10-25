@@ -89,9 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Center(child: LogoMark(size: 62)),
-                  const SizedBox(height: 10),
-                  const Center(child: _Wordmark(size: 26.0)),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 14),
                   Center(
                     child: Text(
                       _register ? 'Crea il tuo account' : 'Bentornato',
@@ -202,43 +200,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// "b-lance" compatto, come il sito: b- scuro + lance salvia.
-class _Wordmark extends StatelessWidget {
-  const _Wordmark({this.size = 20});
-
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text.rich(
-      TextSpan(
-        text: 'b',
-        style: TextStyle(
-          fontFamily: 'Calistoga',
-          fontSize: size,
-          height: 1,
-          letterSpacing: -0.4,
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
-        children: [
-          TextSpan(
-            text: '-',
-            style: TextStyle(color: goldOn(context)),
-          ),
-          TextSpan(
-            text: 'lance',
-            style: TextStyle(
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? sage
-                  : sageInk,
-            ),
-          ),
-        ],
       ),
     );
   }

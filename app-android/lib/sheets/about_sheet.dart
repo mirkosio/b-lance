@@ -28,32 +28,6 @@ Future<void> showAboutSheet(BuildContext context) {
             ),
             const LogoMark(size: 64),
             const SizedBox(height: 12),
-            Text.rich(
-              TextSpan(
-                text: 'b',
-                style: TextStyle(
-                  fontFamily: 'Calistoga',
-                  fontSize: 30,
-                  letterSpacing: -0.5,
-                  color: Theme.of(ctx).colorScheme.onSurface,
-                ),
-                children: [
-                  TextSpan(
-                    text: '-',
-                    style: TextStyle(color: goldOn(ctx)),
-                  ),
-                  TextSpan(
-                    text: 'lance',
-                    style: TextStyle(
-                      color: Theme.of(ctx).brightness == Brightness.dark
-                          ? sage
-                          : sageInk,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
             Text(
               'Dividi le spese, non le amicizie.',
               style: TextStyle(fontSize: 13, color: muted),

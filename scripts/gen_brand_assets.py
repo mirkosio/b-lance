@@ -2,120 +2,115 @@
 
 Uso: .venv/bin/python scripts/gen_brand_assets.py
 
-Il marchio è il monogramma "bl" in Calistoga, dentro un badge salvia.
-Qui si rasterizza per PWA e per il launcher Android, senza dipendenze SVG.
+Il marchio è una sola lettera b/l: l'asta e il piede bianchi sono la l,
+l'anello salvia è la b. Badge nero. Qui si rasterizza per PWA e per il
+launcher Android, senza dipendenze SVG.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parent.parent
 SITE = ROOT / "app" / "static" / "icons"
 RES = ROOT / "app-android" / "android" / "app" / "src" / "main" / "res"
-FONT = ROOT / "app-android" / "assets" / "fonts" / "Calistoga-Regular.ttf"
 
-SAGE_TOP = (107, 155, 124)
+INK = (10, 14, 11)
+SAGE_TOP = (127, 175, 143)
 SAGE_BOTTOM = (71, 104, 79)
-SAGE = (95, 141, 110)
 PAPER = (245, 244, 239)
+BORDER = (53, 71, 59)
 SS = 4  # supersampling
 
-# Il monogramma occupa il 62,5% del badge, come nel viewBox SVG 64×64.
-MARK_RATIO = 0.625
-# Il tracking è -0,09 em: la "l" tocca la pancia della "b".
-TRACKING_EM = -0.09
 
-
-def _rounded_gradient(size: int, radius_ratio: float = 0.25) -> Image.Image:
-    """Badge quadrato con angoli tondi e gradiente salvia in diagonale."""
-    size *= SS
-    grad = Image.new("RGBA", (size, size))
-    px = grad.load()
-    denom = max(1, 2 * (size - 1))
-    for y in range(size):
-        for x in range(size):
-            t = (x + y) / denom
+def _gradient_square(size: int) -> Image.Image:
+    """Gradiente diagonale salvia, piccolo e poi ridimensionato."""
+    small = Image.new("RGBA", (64, 64))
+    px = small.load()
+    for y in range(64):
+        for x in range(64):
+            t = (x + y) / 126
             color = tuple(
                 int(SAGE_TOP[i] + (SAGE_BOTTOM[i] - SAGE_TOP[i]) * t)
                 for i in range(3)
             )
             px[x, y] = (*color, 255)
+    return small.resize((size, size), Image.Resampling.BICUBIC)
+
+
+def _mark_layer(size: int) -> Image.Image:
+    """Anello salvia + l bianca (asta e piede), su trasparente."""
+    layer = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    scale = size / 64.0
+    ring = _gradient_square(size)
     mask = Image.new("L", (size, size), 0)
-    ImageDraw.Draw(mask).rounded_rectangle(
-        [0, 0, size - 1, size - 1], radius=int(size * radius_ratio), fill=255
+    md = ImageDraw.Draw(mask)
+    cx, cy, r = 38 * scale, 38 * scale, 16 * scale
+    md.ellipse([cx - r, cy - r, cx + r, cy + r], fill=255)
+    r2 = 8 * scale
+    md.ellipse([cx - r2, cy - r2, cx + r2, cy + r2], fill=0)
+    ring.putalpha(mask)
+    layer.alpha_composite(ring)
+
+    d = ImageDraw.Draw(layer)
+    d.rounded_rectangle(
+        [16 * scale, 10 * scale, 24 * scale, 53 * scale],
+        radius=4 * scale,
+        fill=(*PAPER, 255),
     )
-    grad.putalpha(mask)
-    return grad
-
-
-def _monogram(target_height: int, color: tuple[int, int, int] = PAPER) -> Image.Image:
-    """Disegna "bl" con il font del wordmark e lo ritaglia al vivo."""
-    # Disegno grande, poi ridimensiono: così il risultato è identico a
-    # qualsiasi dimensione dell'icona.
-    font_size = 1600
-    font = ImageFont.truetype(str(FONT), font_size)
-    probe = Image.new("RGBA", (8, 8))
-    pd = ImageDraw.Draw(probe)
-    bb_b = pd.textbbox((0, 0), "b", font=font)
-    bb_l = pd.textbbox((0, 0), "l", font=font)
-    advance_b = pd.textlength("b", font=font)
-    tracking = TRACKING_EM * font_size
-
-    left = bb_b[0]
-    right = max(bb_b[2], advance_b + tracking + bb_l[2])
-    top = min(bb_b[1], bb_l[1])
-    bottom = max(bb_b[3], bb_l[3])
-    pad = 80
-
-    canvas = Image.new(
-        "RGBA",
-        (int(right - left) + pad * 2, int(bottom - top) + pad * 2),
-        (0, 0, 0, 0),
+    d.rounded_rectangle(
+        [10 * scale, 48 * scale, 24 * scale, 53 * scale],
+        radius=2.5 * scale,
+        fill=(*PAPER, 255),
     )
-    d = ImageDraw.Draw(canvas)
-    x = pad - left
-    y = pad - top
-    d.text((x, y), "b", font=font, fill=(*color, 255))
-    d.text((x + advance_b + tracking, y), "l", font=font, fill=(*color, 255))
-
-    bbox = canvas.getbbox()
-    if bbox:
-        canvas = canvas.crop(bbox)
-    width, height = canvas.size
-    new_width = max(1, round(width * target_height / max(1, height)))
-    return canvas.resize((new_width, target_height), Image.LANCZOS)
+    return layer
 
 
-def _icon(size: int, *, maskable: bool = False, transparent: bool = False) -> Image.Image:
-    canvas_size = size * SS
-    if transparent:
-        base = Image.new("RGBA", (canvas_size, canvas_size), (0, 0, 0, 0))
-    elif maskable:
-        # Full bleed: il sistema applica la maschera (cerchio, squircle…).
-        base = Image.new("RGBA", (canvas_size, canvas_size), (*SAGE, 255))
+def _badge(size: int, *, rounded: bool = True) -> Image.Image:
+    base = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(base)
+    if rounded:
+        radius = int(size * 0.25)
+        d.rounded_rectangle(
+            [0, 0, size - 1, size - 1], radius=radius, fill=(*INK, 255)
+        )
+        d.rounded_rectangle(
+            [0, 0, size - 1, size - 1],
+            radius=radius,
+            outline=(*BORDER, 255),
+            width=max(1, round(size / 64)),
+        )
     else:
-        base = _rounded_gradient(size)
+        d.rectangle([0, 0, size, size], fill=(*INK, 255))
+    return base
 
-    mark_h = max(1, round(canvas_size * MARK_RATIO))
-    mark = _monogram(mark_h)
+
+def _icon(size: int, *, maskable: bool = False) -> Image.Image:
+    canvas_size = size * SS
+    if maskable:
+        base = _badge(canvas_size, rounded=False)
+        mark_size = max(1, round(canvas_size * 0.625))
+    else:
+        base = _badge(canvas_size, rounded=True)
+        mark_size = canvas_size
+    mark = _mark_layer(mark_size)
     base.alpha_composite(
         mark,
         ((canvas_size - mark.width) // 2, (canvas_size - mark.height) // 2),
     )
-    return base.resize((size, size), Image.LANCZOS)
+    return base.resize((size, size), Image.Resampling.LANCZOS)
 
 
 def _foreground(size: int) -> Image.Image:
-    """Foreground adattivo: trasparente, monogramma nel 62% centrale."""
+    """Foreground adattivo: trasparente, marchio nel 62% centrale."""
     canvas = Image.new("RGBA", (size * SS, size * SS), (0, 0, 0, 0))
-    mark = _monogram(max(1, round(size * SS * 0.62)))
+    mark = _mark_layer(max(1, round(size * SS * 0.62)))
     canvas.alpha_composite(
         mark, ((canvas.width - mark.width) // 2, (canvas.height - mark.height) // 2)
     )
-    return canvas.resize((size, size), Image.LANCZOS)
+    return canvas.resize((size, size), Image.Resampling.LANCZOS)
 
 
 def main() -> None:

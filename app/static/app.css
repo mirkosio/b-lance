@@ -214,16 +214,14 @@ html.sb-open .sidebar {
 }
 html.sb-open .sidebar-scrim { opacity: 1; pointer-events: auto; }
 
-/* Wordmark: testo b-lance, con il badge "bl" come simbolo separato. */
+/* Marchio: solo badge, senza wordmark nell'interfaccia.
+   Il wordmark completo resta nel README e nei lockup estesi. */
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 0;
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: 1.34rem;
-  letter-spacing: -0.02em;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
   color: var(--text);
   padding: 0;
 }
@@ -234,14 +232,8 @@ html.sb-open .sidebar-scrim { opacity: 1; pointer-events: auto; }
   flex: 0 0 auto;
   display: block;
   border-radius: 25%;
-  box-shadow: 0 2px 6px rgba(71, 104, 79, 0.28);
+  box-shadow: 0 2px 6px rgba(10, 14, 11, 0.24);
 }
-.wm { font-family: var(--font-display); font-weight: 400; letter-spacing: -0.02em; white-space: nowrap; }
-.wm b { font-weight: 400; color: var(--text); }
-.wm .hy { color: var(--gold); }
-.brand em, .wm em { font-style: normal; color: var(--primary-deep); }
-:root[data-theme="dark"] .brand em,
-:root[data-theme="dark"] .wm em { color: var(--primary); }
 
 .side-nav { display: flex; flex-direction: column; gap: 4px; }
 .side-form { margin: 0; }
@@ -330,8 +322,8 @@ button.side-link:hover { background: var(--bg-soft); }
   background: var(--chrome);
   border-bottom: 1px solid var(--border);
 }
-.topbar .brand { padding: 0; font-size: 1.2rem; }
-.topbar .brand-badge { width: 30px; height: 30px; }
+.topbar .brand { padding: 0; }
+.topbar .brand-badge { width: 32px; height: 32px; }
 .topbar .right { display: flex; align-items: center; gap: 10px; }
 @media (max-width: 520px) {
   .topbar.publicnav .right .btn.ghost { display: none; }
@@ -495,22 +487,21 @@ p a, footer a { text-decoration: underline; text-underline-offset: 2px; }
 }
 h1.section-title { font-size: 1.35rem; }
 
-/* Brand nelle pagine interne: badge + wordmark testuale. */
+/* Brand nelle pagine interne: solo badge. */
 .about-brand {
+  display: flex;
+  align-items: center;
   justify-content: flex-start;
   gap: 14px;
 }
 .about-brand .brand-badge { width: 52px; height: 52px; }
-.about-brand .wm { font-size: 1.7rem; line-height: 1; }
 .auth-brand {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
   margin: 0 0 10px;
 }
 .auth-brand .brand-badge { width: 46px; height: 46px; }
-.auth-brand .wm { font-size: 1.3rem; }
 
 .group-heading {
   display: flex;
