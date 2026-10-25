@@ -178,6 +178,8 @@ Non ancora dentro, per scelta o perché mancano credenziali esterne:
 Dettagli tecnici e decisioni: [`AUDIT.md`](AUDIT.md),
 [`OPERAZIONE.md`](OPERAZIONE.md) e
 [`design-system/b-lance/MASTER.md`](design-system/b-lance/MASTER.md).
+Prossimo ciclo (modalità cassiere, offline, riepiloghi condivisi):
+[`PROPOSTA.md`](PROPOSTA.md).
 
 ## Privacy
 
