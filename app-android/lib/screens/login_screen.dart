@@ -4,6 +4,7 @@ import '../api.dart';
 import '../ui.dart';
 import '../widgets/logo_mark.dart';
 import 'main_shell.dart';
+import '../cashier/cashier_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, required this.api, this.notice});
@@ -194,6 +195,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? 'Hai già un account? Entra'
                           : 'Non hai ancora un account? Registrati',
                     ),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CashierHomeScreen())),
+                    child: const Text('Prova senza account'),
                   ),
                 ],
               ),

@@ -27,6 +27,7 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 from sqlalchemy.orm import Session, selectinload
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from xml.sax.saxutils import escape
 
 from .account import anonymize_user
 from .api import router as api_router
@@ -43,7 +44,7 @@ from .core.money import MoneyError, format_amount, parse_user_amount
 from .core.recurring import materialize_due
 from .core.splitting import SplitMethod, compute_shares
 from .database import get_db, init_db
-from .export import group_csv, group_pdf
+from .export import group_csv, group_pdf, summary_pdf
 from .models import (
     Expense,
     Group,
@@ -853,6 +854,12 @@ def group_detail(
             "perms": effective_perms(member.role, member.perms),
             "perm_defs": PERMISSIONS,
             "is_owner": member.role == "owner",
+            "share_token": group.share_token,
+            "share_url": (
+                str(request.base_url).rstrip("/") + f"/s/{group.share_token}"
+                if group.share_token
+                else ""
+            ),
         },
     )
 
@@ -930,6 +937,39 @@ def regenerate_invite(
     group.invite_code = _make_invite_code()
     db.commit()
     return RedirectResponse(f"/groups/{group.id}", status_code=303)
+
+
+@app.post("/groups/{group_id}/share")
+def share_group(
+    group_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Attiva il link read-only del riepilogo (solo membri)."""
+    group = _get_group_for_user(db, group_id, user)
+    if not group.share_token:
+        group.share_token = secrets.token_urlsafe(24)
+        group.share_created_at = utcnow()
+        db.commit()
+    return RedirectResponse(
+        f"/groups/{group.id}?ok=Riepilogo+condivisibile+attivo", status_code=303
+    )
+
+
+@app.post("/groups/{group_id}/share/revoke")
+def revoke_group_share(
+    group_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Revoca il link pubblico: chi lo aveva salvato non vede più nulla."""
+    group = _get_group_for_user(db, group_id, user)
+    group.share_token = None
+    group.share_created_at = None
+    db.commit()
+    return RedirectResponse(
+        f"/groups/{group.id}?ok=Link+del+riepilogo+revocato", status_code=303
+    )
 
 
 @app.get("/join/{code}")
@@ -1341,3 +1381,95 @@ def add_payment(
     except (MoneyError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     return RedirectResponse(f"/groups/{group.id}", status_code=303)
+
+
+@app.get("/s/{token}", response_class=HTMLResponse)
+def public_share_page(token: str, request: Request, db: Session = Depends(get_db)):
+    """Pagina pubblica read-only del riepilogo di gruppo.
+
+    Nessun login richiesto. Mostra nome, valuta, saldi attivi e bonifici
+    consigliati. Nessuna email o spesa dettagliata. Se il token non esiste
+    o è stato revocato, ritorna 404.
+    """
+    token = token.strip()
+    if not token:
+        raise HTTPException(status_code=404, detail="Riepilogo non trovato")
+    group = db.scalar(select(Group).where(Group.share_token == token))
+    if group is None:
+        raise HTTPException(status_code=404, detail="Riepilogo non trovato o revocato")
+    materialize_due(db, group.id)
+    view = compute_balances(db, group)
+    
+    html = f"""<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>{escape(group.name)} — b-lance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="/static/app.css?v=17">
+</head>
+<body class="guest">
+<header class="topbar publicnav">
+  <a href="/" class="brand" aria-label="b-lance">
+    <img class="brand-badge" src="/static/logo-mark.svg?v=5" alt="">
+  </a>
+  <span class="right">
+    <a class="btn sm ghost" href="/login">Accedi</a>
+    <a class="btn sm" href="/register">Registrati</a>
+  </span>
+</header>
+<main class="wrap" style="max-width:680px;padding:32px 16px">
+  <div class="card" style="margin-bottom:20px">
+    <span class="eyebrow">Riepilogo condivisibile</span>
+    <h1 style="font-family:Calistoga;font-size:1.8rem;margin:6px 0 10px">{escape(group.name)}</h1>
+    <p class="muted">Valuta base: <b>{group.base_currency}</b> · Totale speso: <b>{view.total_expenses_display()}</b></p>
+    <div class="row" style="margin-top:14px">
+      <a class="btn sm" href="/s/{token}/pdf">Scarica PDF</a>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px">
+    <div class="section-title">Saldi dei membri</div>
+    {"".join(f'<div class="balance-row"><div class="person"><span class="avatar" style="background:{m.color}">{m.name[0].upper()}</span><span>{escape(m.name)}</span></div><span style="font-weight:700" class="{"pos" if m.net_minor > 0 else "neg" if m.net_minor < 0 else ""}">{m.display(group.base_currency)}</span></div>' for m in view.members if m.active)}
+    <p class="muted small" style="margin-top:10px">+ verde = gli devono · - rosso = deve · 0 = in pari</p>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Chi paga a chi (bonifici consigliati)</div>
+    {"".join(f'<div class="transfer"><span>{escape(view.member_name(t.payer_id))}</span><span class="arrow">→</span><span>{escape(view.member_name(t.payee_id))}</span><span style="margin-left:auto;font-weight:700">{format_amount(t.amount_minor, group.base_currency, symbol=True)}</span></div>' for t in view.transfers) if view.transfers else '<div class="empty">Nessun debito in sospeso. Conto saldato.</div>'}
+  </div>
+</main>
+<footer style="text-align:center;padding:24px;color:var(--muted);font-size:.85rem">
+  Generato da b-lance · <a href="/">Crea il tuo gruppo</a>
+</footer>
+</body>
+</html>"""
+    resp = HTMLResponse(html)
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
+
+
+@app.get("/s/{token}/pdf")
+def public_share_pdf(token: str, db: Session = Depends(get_db)):
+    """PDF pubblico del riepilogo."""
+    token = token.strip()
+    if not token:
+        raise HTTPException(status_code=404, detail="Riepilogo non trovato")
+    group = db.scalar(select(Group).where(Group.share_token == token))
+    if group is None:
+        raise HTTPException(status_code=404, detail="Riepilogo non trovato o revocato")
+    materialize_due(db, group.id)
+    pdf_bytes = summary_pdf(db, group)
+    resp = Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="b-lance-riepilogo-{group.id}.pdf"'
+        },
+    )
+    resp.headers["Cache-Control"] = "no-store"
+    return resp

@@ -140,3 +140,4 @@ README aggiornati.
 
 ## 6. Cosa non ho potuto verificare (serve il telefono)
 - Push con app chiusa (FCM), QR con fotocamera, apertura dei link invito nell'app, comportamento reale su Poco F6 di notte, email di reset in spam o no.
+v1.5.0 - cashier + share + PDF - 2026-10-26

@@ -139,3 +139,4 @@ cd app-android && flutter test                 # 25 test Dart (modelli, formati,
 - Sito: https://b-lance.vercel.app
 - Release APK: https://github.com/mirkosio/b-lance/releases
 - Dashboard: https://vercel.com/mirkosios-projects/b-lance
+121 backend + 25 flutter = 146 totali

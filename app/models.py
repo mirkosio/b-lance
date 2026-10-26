@@ -62,6 +62,14 @@ class Group(Base):
     kind: Mapped[str] = mapped_column(String(32), default="other")
     # Codice corto per invitare via link/WhatsApp senza account.
     invite_code: Mapped[str] = mapped_column(String(12), unique=True, index=True)
+    # Token opzionale per il riepilogo pubblico read-only. None = disattivato.
+    # Si genera solo quando il gruppo decide di condividere i saldi.
+    share_token: Mapped[str | None] = mapped_column(
+        String(64), unique=True, index=True, nullable=True
+    )
+    share_created_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 

@@ -139,6 +139,24 @@ def _migrate() -> None:
                 text("ALTER TABLE payments ADD COLUMN voided_at TIMESTAMP")
             )
 
+    group_columns = {c["name"] for c in inspect(engine).get_columns("groups")}
+    if "share_token" not in group_columns:
+        with engine.begin() as conn:
+            conn.execute(
+                text("ALTER TABLE groups ADD COLUMN share_token VARCHAR(64)")
+            )
+            conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS ix_groups_share_token "
+                    "ON groups (share_token)"
+                )
+            )
+    if "share_created_at" not in group_columns:
+        with engine.begin() as conn:
+            conn.execute(
+                text("ALTER TABLE groups ADD COLUMN share_created_at TIMESTAMP")
+            )
+
 
 def init_db(retries: int = 5, delay: float = 2.0) -> None:
     """Crea le tabelle e applica le migrazioni MINORI.

@@ -127,7 +127,7 @@ flutter build apk --release
 ```
 
 L'APK esce in `app-android/build/app/outputs/flutter-apk/app-release.apk`.
-La versione corrente è **1.4.1** (`versionCode 17`).
+La versione corrente è **1.5.0** (`versionCode 17`).
 
 Link diretti: `https://b-lance.vercel.app/join/CODICE` aprono l'app tramite
 App Links. La verifica dipende da `/.well-known/assetlinks.json` con package

@@ -215,6 +215,30 @@
   {% endif %}
 </div>
 
+<!-- Riepilogo condivisibile: solo saldi e bonifici, niente dettagli privati -->
+<div class="card" id="riepilogo">
+  <div class="section-title">Riepilogo condivisibile</div>
+  {% if share_token %}
+    <p class="muted small">Link read-only per chi non ha l'app: vede solo saldi e bonifici, non spese, note o email. Puoi revocarlo quando vuoi.</p>
+    <div class="invite-box" style="display:flex;gap:8px;align-items:center">
+      <input id="share-url" type="text" readonly value="{{ share_url }}" style="flex:1;border:0;background:transparent;font:inherit;color:inherit">
+      <button class="btn sm ghost" type="button" onclick="navigator.clipboard.writeText(document.getElementById('share-url').value);this.textContent='Copiato'">Copia</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <a class="btn sm" href="{{ share_url }}" target="_blank" rel="noopener">Apri riepilogo</a>
+      <a class="btn sm ghost" href="/s/{{ share_token }}/pdf">PDF</a>
+      <form method="post" action="/groups/{{ group.id }}/share/revoke" style="margin:0">
+        <button class="btn sm ghost" type="submit">Revoca link</button>
+      </form>
+    </div>
+  {% else %}
+    <p class="muted small">Crea un link per far vedere i saldi a chi non ha l'app. Nessun dettaglio delle spese: solo chi deve dare cosa a chi.</p>
+    <form method="post" action="/groups/{{ group.id }}/share">
+      <button class="btn" type="submit">Crea link condivisibile</button>
+    </form>
+  {% endif %}
+</div>
+
 <!-- Aggiungi spesa -->
 <div class="card">
   <div class="section-title">Aggiungi spesa</div>

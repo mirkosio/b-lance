@@ -764,6 +764,59 @@ def api_regenerate_invite(
     return {"invite_code": group.invite_code}
 
 
+@router.get("/groups/{group_id}/share")
+def api_get_share(
+    group_id: int,
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    """Stato del riepilogo pubblico del gruppo."""
+    group = _group_for_user(db, group_id, user)
+    return {
+        "active": bool(group.share_token),
+        "token": group.share_token,
+        "path": f"/s/{group.share_token}" if group.share_token else None,
+    }
+
+
+@router.post("/groups/{group_id}/share")
+def api_create_share(
+    group_id: int,
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    """Attiva (o riattiva) il link read-only del riepilogo.
+
+    Il link mostra solo saldi e bonifici: niente email, note o spese
+    individuali. Chiunque abbia il token può leggerlo, quindi va trattato
+    come un segreto e può essere revocato in qualsiasi momento.
+    """
+    group = _group_for_user(db, group_id, user)
+    if not group.share_token:
+        group.share_token = secrets.token_urlsafe(24)
+        group.share_created_at = utcnow()
+        db.commit()
+    return {
+        "active": True,
+        "token": group.share_token,
+        "path": f"/s/{group.share_token}",
+    }
+
+
+@router.delete("/groups/{group_id}/share")
+def api_revoke_share(
+    group_id: int,
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    """Revoca il link pubblico: chi lo aveva salvato non vede più nulla."""
+    group = _group_for_user(db, group_id, user)
+    group.share_token = None
+    group.share_created_at = None
+    db.commit()
+    return {"ok": True, "active": False}
+
+
 @router.post("/groups/join")
 def api_join(
     data: JoinIn,

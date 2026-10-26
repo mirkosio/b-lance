@@ -281,3 +281,142 @@ def group_pdf(db: Session, group: Group) -> bytes:
     )
     doc.build(story)
     return buffer.getvalue()
+
+
+def summary_pdf(db: Session, group: Group) -> bytes:
+    """Riepilogo pubblico: solo saldi e bonifici, nessun dettaglio privato.
+
+    È il PDF del link condivisibile. Non contiene note, descrizioni delle
+    spese, email o username: chi riceve il link vede solo ciò che serve per
+    chiudere i conti.
+    """
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import mm
+    from reportlab.platypus import (
+        Paragraph,
+        SimpleDocTemplate,
+        Spacer,
+        Table,
+        TableStyle,
+    )
+
+    view = compute_balances(db, group)
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=16 * mm,
+        rightMargin=16 * mm,
+        topMargin=16 * mm,
+        bottomMargin=16 * mm,
+        title=f"B-Lance - riepilogo {group.name}",
+    )
+    styles = getSampleStyleSheet()
+    title = ParagraphStyle(
+        "ShareTitle",
+        parent=styles["Title"],
+        fontName="Helvetica-Bold",
+        fontSize=20,
+        textColor=colors.HexColor("#33523E"),
+        spaceAfter=4,
+    )
+    h2 = ParagraphStyle(
+        "ShareH2",
+        parent=styles["Heading2"],
+        fontName="Helvetica-Bold",
+        fontSize=11,
+        textColor=colors.HexColor("#3D644B"),
+        spaceBefore=12,
+        spaceAfter=5,
+    )
+    small = ParagraphStyle(
+        "ShareSmall",
+        parent=styles["BodyText"],
+        fontName="Helvetica",
+        fontSize=9,
+        leading=12,
+    )
+    story = [Paragraph("b-lance", title)]
+    story.append(
+        Paragraph(
+            f"{escape(group.name)} · valuta {group.base_currency} · "
+            f"riepilogo del {datetime.now(timezone.utc).strftime('%d/%m/%Y')}",
+            small,
+        )
+    )
+    story.append(Spacer(1, 5 * mm))
+    story.append(
+        Paragraph(
+            f"Totale speso: <b>{_money(view.total_expenses_minor(), group.base_currency)}</b>"
+            f" · Membri: <b>{view.active_count()}</b>",
+            small,
+        )
+    )
+
+    story.append(Paragraph("Saldi", h2))
+    rows = [["Membro", "Saldo"]]
+    for m in view.members:
+        if not m.active:
+            continue
+        rows.append([escape(m.name), _money(m.net_minor, group.base_currency)])
+    table = Table(rows, colWidths=[100 * mm, 50 * mm], repeatRows=1)
+    table.setStyle(
+        TableStyle(
+            [
+                ("FONT", (0, 0), (-1, -1), "Helvetica", 9),
+                ("FONT", (0, 0), (-1, 0), "Helvetica-Bold", 9),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#E7EFE9")),
+                ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#C9D8CE")),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+            ]
+        )
+    )
+    story.append(table)
+
+    story.append(Paragraph("Chi paga chi", h2))
+    if not view.transfers:
+        story.append(Paragraph("Nessun debito in sospeso: il conto è saldato.", small))
+    else:
+        rows = [["Da", "A", "Importo"]]
+        for t in view.transfers:
+            rows.append(
+                [
+                    escape(view.member_name(t.payer_id)),
+                    escape(view.member_name(t.payee_id)),
+                    _money(t.amount_minor, group.base_currency),
+                ]
+            )
+        table = Table(rows, colWidths=[60 * mm, 60 * mm, 30 * mm], repeatRows=1)
+        table.setStyle(
+            TableStyle(
+                [
+                    ("FONT", (0, 0), (-1, -1), "Helvetica", 9),
+                    ("FONT", (0, 0), (-1, 0), "Helvetica-Bold", 9),
+                    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#E7EFE9")),
+                    ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#C9D8CE")),
+                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                ]
+            )
+        )
+        story.append(table)
+        story.append(
+            Paragraph(
+                f"Con {len(view.transfers)} bonifici il conto è saldato.",
+                small,
+            )
+        )
+
+    story.append(Spacer(1, 8 * mm))
+    story.append(
+        Paragraph(
+            "Riepilogo generato da b-lance. Le spese annullate non entrano nei saldi. "
+            "Il link può essere revocato in qualsiasi momento.",
+            small,
+        )
+    )
+    doc.build(story)
+    return buffer.getvalue()
