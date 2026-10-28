@@ -1,20 +1,45 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:quick_actions/quick_actions.dart';
 
 import 'api.dart';
+import 'cashier/cashier_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
 import 'theme_controller.dart';
 import 'ui.dart';
 import 'widgets/brand_loader.dart';
 
+final quickActions = QuickActions();
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // Non bloccante: se lo storage e' lento l'app parte comunque col tema
-  // di sistema e si aggiorna appena la preferenza e' letta.
   loadThemeMode();
+  _setupQuickActions();
   runApp(const BlanceApp());
 }
+
+void _setupQuickActions() {
+  quickActions.initialize((String shortcutType) {
+    _quickActionSubject.add(shortcutType);
+  });
+  quickActions.setShortcutItems(<ShortcutItem>[
+    const ShortcutItem(
+      type: 'nuovo_gruppo',
+      localizedTitle: 'Nuovo gruppo',
+      icon: 'ic_shortcut_new_group',
+    ),
+    const ShortcutItem(
+      type: 'nuova_spesa',
+      localizedTitle: 'Nuova spesa',
+      icon: 'ic_shortcut_new_expense',
+    ),
+  ]);
+}
+
+final StreamController<String> _quickActionSubject = StreamController<String>.broadcast();
 
 class BlanceApp extends StatelessWidget {
   const BlanceApp({super.key});
@@ -38,11 +63,6 @@ class BlanceApp extends StatelessWidget {
   }
 }
 
-/// All'avvio: c'e' il token -> dashboard, no -> login.
-///
-/// Regole: NON si blocca MAI. Ogni fase e' visibile sotto lo spinner
-/// (cosi' si capisce dove si e' fermati), qualsiasi eccezione cade su
-/// una schermata con il messaggio vero e un pulsante Riprova.
 class _Gate extends StatefulWidget {
   const _Gate();
 
@@ -52,6 +72,7 @@ class _Gate extends StatefulWidget {
 
 class _GateState extends State<_Gate> {
   late final Api _api = Api();
+  StreamSubscription<String>? _qaSub;
 
   String _phase = 'Avvio…';
   Object? _error;
@@ -60,6 +81,22 @@ class _GateState extends State<_Gate> {
   void initState() {
     super.initState();
     _boot();
+    _qaSub = _quickActionSubject.stream.listen((type) {
+      if (!mounted) return;
+      switch (type) {
+        case 'nuovo_gruppo':
+        case 'nuova_spesa':
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const CashierHomeScreen()),
+          );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _qaSub?.cancel();
+    super.dispose();
   }
 
   void _setPhase(String value) {
@@ -87,15 +124,10 @@ class _GateState extends State<_Gate> {
         return;
       }
     } catch (e) {
-      // Token scaduto, rete assente, risposta inattesa: qualsiasi cosa,
-      // pulisco e lascio decidere all'utente (non resta appeso).
       try {
         await _api.saveToken(null);
-      } catch (_) {
-        // preferisco comunque proseguire
-      }
+      } catch (_) {}
       if (e is ApiException && e.status == 401) {
-        // Sessione revocata o scaduta: direttamente al login, con il motivo.
         if (!mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -110,7 +142,7 @@ class _GateState extends State<_Gate> {
       if (mounted) setState(() => _error = e);
     }
     if (!mounted) return;
-    if (_error != null) return; // resta sullo schermo d'errore con Riprova
+    if (_error != null) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => LoginScreen(api: _api)),
     );

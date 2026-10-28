@@ -11,18 +11,49 @@ class CashierPerson {
   Map<String, dynamic> toJson() => {'id': id, 'name': name, 'color': color};
 }
 
+class CashierExpenseItem {
+  final int id;
+  final String description;
+  final int amountMinor;
+  final List<int> memberIds; // chi partecipa a questo articolo (vuoto = tutti)
+  CashierExpenseItem({
+    required this.id,
+    required this.description,
+    required this.amountMinor,
+    this.memberIds = const [],
+  });
+  factory CashierExpenseItem.fromJson(Map<String, dynamic> j) => CashierExpenseItem(
+        id: j['id'] as int,
+        description: j['description'] as String,
+        amountMinor: j['amount_minor'] as int,
+        memberIds: (j['member_ids'] as List<dynamic>? ?? const [])
+            .map((e) => e as int)
+            .toList(),
+      );
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'description': description,
+        'amount_minor': amountMinor,
+        'member_ids': memberIds,
+      };
+}
+
 class CashierExpense {
   final int id;
   final String description;
   final int amountMinor;
   final int paidById;
   final List<int> memberIds;
+  final String currency;
+  final List<CashierExpenseItem> items; // split a livello di singolo articolo
   CashierExpense({
     required this.id,
     required this.description,
     required this.amountMinor,
     required this.paidById,
     required this.memberIds,
+    this.currency = 'EUR',
+    this.items = const [],
   });
   factory CashierExpense.fromJson(Map<String, dynamic> j) => CashierExpense(
         id: j['id'] as int,
@@ -30,6 +61,10 @@ class CashierExpense {
         amountMinor: j['amount_minor'] as int,
         paidById: j['paid_by_id'] as int,
         memberIds: (j['member_ids'] as List<dynamic>).map((e) => e as int).toList(),
+        currency: j['currency'] as String? ?? 'EUR',
+        items: (j['items'] as List<dynamic>? ?? const [])
+            .map((e) => CashierExpenseItem.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -37,6 +72,8 @@ class CashierExpense {
         'amount_minor': amountMinor,
         'paid_by_id': paidById,
         'member_ids': memberIds,
+        'currency': currency,
+        'items': items.map((i) => i.toJson()).toList(),
       };
 }
 

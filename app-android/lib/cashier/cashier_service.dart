@@ -19,12 +19,25 @@ List<CashierBalance> cashierBalances(CashierGroup group) {
   final owed = <int, int>{};
   for (final e in group.expenses) {
     paid[e.paidById] = (paid[e.paidById] ?? 0) + e.amountMinor;
-    if (e.memberIds.isEmpty) continue;
-    final share = e.amountMinor ~/ e.memberIds.length;
-    final rem = e.amountMinor - share * e.memberIds.length;
-    for (var i = 0; i < e.memberIds.length; i++) {
-      final extra = i < rem ? 1 : 0;
-      owed[e.memberIds[i]] = (owed[e.memberIds[i]] ?? 0) + share + extra;
+    if (e.items.isNotEmpty) {
+      // split a livello di singolo articolo
+      for (final item in e.items) {
+        final participants = item.memberIds.isEmpty ? e.memberIds : item.memberIds;
+        if (participants.isEmpty) continue;
+        final share = item.amountMinor ~/ participants.length;
+        final rem = item.amountMinor - share * participants.length;
+        for (var i = 0; i < participants.length; i++) {
+          final extra = i < rem ? 1 : 0;
+          owed[participants[i]] = (owed[participants[i]] ?? 0) + share + extra;
+        }
+      }
+    } else if (e.memberIds.isNotEmpty) {
+      final share = e.amountMinor ~/ e.memberIds.length;
+      final rem = e.amountMinor - share * e.memberIds.length;
+      for (var i = 0; i < e.memberIds.length; i++) {
+        final extra = i < rem ? 1 : 0;
+        owed[e.memberIds[i]] = (owed[e.memberIds[i]] ?? 0) + share + extra;
+      }
     }
   }
   final ids = <int>{...paid.keys, ...owed.keys};
