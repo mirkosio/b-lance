@@ -193,3 +193,4 @@ Prossimo ciclo (modalità cassiere, offline, riepiloghi condivisi):
 
 Pagina pubblica: `https://b-lance.vercel.app/about`.
 Problemi e idee: [github.com/mirkosio/b-lance/issues](https://github.com/mirkosio/b-lance/issues).
+APK 1.5.0 rilasciato: APK_1.5.0.apk (58 MB, SHA-256: 1e661...)

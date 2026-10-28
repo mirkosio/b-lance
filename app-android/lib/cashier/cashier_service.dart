@@ -133,6 +133,6 @@ String formatSignedCashier(int minor, int exponent, String currency) {
 
 int _pow10(int e) {
   var r = 1;
-  for (var i = 0; i < e; i++) r *= 10;
+  for (var i = 0; i < e; i++) { r *= 10; }
   return r;
 }
