@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../api.dart';
 import '../categories.dart';
@@ -382,6 +383,85 @@ class _GroupScreenState extends State<GroupScreen> {
     }
   }
 
+  Future<void> _shareSummary(GroupDetail d) async {
+    try {
+      final share = await widget.api.ensureGroupShare(d.id);
+      final path = share.path;
+      if (path == null) {
+        _snack('Link non disponibile');
+        return;
+      }
+      final url = '${widget.api.base}$path';
+      if (!mounted) return;
+      await showModalBottomSheet<void>(
+        context: context,
+        showDragHandle: true,
+        builder: (ctx) => SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Riepilogo condivisibile',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Chi riceve il link vede solo saldi e bonifici. '
+                  'Nessuna spesa, nota o email.',
+                  style: TextStyle(color: mutedOn(ctx), fontSize: 13.5),
+                ),
+                const SizedBox(height: 12),
+                SelectableText(url, style: const TextStyle(fontSize: 12.5)),
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  onPressed: () => SharePlus.instance.share(
+                    ShareParams(
+                      subject: 'Riepilogo ${d.name} su b-lance',
+                      text: 'Riepilogo b-lance · ${d.name}\n$url',
+                    ),
+                  ),
+                  icon: const Icon(Icons.share_outlined, size: 19),
+                  label: const Text('Condividi link'),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    await Clipboard.setData(ClipboardData(text: url));
+                    if (ctx.mounted) {
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(content: Text('Link copiato')),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.link, size: 19),
+                  label: const Text('Copia link'),
+                ),
+                TextButton(
+                  onPressed: () async {
+                    try {
+                      await widget.api.revokeGroupShare(d.id);
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      _snack('Link disattivato');
+                    } catch (e) {
+                      if (ctx.mounted) Navigator.pop(ctx);
+                      _snack(describeError(e));
+                    }
+                  },
+                  child: const Text('Disattiva link'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } catch (e) {
+      _snack(describeError(e));
+    }
+  }
+
   Future<void> _toggleRule(RecurringRule r) async {
     try {
       await widget.api.setRecurringActive(widget.groupId, r.id, !r.active);
@@ -497,8 +577,13 @@ class _GroupScreenState extends State<GroupScreen> {
                   if (v == 'rename') _rename(d);
                   if (v == 'delete') _deleteGroup();
                   if (v == 'export') _shareCsv(d);
+                  if (v == 'share') _shareSummary(d);
                 },
                 itemBuilder: (_) => [
+                  const PopupMenuItem(
+                    value: 'share',
+                    child: Text('Condividi riepilogo'),
+                  ),
                   const PopupMenuItem(
                     value: 'export',
                     child: Text('Esporta CSV'),

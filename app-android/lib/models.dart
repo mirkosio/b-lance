@@ -427,6 +427,20 @@ class GroupDetail {
   }
 }
 
+/// Stato del link pubblico read-only del gruppo.
+class GroupShare {
+  const GroupShare({required this.active, this.token, this.path});
+
+  final bool active;
+  final String? token;
+  final String? path;
+
+  factory GroupShare.fromJson(Map<String, dynamic> j) => GroupShare(
+    active: j['active'] as bool? ?? false,
+    token: j['token'] as String?,
+    path: j['path'] as String?,
+  );
+}
 
 /// Regola di spesa ricorrente. La vera spesa viene creata dal server quando
 /// arriva la data; qui si mostrano frequenza e prossima occorrenza.

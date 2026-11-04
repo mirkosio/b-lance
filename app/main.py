@@ -1399,6 +1399,13 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
         raise HTTPException(status_code=404, detail="Riepilogo non trovato o revocato")
     materialize_due(db, group.id)
     view = compute_balances(db, group)
+    base_url = str(request.base_url).rstrip("/")
+    share_url = f"{base_url}/s/{token}"
+    updated = (
+        group.share_created_at.strftime("%d/%m/%Y")
+        if group.share_created_at
+        else None
+    )
     
     html = f"""<!doctype html>
 <html lang="it">
@@ -1407,12 +1414,21 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>{escape(group.name)} — b-lance</title>
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="b-lance">
+  <meta property="og:title" content="{escape(group.name)} — riepilogo b-lance">
+  <meta property="og:description" content="Saldi e bonifici consigliati per chiudere i conti. Nessuna spesa, nota o email.">
+  <meta property="og:url" content="{share_url}">
+  <meta property="og:image" content="{base_url}/static/icons/icon-512.png">
+  <meta property="og:image:alt" content="b-lance">
+  <meta name="twitter:card" content="summary">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=17">
+  <link rel="stylesheet" href="/static/app.css?v=18">
 </head>
 <body class="guest">
+<a class="skip-link" href="#main">Salta al contenuto</a>
 <header class="topbar publicnav">
   <a href="/" class="brand" aria-label="b-lance">
     <img class="brand-badge" src="/static/logo-mark.svg?v=5" alt="">
@@ -1422,11 +1438,12 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
     <a class="btn sm" href="/register">Registrati</a>
   </span>
 </header>
-<main class="wrap" style="max-width:680px;padding:32px 16px">
+<main id="main" class="wrap" style="max-width:680px;padding:32px 16px">
   <div class="card" style="margin-bottom:20px">
     <span class="eyebrow">Riepilogo condivisibile</span>
     <h1 style="font-family:Calistoga;font-size:1.8rem;margin:6px 0 10px">{escape(group.name)}</h1>
     <p class="muted">Valuta base: <b>{group.base_currency}</b> · Totale speso: <b>{view.total_expenses_display()}</b></p>
+    {f'<p class="muted small">Aggiornato al {updated}</p>' if updated else ''}
     <div class="row" style="margin-top:14px">
       <a class="btn sm" href="/s/{token}/pdf">Scarica PDF</a>
     </div>
@@ -1444,7 +1461,8 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
   </div>
 </main>
 <footer style="text-align:center;padding:24px;color:var(--muted);font-size:.85rem">
-  Generato da b-lance · <a href="/">Crea il tuo gruppo</a>
+  <a class="btn sm" href="/register">Crea il tuo gruppo</a>
+  <div style="margin-top:10px">Generato da b-lance</div>
 </footer>
 </body>
 </html>"""

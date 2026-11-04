@@ -295,7 +295,8 @@ class Api {
     if (name != null) body['name'] = name;
     if (color != null) body['color'] = color;
     if (changeHandle) body['handle'] = handle;
-    final data = await _req('PATCH', '/api/me', body: body) as Map<String, dynamic>;
+    final data =
+        await _req('PATCH', '/api/me', body: body) as Map<String, dynamic>;
     return User.fromJson(data['user'] as Map<String, dynamic>);
   }
 
@@ -319,7 +320,8 @@ class Api {
 
   Future<List<PublicUser>> searchUsers(String query) async {
     final q = Uri.encodeQueryComponent(query.trim().replaceFirst('@', ''));
-    final data = await _req('GET', '/api/users/search?q=$q') as Map<String, dynamic>;
+    final data =
+        await _req('GET', '/api/users/search?q=$q') as Map<String, dynamic>;
     return (data['users'] as List<dynamic>)
         .map((u) => PublicUser.fromJson(u as Map<String, dynamic>))
         .toList();
@@ -438,6 +440,29 @@ class Api {
     return data['invite_code'] as String;
   }
 
+  // ------------------------------------------------------- riepilogo pubblico
+  Future<GroupShare> groupShare(int id) async {
+    final data =
+        await _req('GET', '/api/groups/$id/share') as Map<String, dynamic>;
+    return GroupShare.fromJson(data);
+  }
+
+  Future<GroupShare> createGroupShare(int id) async {
+    final data =
+        await _req('POST', '/api/groups/$id/share') as Map<String, dynamic>;
+    return GroupShare.fromJson(data);
+  }
+
+  Future<void> revokeGroupShare(int id) =>
+      _req('DELETE', '/api/groups/$id/share');
+
+  /// Riusa il link esistente o ne crea uno nuovo se non c'è.
+  Future<GroupShare> ensureGroupShare(int id) async {
+    final current = await groupShare(id);
+    if (current.active && current.path != null) return current;
+    return createGroupShare(id);
+  }
+
   // ---------------------------------------------------------------- spese
   Future<Expense> addExpense(
     int groupId, {
@@ -505,8 +530,10 @@ class Api {
 
   // ---------------------------------------------------------------- ricorrenti
   Future<List<RecurringRule>> recurringRules(int groupId) async {
-    final data = await _req('GET', '/api/groups/$groupId/recurring')
-        as Map<String, dynamic>;
+    final data = await _req(
+      'GET',
+      '/api/groups/$groupId/recurring',
+    ) as Map<String, dynamic>;
     return (data['rules'] as List<dynamic>)
         .map((r) => RecurringRule.fromJson(r as Map<String, dynamic>))
         .toList();
@@ -546,12 +573,11 @@ class Api {
     return RecurringRule.fromJson(data['rule'] as Map<String, dynamic>);
   }
 
-  Future<void> setRecurringActive(int groupId, int ruleId, bool active) =>
-      _req(
-        'PATCH',
-        '/api/groups/$groupId/recurring/$ruleId',
-        body: {'active': active},
-      );
+  Future<void> setRecurringActive(int groupId, int ruleId, bool active) => _req(
+    'PATCH',
+    '/api/groups/$groupId/recurring/$ruleId',
+    body: {'active': active},
+  );
 
   Future<void> deleteRecurring(int groupId, int ruleId) =>
       _req('DELETE', '/api/groups/$groupId/recurring/$ruleId');
