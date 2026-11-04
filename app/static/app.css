@@ -22,7 +22,7 @@
   --link: #3f6a52;
   --accent: #a8823c;          /* oro polvere, i dettagli "soldi" */
   --pos: #3b7a52;
-  --neg: #b4553f;             /* terracotta, non rosso segnale */
+  --neg: #a84a34;             /* terracotta scura: 5.16:1 su carta */
   --danger: #a0432f;
   --gold: #a8823c;
   --radius: 16px;
@@ -32,7 +32,7 @@
   --font-display: "Calistoga", Georgia, "Times New Roman", serif;
   /* Gradienti: solo su marchio, CTA e hero. Mai sui dati, mai ovunque. */
   --grad-brand: linear-gradient(135deg, #6b9b7c 0%, #47684f 100%);
-  --grad-btn: linear-gradient(180deg, #5c8a6b 0%, #47684f 100%);
+  --grad-btn: linear-gradient(180deg, #547f61 0%, #47684f 100%);
 }
 
 /* Tema scuro: inchiostro verde-caldo, non nero puro, non neon */

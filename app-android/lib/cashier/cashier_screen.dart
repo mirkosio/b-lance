@@ -263,7 +263,7 @@ class CashierGroupScreen extends StatefulWidget {
 
 class _CashierGroupScreenState extends State<CashierGroupScreen> {
   late CashierGroup _group;
-  bool _offline = true; // modalità cassiere è sempre locale
+  final bool _offline = true; // modalità cassiere è sempre locale
 
   @override
   void initState() {
@@ -560,7 +560,7 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      _offline ? 'Offline — modifiche salvate sul telefono' : 'Online — sincronizzato',
+                      _offline ? 'Salvato solo su questo telefono' : 'Online — sincronizzato',
                       style: TextStyle(fontSize: 12.5, color: _offline ? negOn(context) : posOn(context), fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -634,11 +634,24 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      Text(_personById(b.personId).name),
-                                      const SizedBox(width: 8),
-                                      GestureDetector(
-                                        onTap: () => _removeMember(b.personId),
-                                        child: const Icon(Icons.remove_circle_outline, size: 18, color: sage),
+                                      Expanded(
+                                        child: Text(
+                                          _personById(b.personId).name,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        onPressed: () =>
+                                            _removeMember(b.personId),
+                                        tooltip: 'Rimuovi partecipante',
+                                        constraints: const BoxConstraints(
+                                          minWidth: 48,
+                                          minHeight: 48,
+                                        ),
+                                        icon: const Icon(
+                                          Icons.remove_circle_outline,
+                                          size: 20,
+                                          color: sage,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -691,14 +704,6 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                     ),
                   ],
                   const SizedBox(height: 20),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: TextButton.icon(
-                      onPressed: _share,
-                      icon: const Icon(Icons.share_outlined, size: 18),
-                      label: const Text('Condividi riepilogo'),
-                    ),
-                  ),
                 ],
               ),
             ),
