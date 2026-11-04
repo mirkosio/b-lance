@@ -352,8 +352,11 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                             selected: selected.contains(m.id),
                             onSelected: (v) {
                               setModal(() {
-                                if (v) selected.add(m.id);
-                                else selected.remove(m.id);
+                                if (v) {
+                                  selected.add(m.id);
+                                } else {
+                                  selected.remove(m.id);
+                                }
                               });
                             },
                           ),
@@ -491,6 +494,7 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
       ),
     );
     if (ok != true) return;
+    if (!mounted) return;
     Navigator.of(context).pop(true);
   }
 
@@ -501,7 +505,9 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
 
   int _pow10(int e) {
     var r = 1;
-    for (var i = 0; i < e; i++) r *= 10;
+    for (var i = 0; i < e; i++) {
+      r *= 10;
+    }
     return r;
   }
 
