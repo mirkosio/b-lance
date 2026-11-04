@@ -127,7 +127,7 @@ sidebar scorre se l'altezza dello schermo è ridotta.
 - Hover-only (non c'è hover sul telefono).
 - Testo < 12 px per informazioni essenziali.
 
-## Stato implementazione (app 1.4.1, Fase 3)
+## Stato implementazione (app 1.5.0, Fase 3)
 
 - Token reali in `app-android/lib/ui.dart`: salvia `#5F8D6E`, testo salvia `#3D644B`,
   bottoni `#4A7357` (bianco ≥ 4.5:1), carta `#F5F4EF`, notte `#141816`.

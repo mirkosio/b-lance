@@ -32,4 +32,4 @@ geometria vive in `../app/static/logo-mark.svg`; le icone si rigenerano con
 - `lib/models.dart`: modelli e parsing JSON.
 - `test/`: modelli, formati, dashboard, filtri e Fase 3.
 
-Versione corrente: **1.4.1** (`versionCode 17`).
+Versione corrente: **1.5.0** (`versionCode 18`).
