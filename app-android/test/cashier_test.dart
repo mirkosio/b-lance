@@ -135,5 +135,72 @@ void main() {
       expect(restored.expenses.length, 1);
       expect(restored.expenses[0].amountMinor, 100);
     });
+
+    test('payment reduces balances', () {
+      final group = CashierGroup(
+        id: 1,
+        name: 'T',
+        currency: 'EUR',
+        members: [
+          CashierPerson(id: 1, name: 'A'),
+          CashierPerson(id: 2, name: 'B'),
+        ],
+        expenses: [
+          CashierExpense(
+            id: 1,
+            description: 'X',
+            amountMinor: 100,
+            paidById: 1,
+            memberIds: [1, 2],
+          ),
+        ],
+        payments: [
+          CashierPayment(
+            id: 1,
+            fromId: 2,
+            toId: 1,
+            amountMinor: 50,
+          ),
+        ],
+      );
+      final balances = cashierBalances(group);
+      expect(balances.firstWhere((b) => b.personId == 1).netMinor, 0);
+      expect(balances.firstWhere((b) => b.personId == 2).netMinor, 0);
+      expect(cashierTransfers(balances), isEmpty);
+    });
+
+    test('amount parser handles italian and english input', () {
+      expect(parseCashierAmount('12,50', 2), 1250);
+      expect(parseCashierAmount('12.50', 2), 1250);
+      expect(parseCashierAmount('1.234,56', 2), 123456);
+      expect(parseCashierAmount('1234', 2), 123400);
+      expect(parseCashierAmount('100', 0), 100);
+      expect(parseCashierAmount('12,345', 2), isNull);
+      expect(parseCashierAmount('-5', 2), isNull);
+      expect(parseCashierAmount('', 2), isNull);
+      expect(cashierAmountInput(1250, 2), '12,50');
+    });
+
+    test('payment json roundtrip', () {
+      final group = CashierGroup(
+        id: 1,
+        name: 'T',
+        currency: 'EUR',
+        members: [CashierPerson(id: 1, name: 'A')],
+        payments: [
+          CashierPayment(
+            id: 7,
+            fromId: 1,
+            toId: 2,
+            amountMinor: 500,
+            note: 'bonifico',
+          ),
+        ],
+      );
+      final restored = CashierGroup.fromJson(group.toJson());
+      expect(restored.payments.length, 1);
+      expect(restored.payments[0].amountMinor, 500);
+      expect(restored.payments[0].note, 'bonifico');
+    });
   });
 }

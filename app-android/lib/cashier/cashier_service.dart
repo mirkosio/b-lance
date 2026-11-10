@@ -40,6 +40,12 @@ List<CashierBalance> cashierBalances(CashierGroup group) {
       }
     }
   }
+  // Un pagamento sposta debito: chi paga vede salire il proprio netto,
+  // chi incassa vede scendere il proprio credito.
+  for (final p in group.payments) {
+    paid[p.fromId] = (paid[p.fromId] ?? 0) + p.amountMinor;
+    owed[p.toId] = (owed[p.toId] ?? 0) + p.amountMinor;
+  }
   final ids = <int>{...paid.keys, ...owed.keys};
   return [
     for (final id in ids) CashierBalance(id, (paid[id] ?? 0) - (owed[id] ?? 0))
@@ -142,6 +148,79 @@ String formatCashier(int minor, int exponent) {
 String formatSignedCashier(int minor, int exponent, String currency) {
   final sign = minor > 0 ? '+' : '';
   return '$sign${formatCashier(minor, exponent)} $currency';
+}
+
+/// Converte quello che l'utente scrive in centesimi interi, senza passare
+/// da double. Accetta "12,50", "12.50", "1.234,56" e "1234".
+/// Restituisce null se il testo non è un importo valido.
+int? parseCashierAmount(String raw, int exponent) {
+  if (raw.contains('-')) return null;
+  var s = raw.trim().replaceAll(RegExp(r'[^\d.,]'), '');
+  if (s.isEmpty) return null;
+  final lastComma = s.lastIndexOf(',');
+  final lastDot = s.lastIndexOf('.');
+  String intPart;
+  String decPart;
+
+  if (lastComma >= 0 && lastDot >= 0) {
+    final decSep = lastComma > lastDot ? ',' : '.';
+    final thouSep = decSep == ',' ? '.' : ',';
+    s = s.replaceAll(thouSep, '');
+    final parts = s.split(decSep);
+    if (parts.length != 2) return null;
+    intPart = parts[0];
+    decPart = parts[1];
+  } else if (lastComma >= 0) {
+    final parts = s.split(',');
+    if (parts.length != 2) return null;
+    intPart = parts[0];
+    decPart = parts[1];
+  } else if (lastDot >= 0) {
+    final parts = s.split('.');
+    if (parts.length > 2) {
+      // "1.234.567": tutti gruppi da tre = separatore delle migliaia.
+      final groupsOk = parts.skip(1).every((p) => p.length == 3);
+      if (!groupsOk || parts.first.isEmpty) return null;
+      intPart = parts.join();
+      decPart = '';
+    } else {
+      final before = parts[0];
+      final after = parts[1];
+      // "1.234" = millequattro; "12.50" = dodici e cinquanta.
+      if (after.length == 3 && before.isNotEmpty && before.length <= 3) {
+        intPart = before + after;
+        decPart = '';
+      } else {
+        intPart = before;
+        decPart = after;
+      }
+    }
+  } else {
+    intPart = s;
+    decPart = '';
+  }
+
+  if (intPart.isEmpty) intPart = '0';
+  if (!RegExp(r'^\d+$').hasMatch(intPart)) return null;
+  if (decPart.isNotEmpty && !RegExp(r'^\d+$').hasMatch(decPart)) return null;
+  if (decPart.length > exponent) return null;
+
+  final major = int.tryParse(intPart);
+  if (major == null) return null;
+  final dec = exponent == 0
+      ? 0
+      : int.parse(decPart.padRight(exponent, '0'));
+  return major * _pow10(exponent) + dec;
+}
+
+/// Importo formattato per il campo di input: "12,50", senza separatore
+/// delle migliaia (che confonderebbe il parser).
+String cashierAmountInput(int minor, int exponent) {
+  if (exponent == 0) return '$minor';
+  final factor = _pow10(exponent);
+  final major = minor ~/ factor;
+  final dec = (minor % factor).toString().padLeft(exponent, '0');
+  return '$major,$dec';
 }
 
 int _pow10(int e) {

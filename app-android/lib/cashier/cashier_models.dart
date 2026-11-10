@@ -77,20 +77,52 @@ class CashierExpense {
       };
 }
 
+class CashierPayment {
+  final int id;
+  final int fromId;
+  final int toId;
+  final int amountMinor;
+  final String note;
+  CashierPayment({
+    required this.id,
+    required this.fromId,
+    required this.toId,
+    required this.amountMinor,
+    this.note = '',
+  });
+  factory CashierPayment.fromJson(Map<String, dynamic> j) => CashierPayment(
+        id: j['id'] as int,
+        fromId: j['from_id'] as int,
+        toId: j['to_id'] as int,
+        amountMinor: j['amount_minor'] as int,
+        note: j['note'] as String? ?? '',
+      );
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'from_id': fromId,
+        'to_id': toId,
+        'amount_minor': amountMinor,
+        'note': note,
+      };
+}
+
 class CashierGroup {
   final int id;
   String name;
   String currency;
   List<CashierPerson> members;
   List<CashierExpense> expenses;
+  List<CashierPayment> payments;
   CashierGroup({
     required this.id,
     required this.name,
     this.currency = 'EUR',
     List<CashierPerson>? members,
     List<CashierExpense>? expenses,
+    List<CashierPayment>? payments,
   })  : members = members ?? [],
-        expenses = expenses ?? [];
+        expenses = expenses ?? [],
+        payments = payments ?? [];
   factory CashierGroup.fromJson(Map<String, dynamic> j) => CashierGroup(
         id: j['id'] as int,
         name: j['name'] as String,
@@ -101,6 +133,9 @@ class CashierGroup {
         expenses: (j['expenses'] as List<dynamic>? ?? [])
             .map((e) => CashierExpense.fromJson(e as Map<String, dynamic>))
             .toList(),
+        payments: (j['payments'] as List<dynamic>? ?? [])
+            .map((e) => CashierPayment.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -108,5 +143,6 @@ class CashierGroup {
         'currency': currency,
         'members': members.map((m) => m.toJson()).toList(),
         'expenses': expenses.map((e) => e.toJson()).toList(),
+        'payments': payments.map((p) => p.toJson()).toList(),
       };
 }

@@ -6,11 +6,52 @@ import 'package:share_plus/share_plus.dart';
 
 import '../api.dart';
 import '../ui.dart';
+import '../models.dart';
+import '../widgets/currency_picker.dart';
 import '../widgets/logo_mark.dart';
+import '../widgets/skeleton.dart';
 import 'cashier_models.dart';
 import 'cashier_service.dart';
 
 const _cashierKey = 'bl_cashier_groups_v1';
+
+const _fallbackCurrencies = <CurrencyInfo>[
+  CurrencyInfo(
+    code: 'EUR',
+    name: 'Euro',
+    symbol: '€',
+    exponent: 2,
+    hasAutoRate: true,
+  ),
+  CurrencyInfo(
+    code: 'USD',
+    name: 'Dollaro USA',
+    symbol: r'$',
+    exponent: 2,
+    hasAutoRate: true,
+  ),
+  CurrencyInfo(
+    code: 'GBP',
+    name: 'Sterlina',
+    symbol: '£',
+    exponent: 2,
+    hasAutoRate: true,
+  ),
+  CurrencyInfo(
+    code: 'CHF',
+    name: 'Franco svizzero',
+    symbol: 'CHF',
+    exponent: 2,
+    hasAutoRate: true,
+  ),
+  CurrencyInfo(
+    code: 'JPY',
+    name: 'Yen',
+    symbol: '¥',
+    exponent: 0,
+    hasAutoRate: true,
+  ),
+];
 
 class CashierHomeScreen extends StatefulWidget {
   const CashierHomeScreen({super.key});
@@ -90,11 +131,21 @@ class _CashierHomeScreenState extends State<CashierHomeScreen> {
       ),
     );
     if (ok == null || !mounted) return;
+    final currencies = Meta.currencies.isNotEmpty
+        ? Meta.currencies
+        : _fallbackCurrencies;
+    final currency = await showCurrencyPicker(
+      context,
+      currencies: currencies,
+      selected: 'EUR',
+      title: 'Valuta del gruppo',
+    );
+    if (currency == null || !mounted) return;
     setState(() {
       _groups.add(CashierGroup(
         id: DateTime.now().millisecondsSinceEpoch % 1000000000,
         name: ok,
-        currency: 'EUR',
+        currency: currency,
         members: [CashierPerson(id: 1, name: 'Tu')],
         expenses: [],
       ));
@@ -131,7 +182,16 @@ class _CashierHomeScreenState extends State<CashierHomeScreen> {
       ),
       body: SafeArea(
         child: !_loaded
-            ? const Center(child: CircularProgressIndicator())
+            ? ListView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                children: const [
+                  Skeleton(height: 84, radius: 16),
+                  SizedBox(height: 12),
+                  Skeleton(height: 84, radius: 16),
+                  SizedBox(height: 12),
+                  Skeleton(height: 84, radius: 16),
+                ],
+              )
             : _groups.isEmpty
                 ? Center(
                     child: Padding(
@@ -279,12 +339,256 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
 
   String _personName(int id) => _personById(id).name;
 
-  Future<void> _addExpense() async {
-    final description = TextEditingController();
+  int _exponentOf(String code) {
+    final known = Meta.byCode(code);
+    if (known != null) return known.exponent;
+    for (final c in _fallbackCurrencies) {
+      if (c.code == code) return c.exponent;
+    }
+    return 2;
+  }
+
+  Future<void> _addExpense() => _expenseSheet();
+
+  Future<void> _editExpense(CashierExpense existing) =>
+      _expenseSheet(existing: existing);
+
+  Future<void> _expenseSheet({CashierExpense? existing}) async {
+    final expo = _exponentOf(_group.currency);
+    final description = TextEditingController(
+      text: existing?.description ?? '',
+    );
+    final amount = TextEditingController(
+      text: existing == null
+          ? ''
+          : cashierAmountInput(existing.amountMinor, expo),
+    );
+    int paidById = existing?.paidById ??
+        (_group.members.isNotEmpty ? _group.members.first.id : 0);
+    final selected = <int>{
+      ...(existing?.memberIds ?? _group.members.map((m) => m.id)),
+    };
+
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModal) {
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 16,
+                  right: 16,
+                  top: 16,
+                  bottom: MediaQuery.of(ctx).viewInsets.bottom + 16,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      existing == null ? 'Nuova spesa' : 'Modifica spesa',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: description,
+                      autofocus: existing == null,
+                      decoration: const InputDecoration(
+                        labelText: 'Descrizione (es. Cena)',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: amount,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Importo',
+                        prefixText: '${_group.currency} ',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Chi ha pagato',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final m in _group.members)
+                          ChoiceChip(
+                            label: Text(m.name),
+                            selected: paidById == m.id,
+                            onSelected: (_) => setModal(() => paidById = m.id),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    const Text(
+                      'Chi partecipa',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final m in _group.members)
+                          FilterChip(
+                            label: Text(m.name),
+                            selected: selected.contains(m.id),
+                            onSelected: (v) {
+                              setModal(() {
+                                if (v) {
+                                  selected.add(m.id);
+                                } else {
+                                  selected.remove(m.id);
+                                }
+                              });
+                            },
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        if (existing != null) ...[
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, 'delete'),
+                            child: Text(
+                              'Elimina',
+                              style: TextStyle(color: negOn(ctx)),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(ctx, 'cancel'),
+                            child: const Text('Annulla'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              final d = description.text.trim();
+                              final minor = parseCashierAmount(
+                                amount.text,
+                                expo,
+                              );
+                              if (d.isEmpty ||
+                                  minor == null ||
+                                  minor <= 0 ||
+                                  paidById == 0 ||
+                                  selected.isEmpty) {
+                                ScaffoldMessenger.of(ctx).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Compila descrizione, importo, pagante e partecipanti',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              Navigator.pop(ctx, 'save');
+                            },
+                            child: Text(
+                              existing == null ? 'Aggiungi' : 'Salva',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    if (action == 'delete' && existing != null) {
+      if (!mounted) return;
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Eliminare la spesa?'),
+          content: const Text('Verrà rimossa dalla cassa locale.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Indietro'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Elimina'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+      setState(() {
+        _group.expenses.removeWhere((e) => e.id == existing.id);
+      });
+      await _persist();
+      return;
+    }
+    if (action != 'save') return;
+
+    final minor = parseCashierAmount(amount.text, expo);
+    if (minor == null || minor <= 0) return;
+    setState(() {
+      final updated = CashierExpense(
+        id: existing?.id ??
+            DateTime.now().millisecondsSinceEpoch % 1000000000,
+        description: description.text.trim(),
+        amountMinor: minor,
+        paidById: paidById,
+        memberIds: selected.toList(),
+        currency: _group.currency,
+        items: existing?.items ?? const [],
+      );
+      if (existing == null) {
+        _group.expenses.add(updated);
+      } else {
+        final i = _group.expenses.indexWhere((e) => e.id == existing.id);
+        if (i >= 0) {
+          _group.expenses[i] = updated;
+        }
+      }
+    });
+    await _persist();
+  }
+
+  Future<void> _addPayment() async {
+    if (_group.members.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Servono almeno due partecipanti')),
+      );
+      return;
+    }
+    final expo = _exponentOf(_group.currency);
     final amount = TextEditingController();
-    int paidById = _group.members.isNotEmpty ? _group.members.first.id : 0;
-    final selected = <int>{};
-    selected.addAll(_group.members.map((m) => m.id));
+    final note = TextEditingController();
+    int fromId = _group.members.first.id;
+    int toId = _group.members[1].id;
 
     final ok = await showModalBottomSheet<bool>(
       context: context,
@@ -306,26 +610,25 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const Text(
-                      'Nuova spesa',
-                      style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: description,
-                      autofocus: true,
-                      decoration: const InputDecoration(labelText: 'Descrizione (es. Cena)'),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: amount,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      decoration: InputDecoration(
-                        labelText: 'Importo',
-                        prefixText: '${_group.currency} ',
+                      'Registra pagamento',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    const Text('Chi ha pagato', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Segna un bonifico o contanti già scambiati.',
+                      style: TextStyle(color: mutedOn(ctx), fontSize: 13),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Da',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
@@ -334,33 +637,50 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                         for (final m in _group.members)
                           ChoiceChip(
                             label: Text(m.name),
-                            selected: paidById == m.id,
-                            onSelected: (_) => setModal(() => paidById = m.id),
+                            selected: fromId == m.id,
+                            onSelected: (_) => setModal(() => fromId = m.id),
                           ),
-                    ],
+                      ],
                     ),
                     const SizedBox(height: 14),
-                    const Text('Chi partecipa', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                    const Text(
+                      'A',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: [
                         for (final m in _group.members)
-                          FilterChip(
+                          ChoiceChip(
                             label: Text(m.name),
-                            selected: selected.contains(m.id),
-                            onSelected: (v) {
-                              setModal(() {
-                                if (v) {
-                                  selected.add(m.id);
-                                } else {
-                                  selected.remove(m.id);
-                                }
-                              });
-                            },
+                            selected: toId == m.id,
+                            onSelected: (_) => setModal(() => toId = m.id),
                           ),
-                    ],
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: amount,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Importo',
+                        prefixText: '${_group.currency} ',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: note,
+                      decoration: const InputDecoration(
+                        labelText: 'Nota (facoltativa)',
+                        hintText: 'Es. bonifico, contanti',
+                      ),
                     ),
                     const SizedBox(height: 18),
                     Row(
@@ -375,24 +695,31 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                         Expanded(
                           child: FilledButton(
                             onPressed: () {
-                              final d = description.text.trim();
-                              final a = amount.text.trim();
-                              if (d.isEmpty || a.isEmpty || paidById == 0 || selected.isEmpty) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Compila descrizione, importo, pagante e partecipanti')),
+                              final minor = parseCashierAmount(
+                                amount.text,
+                                expo,
+                              );
+                              if (fromId == toId) {
+                                ScaffoldMessenger.of(ctx).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Chi paga e chi incassa devono essere diversi',
+                                    ),
+                                  ),
                                 );
                                 return;
                               }
-                              final minor = (double.tryParse(a.replaceAll(',', '.')) ?? 0) * _pow10(Meta.exponentOf(_group.currency));
-                              if (minor <= 0) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Importo non valido')),
+                              if (minor == null || minor <= 0) {
+                                ScaffoldMessenger.of(ctx).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Importo non valido'),
+                                  ),
                                 );
                                 return;
                               }
                               Navigator.pop(ctx, true);
                             },
-                            child: const Text('Aggiungi'),
+                            child: const Text('Registra'),
                           ),
                         ),
                       ],
@@ -405,20 +732,46 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
         );
       },
     );
-
     if (ok != true) return;
-
-    final minor = (double.tryParse(amount.text.replaceAll(',', '.')) ?? 0) * _pow10(Meta.exponentOf(_group.currency));
+    final minor = parseCashierAmount(amount.text, expo);
+    if (minor == null || minor <= 0) return;
     setState(() {
-      _group.expenses.add(CashierExpense(
-        id: DateTime.now().millisecondsSinceEpoch % 1000000000,
-        description: description.text.trim(),
-        amountMinor: minor.round(),
-        paidById: paidById,
-        memberIds: selected.toList(),
-      ));
+      _group.payments.add(
+        CashierPayment(
+          id: DateTime.now().millisecondsSinceEpoch % 1000000000,
+          fromId: fromId,
+          toId: toId,
+          amountMinor: minor,
+          note: note.text.trim(),
+        ),
+      );
     });
-    _persist();
+    await _persist();
+  }
+
+  Future<void> _deletePayment(CashierPayment payment) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminare il pagamento?'),
+        content: const Text('I saldi torneranno come prima.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Indietro'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Elimina'),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    setState(() {
+      _group.payments.removeWhere((p) => p.id == payment.id);
+    });
+    await _persist();
   }
 
   Future<void> _addMember() async {
@@ -499,16 +852,8 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
   }
 
   Future<void> _share() async {
-    final text = cashierSummaryText(_group, exponent: Meta.exponentOf(_group.currency));
+    final text = cashierSummaryText(_group, exponent: _exponentOf(_group.currency));
     await SharePlus.instance.share(ShareParams(text: text, subject: 'b-lance · ${_group.name}'));
-  }
-
-  int _pow10(int e) {
-    var r = 1;
-    for (var i = 0; i < e; i++) {
-      r *= 10;
-    }
-    return r;
   }
 
   Future<void> _persist() async {
@@ -531,7 +876,7 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
     final group = _group;
     final balances = _balances;
     final transfers = _transfers;
-    final expo = Meta.exponentOf(group.currency);
+    final expo = _exponentOf(group.currency);
     final total = group.expenses.fold<int>(0, (s, e) => s + e.amountMinor);
 
     return Scaffold(
@@ -541,7 +886,23 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
         actions: [
           IconButton(tooltip: 'Aggiungi partecipante', onPressed: _addMember, icon: const Icon(Icons.person_add_outlined)),
           IconButton(tooltip: 'Condividi riepilogo', onPressed: _share, icon: const Icon(Icons.share_outlined)),
-          IconButton(tooltip: 'Elimina gruppo', onPressed: _deleteGroup, icon: const Icon(Icons.delete_outline)),
+          PopupMenuButton<String>(
+            tooltip: 'Altre azioni',
+            onSelected: (v) {
+              if (v == 'payment') _addPayment();
+              if (v == 'delete') _deleteGroup();
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(
+                value: 'payment',
+                child: Text('Registra pagamento'),
+              ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Text('Elimina gruppo'),
+              ),
+            ],
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -597,20 +958,97 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                       child: Column(
                         children: [
                           for (final e in group.expenses)
+                            InkWell(
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: () {
+                                hapticTap();
+                                _editExpense(e);
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                  horizontal: 4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        e.description,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      '${formatMinor(e.amountMinor, expo)} ${e.currency}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      size: 18,
+                                      color: mutedOn(context),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  if (group.payments.isNotEmpty) ...[
+                    const SizedBox(height: 12),
+                    SectionCard(
+                      title: 'Pagamenti',
+                      child: Column(
+                        children: [
+                          for (final p in group.payments)
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              padding: const EdgeInsets.symmetric(vertical: 4),
                               child: Row(
                                 children: [
                                   Expanded(
-                                    child: Text(
-                                      e.description,
-                                      style: TextStyle(fontWeight: FontWeight.w600),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${_personName(p.fromId)} → ${_personName(p.toId)}',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        if (p.note.isNotEmpty)
+                                          Text(
+                                            p.note,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: mutedOn(context),
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(width: 10),
                                   Text(
-                                    '${formatMinor(e.amountMinor, expo)} ${e.currency}',
-                                    style: TextStyle(fontWeight: FontWeight.w800),
+                                    '${formatMinor(p.amountMinor, expo)} ${group.currency}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => _deletePayment(p),
+                                    tooltip: 'Elimina pagamento',
+                                    constraints: const BoxConstraints(
+                                      minWidth: 48,
+                                      minHeight: 48,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -618,6 +1056,7 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                         ],
                       ),
                     ),
+                  ],
                   const SizedBox(height: 12),
                   SectionCard(
                     title: 'Saldi',
