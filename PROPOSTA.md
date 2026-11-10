@@ -1,5 +1,9 @@
 # Prossimo ciclo — funzioni Android native
 
+> **Stato al 10 novembre 2026:** la modalità cassiere è implementata (gruppi
+> locali, spese modificabili, pagamenti, valuta per gruppo, riepilogo testo).
+> Restano link/PDF del cassiere, rivendicazione del gruppo e offline con account.
+
 Stato di partenza: **1.4.1** (`versionCode 17`), marchio b/l, service worker
 corretto, 118 test backend e 25 test Flutter verdi. Questa è la proposta per il
 salto da “app per gruppi” a “cassiere di viaggio”; non è ancora implementata.

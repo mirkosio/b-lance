@@ -28,6 +28,9 @@ Il nome viene da **balance**: il conto deve sempre tornare.
   centesimo.
 - **Pagamenti parziali**: "ha saldato 20 su 47,50" è uno stato reale, non una
   nota a testo.
+- **Modalità cassiere locale**: gruppi senza account e senza rete, spese
+  modificabili, pagamenti, valuta per gruppo e riepilogo condivisibile come
+  testo.
 - **Annullamento, non cancellazione**: una spesa annullata resta nello storico,
   barrata, e non entra nei saldi.
 - **Minimo numero di bonifici**: il motore calcola chi paga chi con il minor
@@ -139,7 +142,7 @@ App Links. La verifica dipende da `/.well-known/assetlinks.json` con package
 # backend (121 test)
 .venv/bin/python -m pytest tests/ -q
 
-# app (29 test)
+# app (32 test)
 cd app-android && flutter test
 ```
 
@@ -178,8 +181,9 @@ Non ancora dentro, per scelta o perché mancano credenziali esterne:
 Dettagli tecnici e decisioni: [`AUDIT.md`](AUDIT.md),
 [`OPERAZIONE.md`](OPERAZIONE.md) e
 [`design-system/b-lance/MASTER.md`](design-system/b-lance/MASTER.md).
-Prossimo ciclo (modalità cassiere, offline, riepiloghi condivisi):
-[`PROPOSTA.md`](PROPOSTA.md).
+Modalità cassiere: implementata (gruppi locali, spese modificabili, pagamenti,
+valuta e riepilogo testo). Prossimo ciclo (offline con account, link/PDF del
+cassiere, rivendicazione): [`PROPOSTA.md`](PROPOSTA.md).
 
 ## Privacy
 
