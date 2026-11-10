@@ -239,7 +239,7 @@ html.sb-open .sidebar-scrim { opacity: 1; pointer-events: auto; }
 .side-form { margin: 0; }
 
 .side-label {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -777,7 +777,7 @@ body.landing footer { margin-left: 0; }
   gap: 8px;
   margin-bottom: 14px;
   color: var(--primary-deep);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 0.14em;
   line-height: 1.2;

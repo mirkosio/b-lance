@@ -38,7 +38,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=18">
+  <link rel="stylesheet" href="/static/app.css?v=19">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
 <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -136,8 +136,10 @@
   <nav class="side-nav" aria-label="Sezioni">
     <div class="side-label">Panoramica</div>
     <a class="side-link {% if request.url.path == '/' %}active{% endif %}" href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Home</a>
-    <a class="side-link" href="/#saldi">Saldi</a>
-    <a class="side-link" href="/#gruppi">I tuoi gruppi</a>
+    {% if request.url.path == '/' %}
+    <a class="side-link" href="#saldi">Saldi</a>
+    <a class="side-link" href="#gruppi">I tuoi gruppi</a>
+    {% endif %}
 
     <div class="side-label">Strumenti</div>
     <a class="side-link cta" href="/groups/new">Nuovo gruppo</a>
