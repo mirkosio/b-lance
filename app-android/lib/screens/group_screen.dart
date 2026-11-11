@@ -383,6 +383,14 @@ class _GroupScreenState extends State<GroupScreen> {
     }
   }
 
+  String _shareExpiryLabel(String iso) {
+    final date = DateTime.tryParse(iso);
+    if (date == null) return 'Link a scadenza';
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    return 'Link valido fino al $day/$month/${date.year}';
+  }
+
   Future<void> _shareSummary(GroupDetail d) async {
     try {
       final share = await widget.api.ensureGroupShare(d.id);
@@ -413,6 +421,14 @@ class _GroupScreenState extends State<GroupScreen> {
                   'Nessuna spesa, nota o email.',
                   style: TextStyle(color: mutedOn(ctx), fontSize: 13.5),
                 ),
+                if (share.expiresAt != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 6),
+                    child: Text(
+                      _shareExpiryLabel(share.expiresAt!),
+                      style: TextStyle(color: mutedOn(ctx), fontSize: 12.5),
+                    ),
+                  ),
                 const SizedBox(height: 12),
                 SelectableText(url, style: const TextStyle(fontSize: 12.5)),
                 const SizedBox(height: 16),

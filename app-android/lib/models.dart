@@ -429,16 +429,26 @@ class GroupDetail {
 
 /// Stato del link pubblico read-only del gruppo.
 class GroupShare {
-  const GroupShare({required this.active, this.token, this.path});
+  const GroupShare({
+    required this.active,
+    this.token,
+    this.path,
+    this.expired = false,
+    this.expiresAt,
+  });
 
   final bool active;
   final String? token;
   final String? path;
+  final bool expired;
+  final String? expiresAt;
 
   factory GroupShare.fromJson(Map<String, dynamic> j) => GroupShare(
     active: j['active'] as bool? ?? false,
     token: j['token'] as String?,
     path: j['path'] as String?,
+    expired: j['expired'] as bool? ?? false,
+    expiresAt: j['expires_at'] as String?,
   );
 }
 

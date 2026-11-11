@@ -39,6 +39,7 @@ from .core.currencies import CURRENCIES, get_currency, is_valid_currency, sorted
 from .core.exchange import convert, current_rates, get_rate, rate_date, rate_source
 from .core.money import MoneyError, format_amount, parse_user_amount
 from .core.recurring import FREQUENCIES, materialize_due, next_occurrence
+from .core.share import share_expires_at, share_is_expired
 from .core.splitting import SplitMethod, compute_shares
 from .database import get_db
 from .export import group_csv
@@ -772,10 +773,14 @@ def api_get_share(
 ):
     """Stato del riepilogo pubblico del gruppo."""
     group = _group_for_user(db, group_id, user)
+    expires = share_expires_at(group.share_created_at)
+    expired = share_is_expired(group.share_created_at)
     return {
-        "active": bool(group.share_token),
+        "active": bool(group.share_token) and not expired,
+        "expired": expired,
         "token": group.share_token,
         "path": f"/s/{group.share_token}" if group.share_token else None,
+        "expires_at": expires.isoformat() if expires else None,
     }
 
 
@@ -792,14 +797,17 @@ def api_create_share(
     come un segreto e può essere revocato in qualsiasi momento.
     """
     group = _group_for_user(db, group_id, user)
-    if not group.share_token:
+    if not group.share_token or share_is_expired(group.share_created_at):
         group.share_token = secrets.token_urlsafe(24)
         group.share_created_at = utcnow()
         db.commit()
+    expires = share_expires_at(group.share_created_at)
     return {
         "active": True,
+        "expired": False,
         "token": group.share_token,
         "path": f"/s/{group.share_token}",
+        "expires_at": expires.isoformat() if expires else None,
     }
 
 

@@ -80,6 +80,53 @@ def test_share_link_is_public_and_revocable(client: TestClient) -> None:
     assert client.get(f"/s/{token}").status_code == 404
 
 
+def test_share_link_expires_after_ttl(client: TestClient) -> None:
+    """Dopo la scadenza il link e il PDF rispondono 404, senza revoca esplicita."""
+    from datetime import timedelta
+
+    from app.database import SessionLocal
+    from app.models import Group, utcnow
+
+    group_id = _group_with_two_members(client)
+    r = client.post(f"/api/groups/{group_id}/share")
+    token = r.json()["token"]
+    assert client.get(f"/s/{token}").status_code == 200
+
+    db = SessionLocal()
+    try:
+        group = db.get(Group, group_id)
+        group.share_created_at = utcnow() - timedelta(days=31)
+        db.commit()
+    finally:
+        db.close()
+
+    assert client.get(f"/s/{token}").status_code == 404
+    assert client.get(f"/s/{token}/pdf").status_code == 404
+
+    status = client.get(f"/api/groups/{group_id}/share").json()
+    assert status["expired"] is True
+    assert status["active"] is False
+
+    # Un nuovo POST rigenera token e scadenza: il vecchio resta morto.
+    renewed = client.post(f"/api/groups/{group_id}/share").json()
+    assert renewed["token"] != token
+    assert renewed["expired"] is False
+    assert client.get(f"/s/{token}").status_code == 404
+    assert client.get(f"/s/{renewed['token']}").status_code == 200
+
+
+def test_share_expiry_is_30_days(client: TestClient) -> None:
+    from datetime import datetime, timedelta, timezone
+
+    group_id = _group_with_two_members(client)
+    data = client.post(f"/api/groups/{group_id}/share").json()
+    expires = datetime.fromisoformat(data["expires_at"])
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    delta = expires - datetime.now(timezone.utc)
+    assert timedelta(days=29, hours=23) < delta <= timedelta(days=30, minutes=1)
+
+
 def test_share_requires_login(client: TestClient) -> None:
     r = client.post("/api/groups/1/share")
     assert r.status_code == 401

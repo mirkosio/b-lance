@@ -220,6 +220,9 @@
   <div class="section-title">Riepilogo condivisibile</div>
   {% if share_token %}
     <p class="muted small">Link read-only per chi non ha l'app: vede solo saldi e bonifici, non spese, note o email. Puoi revocarlo quando vuoi.</p>
+    {% if share_expires_at %}
+    <p class="muted small">Scade il {{ share_expires_at.strftime('%d/%m/%Y') }}. Dopo quella data il link non mostra più nulla.</p>
+    {% endif %}
     <div class="invite-box" style="display:flex;gap:8px;align-items:center">
       <input id="share-url" type="text" readonly value="{{ share_url }}" style="flex:1;border:0;background:transparent;font:inherit;color:inherit">
       <button class="btn sm ghost" type="button" onclick="copyShare(this)">Copia</button>

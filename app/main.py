@@ -42,6 +42,7 @@ from .core.currencies import is_valid_currency, sorted_currencies
 from .core.categories import CATEGORIES, category_label, clean_category
 from .core.money import MoneyError, format_amount, parse_user_amount
 from .core.recurring import materialize_due
+from .core.share import share_expires_at, share_is_expired
 from .core.splitting import SplitMethod, compute_shares
 from .database import get_db, init_db
 from .export import group_csv, group_pdf, summary_pdf
@@ -860,6 +861,7 @@ def group_detail(
                 if group.share_token
                 else ""
             ),
+            "share_expires_at": share_expires_at(group.share_created_at),
         },
     )
 
@@ -947,7 +949,7 @@ def share_group(
 ):
     """Attiva il link read-only del riepilogo (solo membri)."""
     group = _get_group_for_user(db, group_id, user)
-    if not group.share_token:
+    if not group.share_token or share_is_expired(group.share_created_at):
         group.share_token = secrets.token_urlsafe(24)
         group.share_created_at = utcnow()
         db.commit()
@@ -1397,6 +1399,8 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
     group = db.scalar(select(Group).where(Group.share_token == token))
     if group is None:
         raise HTTPException(status_code=404, detail="Riepilogo non trovato o revocato")
+    if share_is_expired(group.share_created_at):
+        raise HTTPException(status_code=404, detail="Riepilogo scaduto")
     materialize_due(db, group.id)
     view = compute_balances(db, group)
     base_url = str(request.base_url).rstrip("/")
@@ -1406,6 +1410,7 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
         if group.share_created_at
         else None
     )
+    expires = share_expires_at(group.share_created_at)
     
     html = f"""<!doctype html>
 <html lang="it">
@@ -1444,6 +1449,7 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
     <h1 style="font-family:Calistoga;font-size:1.8rem;margin:6px 0 10px">{escape(group.name)}</h1>
     <p class="muted">Valuta base: <b>{group.base_currency}</b> · Totale speso: <b>{view.total_expenses_display()}</b></p>
     {f'<p class="muted small">Aggiornato al {updated}</p>' if updated else ''}
+    {f'<p class="muted small">Link valido fino al {expires.strftime("%d/%m/%Y")}</p>' if expires else ''}
     <div class="row" style="margin-top:14px">
       <a class="btn sm" href="/s/{token}/pdf">Scarica PDF</a>
     </div>
@@ -1480,6 +1486,8 @@ def public_share_pdf(token: str, db: Session = Depends(get_db)):
     group = db.scalar(select(Group).where(Group.share_token == token))
     if group is None:
         raise HTTPException(status_code=404, detail="Riepilogo non trovato o revocato")
+    if share_is_expired(group.share_created_at):
+        raise HTTPException(status_code=404, detail="Riepilogo scaduto")
     materialize_due(db, group.id)
     pdf_bytes = summary_pdf(db, group)
     resp = Response(
