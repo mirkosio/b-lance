@@ -29,8 +29,8 @@ Il nome viene da **balance**: il conto deve sempre tornare.
 - **Pagamenti parziali**: "ha saldato 20 su 47,50" è uno stato reale, non una
   nota a testo.
 - **Modalità cassiere locale**: gruppi senza account e senza rete, spese
-  modificabili, pagamenti, valuta per gruppo e riepilogo condivisibile come
-  testo.
+  modificabili con divisione uguale, esatta o percentuale, pagamenti, valuta per
+  gruppo e riepilogo condivisibile come immagine o testo.
 - **Annullamento, non cancellazione**: una spesa annullata resta nello storico,
   barrata, e non entra nei saldi.
 - **Minimo numero di bonifici**: il motore calcola chi paga chi con il minor
@@ -130,7 +130,7 @@ flutter build apk --release
 ```
 
 L'APK esce in `app-android/build/app/outputs/flutter-apk/app-release.apk`.
-La versione corrente è **1.5.0** (`versionCode 18`).
+La versione corrente è **1.6.0** (`versionCode 19`).
 
 Link diretti: `https://b-lance.vercel.app/join/CODICE` aprono l'app tramite
 App Links. La verifica dipende da `/.well-known/assetlinks.json` con package
@@ -139,10 +139,10 @@ App Links. La verifica dipende da `/.well-known/assetlinks.json` con package
 ## Test
 
 ```bash
-# backend (121 test)
+# backend (123 test)
 .venv/bin/python -m pytest tests/ -q
 
-# app (32 test)
+# app (36 test)
 cd app-android && flutter test
 ```
 
@@ -181,9 +181,10 @@ Non ancora dentro, per scelta o perché mancano credenziali esterne:
 Dettagli tecnici e decisioni: [`AUDIT.md`](AUDIT.md),
 [`OPERAZIONE.md`](OPERAZIONE.md) e
 [`design-system/b-lance/MASTER.md`](design-system/b-lance/MASTER.md).
-Modalità cassiere: implementata (gruppi locali, spese modificabili, pagamenti,
-valuta e riepilogo testo). Prossimo ciclo (offline con account, link/PDF del
-cassiere, rivendicazione): [`PROPOSTA.md`](PROPOSTA.md).
+Modalità cassiere: implementata (gruppi locali, spese modificabili con split
+uguale/esatto/percentuale, pagamenti, valuta e riepilogo immagine o testo).
+Prossimo ciclo (offline con account, link/PDF del cassiere, rivendicazione):
+[`PROPOSTA.md`](PROPOSTA.md).
 
 ## Privacy
 

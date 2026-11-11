@@ -1,0 +1,93 @@
+name: Release APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag della release (es. v23)'
+        required: true
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+          cache: true
+
+      - name: Firma release
+        working-directory: app-android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -e
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "Manca il secret ANDROID_KEYSTORE_BASE64" >&2
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=$STORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=keystore.jks
+          EOF
+
+      - name: Versione
+        id: version
+        working-directory: app-android
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | cut -d' ' -f2 | cut -d+ -f1)
+          echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Versione $VERSION"
+
+      - run: flutter pub get
+        working-directory: app-android
+      - run: flutter analyze
+        working-directory: app-android
+      - run: flutter test
+        working-directory: app-android
+      - run: flutter build apk --release
+        working-directory: app-android
+
+      - name: APK e checksum
+        working-directory: app-android
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          set -e
+          cp build/app/outputs/flutter-apk/app-release.apk "../APK_${VERSION}.apk"
+          cd ..
+          sha256sum "APK_${VERSION}.apk" > "APK_${VERSION}.apk.sha256"
+          cat "APK_${VERSION}.apk.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk-release
+          path: |
+            APK_${{ steps.version.outputs.value }}.apk
+            APK_${{ steps.version.outputs.value }}.apk.sha256
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: "b-lance ${{ steps.version.outputs.value }}"
+          body_path: .github/release-notes.md
+          files: |
+            APK_${{ steps.version.outputs.value }}.apk
+            APK_${{ steps.version.outputs.value }}.apk.sha256

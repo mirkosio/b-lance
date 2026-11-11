@@ -1,7 +1,8 @@
 # Prossimo ciclo — funzioni Android native
 
-> **Stato al 10 novembre 2026:** la modalità cassiere è implementata (gruppi
-> locali, spese modificabili, pagamenti, valuta per gruppo, riepilogo testo).
+> **Stato al 11 novembre 2026:** la modalità cassiere è implementata (gruppi
+> locali, spese modificabili con split uguale/esatto/percentuale, pagamenti,
+> valuta per gruppo, riepilogo immagine o testo).
 > Restano link/PDF del cassiere, rivendicazione del gruppo e offline con account.
 
 Stato di partenza: **1.4.1** (`versionCode 17`), marchio b/l, service worker
@@ -76,7 +77,8 @@ dipende dall’API per leggere i gruppi e calcolare i saldi.
 - **Widget** “Il mio saldo” con aggiornamento periodico.
 - **Quick action** “Nuova spesa” e “Nuovo gruppo” dal launcher.
 - **Notifiche locali** per ricorrenze e “conto da chiudere” (senza Firebase).
-- **Condivisione nativa** già presente: estenderla a riepilogo immagine/PDF.
+- **Condivisione nativa** già presente: immagine del riepilogo fatta; restano
+  PDF e link del cassiere.
 - **App Links** già presenti: aggiungere fallback web se l’app non è installata.
 - **Material You** per il tema dinamico, mantenendo i token b-lance come
   fallback.
