@@ -862,6 +862,7 @@ def group_detail(
                 else ""
             ),
             "share_expires_at": share_expires_at(group.share_created_at),
+            "share_expired": share_is_expired(group.share_created_at),
         },
     )
 

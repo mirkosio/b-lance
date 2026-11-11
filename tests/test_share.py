@@ -107,6 +107,10 @@ def test_share_link_expires_after_ttl(client: TestClient) -> None:
     assert status["expired"] is True
     assert status["active"] is False
 
+    page = client.get(f"/groups/{group_id}").text
+    assert "Rigenera link" in page
+    assert "Apri riepilogo" not in page
+
     # Un nuovo POST rigenera token e scadenza: il vecchio resta morto.
     renewed = client.post(f"/api/groups/{group_id}/share").json()
     assert renewed["token"] != token
