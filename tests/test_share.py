@@ -127,6 +127,15 @@ def test_share_expiry_is_30_days(client: TestClient) -> None:
     assert timedelta(days=29, hours=23) < delta <= timedelta(days=30, minutes=1)
 
 
+def test_share_page_has_og_image(client: TestClient) -> None:
+    group_id = _group_with_two_members(client)
+    token = client.post(f"/api/groups/{group_id}/share").json()["token"]
+    page = client.get(f"/s/{token}").text
+    assert "/static/og.png" in page
+    assert 'property="og:image:width" content="1200"' in page
+    assert "summary_large_image" in page
+
+
 def test_share_requires_login(client: TestClient) -> None:
     r = client.post("/api/groups/1/share")
     assert r.status_code == 401

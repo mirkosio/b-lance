@@ -139,7 +139,7 @@ App Links. La verifica dipende da `/.well-known/assetlinks.json` con package
 ## Test
 
 ```bash
-# backend (123 test)
+# backend (124 test)
 .venv/bin/python -m pytest tests/ -q
 
 # app (36 test)
@@ -198,4 +198,7 @@ Prossimo ciclo (offline con account, link/PDF del cassiere, rivendicazione):
 
 Pagina pubblica: `https://b-lance.vercel.app/about`.
 Problemi e idee: [github.com/mirkosio/b-lance/issues](https://github.com/mirkosio/b-lance/issues).
-APK 1.5.0 rilasciato: APK_1.5.0.apk (58 MB, SHA-256: 1e661...)
+APK 1.6.0 rilasciato: APK_1.6.0.apk (58,8 MB, SHA-256: 72e13cf6896697d5397d7c28e9d53b65a31b606f248d92681176c84843a400c6).
+La 1.6.0 usa una nuova chiave di firma: prima di installarla, disinstalla la
+1.5.0. I gruppi salvati solo sul telefono nella modalità cassiere non vengono
+migrati.
