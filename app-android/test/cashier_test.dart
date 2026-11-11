@@ -1,6 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:blance/cashier/cashier_models.dart';
 import 'package:blance/cashier/cashier_service.dart';
+import 'package:blance/cashier/cashier_summary_card.dart';
 
 void main() {
   group('cashier', () {
@@ -201,6 +203,127 @@ void main() {
       expect(restored.payments.length, 1);
       expect(restored.payments[0].amountMinor, 500);
       expect(restored.payments[0].note, 'bonifico');
+    });
+
+    test('exact split uses custom amounts', () {
+      final group = CashierGroup(
+        id: 1,
+        name: 'T',
+        currency: 'EUR',
+        members: [
+          CashierPerson(id: 1, name: 'A'),
+          CashierPerson(id: 2, name: 'B'),
+        ],
+        expenses: [
+          CashierExpense(
+            id: 1,
+            description: 'X',
+            amountMinor: 1000,
+            paidById: 1,
+            memberIds: [1, 2],
+            splitMode: 'exact',
+            exactMinor: {1: 700, 2: 300},
+          ),
+        ],
+      );
+      final balances = cashierBalances(group);
+      expect(balances.firstWhere((b) => b.personId == 1).netMinor, 300);
+      expect(balances.firstWhere((b) => b.personId == 2).netMinor, -300);
+    });
+
+    test('percent split distributes the remainder', () {
+      final group = CashierGroup(
+        id: 1,
+        name: 'T',
+        currency: 'EUR',
+        members: [
+          CashierPerson(id: 1, name: 'A'),
+          CashierPerson(id: 2, name: 'B'),
+          CashierPerson(id: 3, name: 'C'),
+        ],
+        expenses: [
+          CashierExpense(
+            id: 1,
+            description: 'X',
+            amountMinor: 1000,
+            paidById: 1,
+            memberIds: [1, 2, 3],
+            splitMode: 'percent',
+            percentBp: {1: 3333, 2: 3333, 3: 3334},
+          ),
+        ],
+      );
+      final shares = cashierExpenseShares(group.expenses.first);
+      expect(shares.fold<int>(0, (s, e) => s + e.value), 1000);
+      expect(shares.firstWhere((e) => e.key == 3).value, 334);
+      final balances = cashierBalances(group);
+      expect(balances.firstWhere((b) => b.personId == 1).netMinor, 667);
+    });
+
+    test('old expenses without split fields still load as equal', () {
+      final restored = CashierExpense.fromJson({
+        'id': 1,
+        'description': 'X',
+        'amount_minor': 900,
+        'paid_by_id': 1,
+        'member_ids': [1, 2, 3],
+        'currency': 'EUR',
+      });
+      expect(restored.splitMode, 'equal');
+      expect(restored.exactMinor, isEmpty);
+      expect(cashierBalances(
+        CashierGroup(
+          id: 1,
+          name: 'T',
+          members: [
+            CashierPerson(id: 1, name: 'A'),
+            CashierPerson(id: 2, name: 'B'),
+            CashierPerson(id: 3, name: 'C'),
+          ],
+          expenses: [restored],
+        ),
+      ).length, 3);
+    });
+
+    testWidgets('summary card shows balances and transfers', (tester) async {
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      final group = CashierGroup(
+        id: 1,
+        name: 'Weekend',
+        currency: 'EUR',
+        members: [
+          CashierPerson(id: 1, name: 'A'),
+          CashierPerson(id: 2, name: 'B'),
+        ],
+        expenses: [
+          CashierExpense(
+            id: 1,
+            description: 'Cena',
+            amountMinor: 1000,
+            paidById: 1,
+            memberIds: [1, 2],
+          ),
+        ],
+      );
+      final balances = cashierBalances(group);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CashierSummaryCard(
+              group: group,
+              exponent: 2,
+              balances: balances,
+              transfers: cashierTransfers(balances),
+            ),
+          ),
+        ),
+      );
+      expect(find.text('Weekend'), findsOneWidget);
+      expect(find.text('B  →  A'), findsOneWidget);
+      expect(find.text('5,00 EUR'), findsOneWidget);
     });
   });
 }

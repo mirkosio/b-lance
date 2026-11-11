@@ -46,6 +46,14 @@ class CashierExpense {
   final List<int> memberIds;
   final String currency;
   final List<CashierExpenseItem> items; // split a livello di singolo articolo
+
+  /// 'equal' (default), 'exact' o 'percent'.
+  final String splitMode;
+  /// Solo per 'exact': quanto deve ogni persona, in unità minori.
+  final Map<int, int> exactMinor;
+  /// Solo per 'percent': quota in centesimi di punto percentuale (5000 = 50%).
+  final Map<int, int> percentBp;
+
   CashierExpense({
     required this.id,
     required this.description,
@@ -54,18 +62,39 @@ class CashierExpense {
     required this.memberIds,
     this.currency = 'EUR',
     this.items = const [],
+    this.splitMode = 'equal',
+    this.exactMinor = const {},
+    this.percentBp = const {},
   });
-  factory CashierExpense.fromJson(Map<String, dynamic> j) => CashierExpense(
-        id: j['id'] as int,
-        description: j['description'] as String,
-        amountMinor: j['amount_minor'] as int,
-        paidById: j['paid_by_id'] as int,
-        memberIds: (j['member_ids'] as List<dynamic>).map((e) => e as int).toList(),
-        currency: j['currency'] as String? ?? 'EUR',
-        items: (j['items'] as List<dynamic>? ?? const [])
-            .map((e) => CashierExpenseItem.fromJson(e as Map<String, dynamic>))
-            .toList(),
-      );
+
+  factory CashierExpense.fromJson(Map<String, dynamic> j) {
+    Map<int, int> intMap(Object? raw) {
+      if (raw is! Map) return const {};
+      return {
+        for (final entry in raw.entries)
+          if (int.tryParse('${entry.key}') != null)
+            int.parse('${entry.key}'): (entry.value as num).toInt(),
+      };
+    }
+
+    return CashierExpense(
+      id: j['id'] as int,
+      description: j['description'] as String,
+      amountMinor: j['amount_minor'] as int,
+      paidById: j['paid_by_id'] as int,
+      memberIds: (j['member_ids'] as List<dynamic>)
+          .map((e) => e as int)
+          .toList(),
+      currency: j['currency'] as String? ?? 'EUR',
+      items: (j['items'] as List<dynamic>? ?? const [])
+          .map((e) => CashierExpenseItem.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      splitMode: j['split_mode'] as String? ?? 'equal',
+      exactMinor: intMap(j['exact_minor']),
+      percentBp: intMap(j['percent_bp']),
+    );
+  }
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'description': description,
@@ -74,6 +103,13 @@ class CashierExpense {
         'member_ids': memberIds,
         'currency': currency,
         'items': items.map((i) => i.toJson()).toList(),
+        'split_mode': splitMode,
+        'exact_minor': {
+          for (final e in exactMinor.entries) '${e.key}': e.value,
+        },
+        'percent_bp': {
+          for (final e in percentBp.entries) '${e.key}': e.value,
+        },
       };
 }
 

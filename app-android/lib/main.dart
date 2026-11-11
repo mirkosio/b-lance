@@ -57,6 +57,13 @@ class BlanceApp extends StatelessWidget {
         locale: const Locale('it'),
         supportedLocales: const [Locale('it'), Locale('en')],
         localizationsDelegates: GlobalMaterialLocalizations.delegates,
+        // Rispetta il testo grande di sistema, ma entro un limite che evita
+        // di spezzare i layout a colonna (il massimo utile è ~150%).
+        builder: (context, child) => MediaQuery.withClampedTextScaling(
+          minScaleFactor: 0.8,
+          maxScaleFactor: 1.5,
+          child: child ?? const SizedBox.shrink(),
+        ),
         home: const _Gate(),
       ),
     );

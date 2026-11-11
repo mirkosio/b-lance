@@ -13,6 +13,61 @@ class CashierBalance {
   final int netMinor; // centesimi della valuta del gruppo
 }
 
+/// Divide un importo in parti uguali, distribuendo il resto al centesimo.
+List<int> cashierEqualShares(int amount, List<int> ids) {
+  if (ids.isEmpty) return const [];
+  final share = amount ~/ ids.length;
+  final rem = amount - share * ids.length;
+  return [
+    for (var i = 0; i < ids.length; i++) share + (i < rem ? 1 : 0),
+  ];
+}
+
+/// Quote di una spesa per i partecipanti, rispettando la modalità scelta.
+/// Restituisce coppie (persona, importo) e la somma è sempre l'importo speso.
+List<MapEntry<int, int>> cashierExpenseShares(CashierExpense e) {
+  final ids = e.memberIds;
+  if (ids.isEmpty) return const [];
+  if (e.splitMode == 'exact') {
+    final total = ids.fold<int>(0, (s, id) => s + (e.exactMinor[id] ?? 0));
+    if (total == e.amountMinor) {
+      return [for (final id in ids) MapEntry(id, e.exactMinor[id] ?? 0)];
+    }
+  } else if (e.splitMode == 'percent') {
+    final totalBp = ids.fold<int>(0, (s, id) => s + (e.percentBp[id] ?? 0));
+    if (totalBp > 0) {
+      final shares = <int>[];
+      final remainders = <int>[];
+      var assigned = 0;
+      for (final id in ids) {
+        final bp = e.percentBp[id] ?? 0;
+        final exact = e.amountMinor * bp;
+        final share = exact ~/ totalBp;
+        shares.add(share);
+        remainders.add(exact % totalBp);
+        assigned += share;
+      }
+      var left = e.amountMinor - assigned;
+      final order = List<int>.generate(ids.length, (i) => i)
+        ..sort((a, b) {
+          final byRem = remainders[b].compareTo(remainders[a]);
+          return byRem != 0 ? byRem : a.compareTo(b);
+        });
+      for (var i = 0; left > 0; i = (i + 1) % order.length) {
+        shares[order[i]]++;
+        left--;
+      }
+      return [
+        for (var i = 0; i < ids.length; i++) MapEntry(ids[i], shares[i]),
+      ];
+    }
+  }
+  final equal = cashierEqualShares(e.amountMinor, ids);
+  return [
+    for (var i = 0; i < ids.length; i++) MapEntry(ids[i], equal[i]),
+  ];
+}
+
 /// Saldo per ogni membro di un gruppo cassiere.
 List<CashierBalance> cashierBalances(CashierGroup group) {
   final paid = <int, int>{};
@@ -24,19 +79,14 @@ List<CashierBalance> cashierBalances(CashierGroup group) {
       for (final item in e.items) {
         final participants = item.memberIds.isEmpty ? e.memberIds : item.memberIds;
         if (participants.isEmpty) continue;
-        final share = item.amountMinor ~/ participants.length;
-        final rem = item.amountMinor - share * participants.length;
+        final shares = cashierEqualShares(item.amountMinor, participants);
         for (var i = 0; i < participants.length; i++) {
-          final extra = i < rem ? 1 : 0;
-          owed[participants[i]] = (owed[participants[i]] ?? 0) + share + extra;
+          owed[participants[i]] = (owed[participants[i]] ?? 0) + shares[i];
         }
       }
-    } else if (e.memberIds.isNotEmpty) {
-      final share = e.amountMinor ~/ e.memberIds.length;
-      final rem = e.amountMinor - share * e.memberIds.length;
-      for (var i = 0; i < e.memberIds.length; i++) {
-        final extra = i < rem ? 1 : 0;
-        owed[e.memberIds[i]] = (owed[e.memberIds[i]] ?? 0) + share + extra;
+    } else {
+      for (final s in cashierExpenseShares(e)) {
+        owed[s.key] = (owed[s.key] ?? 0) + s.value;
       }
     }
   }

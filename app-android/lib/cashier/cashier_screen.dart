@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -12,6 +14,7 @@ import '../widgets/logo_mark.dart';
 import '../widgets/skeleton.dart';
 import 'cashier_models.dart';
 import 'cashier_service.dart';
+import 'cashier_summary_card.dart';
 
 const _cashierKey = 'bl_cashier_groups_v1';
 
@@ -368,6 +371,44 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
     final selected = <int>{
       ...(existing?.memberIds ?? _group.members.map((m) => m.id)),
     };
+    var splitMode = existing?.splitMode ?? 'equal';
+    final exactCtrls = <int, TextEditingController>{
+      for (final m in _group.members)
+        if (existing?.exactMinor.containsKey(m.id) ?? false)
+          m.id: TextEditingController(
+            text: cashierAmountInput(existing!.exactMinor[m.id]!, expo),
+          ),
+    };
+    final pctCtrls = <int, TextEditingController>{
+      for (final m in _group.members)
+        if (existing?.percentBp.containsKey(m.id) ?? false)
+          m.id: TextEditingController(
+            text: cashierAmountInput(existing!.percentBp[m.id]!, 2),
+          ),
+    };
+    TextEditingController exactCtrl(int id) =>
+        exactCtrls.putIfAbsent(id, TextEditingController.new);
+    TextEditingController pctCtrl(int id) =>
+        pctCtrls.putIfAbsent(id, TextEditingController.new);
+
+    void prefill(String mode) {
+      if (mode == 'equal') return;
+      final minor = parseCashierAmount(amount.text, expo);
+      final ids = selected.toList();
+      if (ids.isEmpty) return;
+      if (mode == 'exact') {
+        if (minor == null || minor <= 0) return;
+        final shares = cashierEqualShares(minor, ids);
+        for (var i = 0; i < ids.length; i++) {
+          exactCtrl(ids[i]).text = cashierAmountInput(shares[i], expo);
+        }
+      } else {
+        final parts = cashierEqualShares(10000, ids);
+        for (var i = 0; i < ids.length; i++) {
+          pctCtrl(ids[i]).text = cashierAmountInput(parts[i], 2);
+        }
+      }
+    }
 
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -464,6 +505,135 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                           ),
                       ],
                     ),
+                    if ((existing?.items.isEmpty ?? true)) ...[
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Come dividere',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final mode in const [
+                            ('equal', 'Parti uguali'),
+                            ('exact', 'Importi esatti'),
+                            ('percent', 'Percentuale'),
+                          ])
+                            ChoiceChip(
+                              label: Text(mode.$2),
+                              selected: splitMode == mode.$1,
+                              onSelected: (_) {
+                                setModal(() {
+                                  splitMode = mode.$1;
+                                  prefill(splitMode);
+                                });
+                              },
+                            ),
+                        ],
+                      ),
+                      if (splitMode != 'equal') ...[
+                        const SizedBox(height: 10),
+                        for (final m in _group.members)
+                          if (selected.contains(m.id))
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 3),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      m.name,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 132,
+                                    child: TextField(
+                                      controller: splitMode == 'exact'
+                                          ? exactCtrl(m.id)
+                                          : pctCtrl(m.id),
+                                      keyboardType:
+                                          const TextInputType.numberWithOptions(
+                                            decimal: true,
+                                          ),
+                                      textAlign: TextAlign.right,
+                                      decoration: InputDecoration(
+                                        isDense: true,
+                                        hintText: '0,00',
+                                        suffixText: splitMode == 'exact'
+                                            ? _group.currency
+                                            : '%',
+                                      ),
+                                      onChanged: (_) => setModal(() {}),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                        const SizedBox(height: 6),
+                        Builder(
+                          builder: (_) {
+                            final minor = parseCashierAmount(
+                              amount.text,
+                              expo,
+                            );
+                            if (splitMode == 'exact') {
+                              final sum = selected.fold<int>(
+                                0,
+                                (s, id) =>
+                                    s +
+                                    (parseCashierAmount(
+                                          exactCtrl(id).text,
+                                          expo,
+                                        ) ??
+                                        0),
+                              );
+                              final diff = (minor ?? 0) - sum;
+                              return Text(
+                                diff == 0
+                                    ? 'Somma corretta.'
+                                    : diff > 0
+                                    ? 'Mancano ${formatCashier(diff, expo)} ${_group.currency}'
+                                    : 'Superato di ${formatCashier(-diff, expo)} ${_group.currency}',
+                                style: TextStyle(
+                                  fontSize: 12.5,
+                                  color: diff == 0
+                                      ? posOn(ctx)
+                                      : mutedOn(ctx),
+                                ),
+                              );
+                            }
+                            final sum = selected.fold<int>(
+                              0,
+                              (s, id) =>
+                                  s +
+                                  (parseCashierAmount(
+                                        pctCtrl(id).text,
+                                        2,
+                                      ) ??
+                                      0),
+                            );
+                            final pct = sum / 100;
+                            final diff = 10000 - sum;
+                            return Text(
+                              diff == 0
+                                  ? 'Totale 100%.'
+                                  : 'Totale ${pct.toStringAsFixed(2).replaceAll('.', ',')}%',
+                              style: TextStyle(
+                                fontSize: 12.5,
+                                color: diff == 0 ? posOn(ctx) : mutedOn(ctx),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ],
                     const SizedBox(height: 18),
                     Row(
                       children: [
@@ -492,17 +662,55 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                                 amount.text,
                                 expo,
                               );
+                              String? error;
                               if (d.isEmpty ||
                                   minor == null ||
                                   minor <= 0 ||
                                   paidById == 0 ||
                                   selected.isEmpty) {
+                                error =
+                                    'Compila descrizione, importo, pagante e partecipanti';
+                              } else if ((existing?.items.isEmpty ?? true) &&
+                                  splitMode == 'exact') {
+                                final parsed = <int, int?>{};
+                                for (final id in selected) {
+                                  parsed[id] = parseCashierAmount(
+                                    exactCtrl(id).text,
+                                    expo,
+                                  );
+                                }
+                                final sum = parsed.values.fold<int>(
+                                  0,
+                                  (s, v) => s + (v ?? 0),
+                                );
+                                if (parsed.values.any((v) => v == null) ||
+                                    sum != minor) {
+                                  error =
+                                      'Gli importi esatti devono dare ${formatCashier(minor, expo)} ${_group.currency}';
+                                }
+                              } else if ((existing?.items.isEmpty ?? true) &&
+                                  splitMode == 'percent') {
+                                final parsed = <int, int?>{};
+                                for (final id in selected) {
+                                  parsed[id] = parseCashierAmount(
+                                    pctCtrl(id).text,
+                                    2,
+                                  );
+                                }
+                                final sum = parsed.values.fold<int>(
+                                  0,
+                                  (s, v) => s + (v ?? 0),
+                                );
+                                if (parsed.values.any(
+                                      (v) => v == null || v < 0 || v > 10000,
+                                    ) ||
+                                    sum != 10000) {
+                                  error = 'Le percentuali devono dare 100%';
+                                }
+                              }
+                              if (error != null) {
                                 ScaffoldMessenger.of(ctx).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      'Compila descrizione, importo, pagante e partecipanti',
-                                    ),
-                                  ),
+                                  SnackBar(content: Text(error)),
                                 );
                                 return;
                               }
@@ -554,6 +762,19 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
 
     final minor = parseCashierAmount(amount.text, expo);
     if (minor == null || minor <= 0) return;
+    final hasItems = existing?.items.isNotEmpty ?? false;
+    final exact = <int, int>{};
+    final pct = <int, int>{};
+    if (!hasItems && splitMode == 'exact') {
+      for (final id in selected) {
+        exact[id] = parseCashierAmount(exactCtrl(id).text, expo) ?? 0;
+      }
+    }
+    if (!hasItems && splitMode == 'percent') {
+      for (final id in selected) {
+        pct[id] = parseCashierAmount(pctCtrl(id).text, 2) ?? 0;
+      }
+    }
     setState(() {
       final updated = CashierExpense(
         id: existing?.id ??
@@ -564,6 +785,9 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
         memberIds: selected.toList(),
         currency: _group.currency,
         items: existing?.items ?? const [],
+        splitMode: hasItems ? (existing?.splitMode ?? 'equal') : splitMode,
+        exactMinor: exact,
+        percentBp: pct,
       );
       if (existing == null) {
         _group.expenses.add(updated);
@@ -852,8 +1076,153 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
   }
 
   Future<void> _share() async {
-    final text = cashierSummaryText(_group, exponent: _exponentOf(_group.currency));
-    await SharePlus.instance.share(ShareParams(text: text, subject: 'b-lance · ${_group.name}'));
+    final expo = _exponentOf(_group.currency);
+    final text = cashierSummaryText(_group, exponent: expo);
+    final boundaryKey = GlobalKey();
+    var busy = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModal) {
+            Future<void> shareImage() async {
+              if (busy) return;
+              setModal(() => busy = true);
+              try {
+                final boundary =
+                    boundaryKey.currentContext?.findRenderObject()
+                        as RenderRepaintBoundary?;
+                if (boundary == null) return;
+                final image = await boundary.toImage(pixelRatio: 2.5);
+                final data = await image.toByteData(
+                  format: ui.ImageByteFormat.png,
+                );
+                image.dispose();
+                if (data == null) return;
+                final safeName = _group.name
+                    .replaceAll(RegExp(r'[^A-Za-z0-9_-]+'), '-')
+                    .replaceAll(RegExp(r'-+'), '-');
+                await SharePlus.instance.share(
+                  ShareParams(
+                    files: [
+                      XFile.fromData(
+                        data.buffer.asUint8List(),
+                        mimeType: 'image/png',
+                        name: 'b-lance-$safeName.png',
+                      ),
+                    ],
+                    text: 'Riepilogo di ${_group.name}',
+                    subject: 'b-lance · ${_group.name}',
+                  ),
+                );
+              } finally {
+                if (ctx.mounted) setModal(() => busy = false);
+              }
+            }
+
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  16,
+                  8,
+                  16,
+                  MediaQuery.of(ctx).viewInsets.bottom + 16,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'Condividi riepilogo',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Chiudi',
+                          onPressed: () => Navigator.pop(ctx),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    SizedBox(
+                      height: 330,
+                      child: ClipRect(
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: RepaintBoundary(
+                            key: boundaryKey,
+                            child: CashierSummaryCard(
+                              group: _group,
+                              exponent: expo,
+                              balances: _balances,
+                              transfers: _transfers,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: busy ? null : shareImage,
+                            icon: busy
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.image_outlined),
+                            label: const Text('Immagine'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: FilledButton.icon(
+                            onPressed: busy
+                                ? null
+                                : () => SharePlus.instance.share(
+                                    ShareParams(
+                                      text: text,
+                                      subject: 'b-lance · ${_group.name}',
+                                    ),
+                                  ),
+                            icon: const Icon(Icons.notes_outlined),
+                            label: const Text('Testo'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      "L'immagine viene creata sul telefono: nessun dato caricato.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: mutedOn(ctx),
+                        fontSize: 12.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _persist() async {
