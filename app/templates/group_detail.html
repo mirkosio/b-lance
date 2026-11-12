@@ -114,11 +114,17 @@
           <span class="arrow">→</span>
           <span>{{ view.member_name(t.payee_id) }}</span>
           <span style="margin-left:auto;font-weight:700">{{ t.amount_minor | money(group.base_currency) }}</span>
-          <button type="button" class="btn sm ghost transfer-quick"
-                  data-pay-from="{{ t.payer_id }}" data-pay-to="{{ t.payee_id }}"
-                  data-pay-amount="{{ t.amount_minor | money_input(group.base_currency) }}">
-            Registra
-          </button>
+          <div class="transfer-actions">
+            <button type="button" class="btn sm ghost transfer-quick"
+                    data-pay-from="{{ t.payer_id }}" data-pay-to="{{ t.payee_id }}"
+                    data-pay-amount="{{ t.amount_minor | money_input(group.base_currency) }}">
+              Registra
+            </button>
+            <button type="button" class="btn sm ghost transfer-copy"
+                    data-copy="b-lance · {{ group.name }}: {{ view.member_name(t.payer_id) }} versa {{ t.amount_minor | money(group.base_currency) }} a {{ view.member_name(t.payee_id) }}">
+              Copia
+            </button>
+          </div>
         </div>
       {% endfor %}
       <p class="muted small" style="margin-top:10px">
@@ -592,6 +598,39 @@ document.querySelectorAll('.transfer-quick').forEach(function (button) {
     document.getElementById('pay-note').value = '';
     payForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
     document.getElementById('pay-amount').focus({ preventScroll: true });
+  });
+});
+
+// --- Copia i dettagli del bonifico: nessun IBAN, solo chi paga chi e quanto ---
+document.querySelectorAll('.transfer-copy').forEach(function (button) {
+  button.addEventListener('click', function () {
+    var text = button.dataset.copy || '';
+    function done() {
+      if (window.blToast) blToast('Dettagli del bonifico copiati', 'ok');
+      button.textContent = 'Copiato';
+      setTimeout(function () { button.textContent = 'Copia'; }, 2000);
+    }
+    function fallback() {
+      var area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      try {
+        document.execCommand('copy');
+        done();
+      } catch (e) {
+        if (window.blToast) blToast('Copia non riuscita: seleziona il testo a mano', 'err');
+      }
+      document.body.removeChild(area);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else {
+      fallback();
+    }
   });
 });
 payForm.addEventListener('submit', function (e) {

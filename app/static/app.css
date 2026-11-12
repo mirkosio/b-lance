@@ -1126,6 +1126,7 @@ body.landing footer { margin-left: 0; }
 
 .transfer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 10px;
   padding: 11px 12px;
@@ -1137,6 +1138,10 @@ body.landing footer { margin-left: 0; }
   font-size: 0.92rem;
 }
 .transfer .arrow { color: var(--primary); font-weight: 800; }
+.transfer-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+@media (max-width: 460px) {
+  .transfer-actions { width: 100%; justify-content: flex-end; }
+}
 
 .expense-item {
   display: flex;

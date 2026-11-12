@@ -41,7 +41,12 @@ from .auth import (
 )
 from .core.currencies import is_valid_currency, sorted_currencies
 from .core.categories import CATEGORIES, category_label, clean_category
-from .core.money import MoneyError, format_amount, parse_user_amount
+from .core.money import (
+    MoneyError,
+    format_amount,
+    format_amount_plain,
+    parse_user_amount,
+)
 from .core.recurring import materialize_due
 from .core.share import share_expires_at, share_is_expired
 from .core.splitting import SplitMethod, compute_shares
@@ -289,7 +294,7 @@ async def assetlinks():
 def _jinja_filters() -> None:
     # Formattazione generica (default EUR).
     templates.env.filters["money"] = lambda minor, code="EUR": format_amount(int(minor), code)
-    templates.env.filters["money_input"] = lambda minor, code="EUR": format_amount(int(minor), code, symbol=False)
+    templates.env.filters["money_input"] = lambda minor, code="EUR": format_amount_plain(int(minor), code)
     templates.env.filters["eur"] = lambda minor: format_amount(int(minor), "EUR")
     templates.env.filters["euro_major"] = lambda minor: f"{int(minor) / 100:.2f}"
     # Valute senza tasso automatico: il form deve chiedere il tasso a mano.
@@ -785,6 +790,16 @@ _INFO_PAGES = {
                 "body": (
                     "Sì, dal browser. L'app nativa è per Android; il sito ha le "
                     "stesse funzioni principali e si adatta al telefono."
+                ),
+            },
+            {
+                "title": "Posso installare il sito sul telefono?",
+                "body": (
+                    "Sì, senza store. Su Android apri il menu di Chrome e scegli "
+                    "\"Installa app\". Su iPhone apri il sito in Safari, tocca "
+                    "Condividi e poi \"Aggiungi alla schermata Home\". Le pagine "
+                    "già visitate restano leggibili offline; per saldi e "
+                    "modifiche serve la connessione."
                 ),
             },
             {

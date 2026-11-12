@@ -19,8 +19,9 @@ e saldi nello stesso posto. Il nome viene da *balance*: il conto deve tornare.
 
 - Gruppi con ruoli e permessi; spese e pagamenti parziali, modificabili o
   annullabili mantenendo lo storico.
-- Split uguale, esatto o percentuale; importi in unità minori intere e saldi
-  regolati con il minor numero di trasferimenti.
+- Split uguale, esatto o percentuale; importi in unità minori intere,
+  formattati in stile italiano (`1.234,56 €`) e saldi regolati con il minor
+  numero di trasferimenti.
 - Modalità Cassiere locale senza account o rete: valuta per gruppo, split per
   articolo, riepilogo come immagine, testo o PDF creati sul telefono.
 - 125 valute, cambi BCE aggiornati ogni giorno e tasso storico conservato sulla
@@ -40,6 +41,8 @@ e saldi nello stesso posto. Il nome viene da *balance*: il conto deve tornare.
 - Demo pubblica su `/demo`: un conto di esempio con tre persone, spese
   modificabili e saldi calcolati nel browser. Nessun dato viene inviato o
   salvato; la CTA finale porta alla registrazione.
+- PWA installabile senza store: manifest, service worker e icone (180×180 per
+  iOS). Le istruzioni per Android e iPhone sono nelle FAQ.
 
 ## Stack
 
@@ -110,10 +113,10 @@ release.
 
 Al riferimento v23 risultavano verdi 124 test backend, 36 test Flutter e
 `flutter analyze`. Con pagine informative, demo e scadenza dei link la suite
-backend è a **137 test**. Per eseguirli:
+backend è a **140 test**. Per eseguirli:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q     # 137 test
+.venv/bin/python -m pytest tests/ -q     # 140 test
 cd app-android && flutter test           # 36 test
 ```
 

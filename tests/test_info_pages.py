@@ -30,7 +30,7 @@ def test_info_pages_are_public_and_have_metadata(client: TestClient, path: str, 
     assert r.status_code == 200, r.text
     assert title in r.text
     assert '<meta name="description"' in r.text
-    assert 'app.css?v=21' in r.text
+    assert 'app.css?v=22' in r.text
     assert 'info-hero' in r.text
 
 
@@ -122,3 +122,71 @@ def test_authenticated_demo_offers_group_cta(client: TestClient) -> None:
     assert r.status_code == 200
     assert 'href="/groups/new"' in r.text
     assert "Torna ai tuoi gruppi" in r.text
+
+
+def test_pwa_metadata_is_ios_ready(client: TestClient) -> None:
+    r = client.get("/")
+    assert r.status_code == 200
+    assert "apple-touch-icon-180.png" in r.text
+    assert 'apple-mobile-web-app-status-bar-style" content="default"' in r.text
+    assert 'media="(prefers-color-scheme: dark)"' in r.text
+    manifest = client.get("/static/manifest.webmanifest")
+    assert manifest.status_code == 200
+    assert manifest.json()["display"] == "standalone"
+
+
+def test_faq_explains_install_without_store(client: TestClient) -> None:
+    r = client.get("/faq")
+    assert r.status_code == 200
+    assert "Posso installare il sito sul telefono?" in r.text
+    assert "Aggiungi alla schermata Home" in r.text
+
+
+def test_transfer_offers_copy_without_bank_details(client: TestClient) -> None:
+    """Chi paga deve poter copiare i dettagli, senza esporre IBAN o email."""
+    import re
+
+    r = client.post(
+        "/register",
+        data={"name": "Marco", "email": "marco@example.com", "password": "secret123"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    r = client.post(
+        "/groups/new",
+        data={"name": "Weekend", "base_currency": "EUR"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303, r.text
+    group_id = int(r.headers["location"].split("/groups/")[1].split("?")[0].rstrip("/"))
+
+    code = re.search(r"/join/([A-Z0-9]+)", client.get(f"/groups/{group_id}").text).group(1)
+    client.post("/logout")
+    client.post(
+        "/register",
+        data={"name": "Sara", "email": "sara@example.com", "password": "secret123"},
+        follow_redirects=False,
+    )
+    client.get(f"/join/{code}")
+
+    # Sara paga 30: Marco e Sara devono 15 a testa, quindi nasce un bonifico.
+    r = client.post(
+        f"/groups/{group_id}/expenses",
+        data={
+            "description": "Cena",
+            "amount": "30",
+            "paid_by": "2",
+            "split_method": "even",
+            "members": ["1", "2"],
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 303, r.text
+
+    page = client.get(f"/groups/{group_id}").text
+    assert "transfer-copy" in page
+    assert "Dettagli del bonifico copiati" in page
+    copy_text = page.split('data-copy="')[1].split('"')[0]
+    assert "versa" in copy_text
+    assert "IBAN" not in copy_text
+    assert "@" not in copy_text

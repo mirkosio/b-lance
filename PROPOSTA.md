@@ -57,8 +57,9 @@ correggibili, link Cassiere revocabile e trasferimento esplicito.
 
 ## P1 — Migrazione e pagamenti
 
-- **PWA iOS:** completare e verificare l’installazione da home screen, istruzioni,
-  icone e comportamento offline. Manifest e service worker esistono già; push
+- **PWA iOS:** manifest, service worker, icone (inclusa 180×180), status bar
+  iOS e istruzioni di installazione in FAQ sono pronti. Resta da provare
+  l’installazione da Safari su un iPhone reale e il comportamento offline; push
   dipende dal supporto iOS e dall’installazione PWA.
 - **Pagamenti esterni:** valutare PayPal, Satispay, Revolut e testo SEPA con
   importo precompilato. Solo link/copia verso wallet esterni: b-lance non

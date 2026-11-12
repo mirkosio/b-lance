@@ -57,10 +57,10 @@ def test_sorted_priorities_first():
 
 
 def test_format_amount_by_currency():
-    assert format_amount(1250, "EUR") == "€12.50"
-    assert format_amount(1250, "JPY") == "¥1250"
-    assert format_amount(1250, "KWD") == "KD1.250"
-    assert format_amount(9999, "USD") == "$99.99"
+    assert format_amount(1250, "EUR") == "12,50 €"
+    assert format_amount(1250, "JPY") == "1.250 ¥"
+    assert format_amount(1250, "KWD") == "1,250 KD"
+    assert format_amount(9999, "USD") == "99,99 $"
 
 
 def test_parse_by_exponent():
@@ -188,9 +188,9 @@ def test_foreign_currency_expense_converts(client):
 
     page = client.get(f"/groups/{gid}").text
     # Marco +13.70 circa, Luca -13.70
-    assert "+€13.70" in page or "+€13.7" in page
+    assert "+13,70 €" in page
     # la spesa si mostra in THB
-    assert "฿1000.00" in page or "฿1000" in page
+    assert "1.000,00 ฿" in page
 
 
 def test_expense_paid_by_non_member_rejected(client):
@@ -240,8 +240,8 @@ def test_exact_split_e2e(client):
     assert r.status_code == 303, r.text
     page = client.get(f"/groups/{gid}").text
     # Marco pagato 30, doveva 20 -> +10 ; Luca doveva 10 -> -10
-    assert "+€10.00" in page
-    assert "-€10.00" in page
+    assert "+10,00 €" in page
+    assert "-10,00 €" in page
 
 
 def test_exact_split_wrong_sum_rejected(client):
@@ -285,8 +285,8 @@ def test_percent_split_e2e(client):
     )
     assert r.status_code == 303, r.text
     page = client.get(f"/groups/{gid}").text
-    assert "+€15.00" in page
-    assert "-€15.00" in page
+    assert "+15,00 €" in page
+    assert "-15,00 €" in page
 
 
 def test_percent_wrong_sum_rejected(client):

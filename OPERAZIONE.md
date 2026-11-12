@@ -100,7 +100,7 @@ mano: cambia la geometria e rigenera.
 ## Test
 
 ```bash
-.venv/bin/python -m pytest tests/ -q           # suite locale (137 test)
+.venv/bin/python -m pytest tests/ -q           # suite locale (140 test)
 .venv/bin/python /tmp/opencode/e2e_phase1.py   # E2E produzione (Fase 1 + movimenti)
 cd app-android && flutter test                 # 36 test Dart (modelli, formati, Fase 3)
 ```
@@ -142,4 +142,4 @@ cd app-android && flutter test                 # 36 test Dart (modelli, formati,
 - Sito: https://b-lance.vercel.app
 - Release APK: https://github.com/mirkosio/b-lance/releases
 - Dashboard: https://vercel.com/mirkosios-projects/b-lance
-137 backend + 36 flutter = 173 totali
+140 backend + 36 flutter = 176 totali

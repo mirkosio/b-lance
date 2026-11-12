@@ -119,8 +119,8 @@ def test_even_split_balances(client: TestClient) -> None:
 
     page = client.get(f"/groups/{group_id}").text
     # Marco +20, Luca -10, Anna -10.
-    assert "+€20.00" in page
-    assert "-€10.00" in page
+    assert "+20,00 €" in page
+    assert "-10,00 €" in page
 
 
 def test_partial_payment_lowers_balance(client: TestClient) -> None:
@@ -160,8 +160,8 @@ def test_partial_payment_lowers_balance(client: TestClient) -> None:
 
     page = client.get(f"/groups/{group_id}").text
     # Luca ora deve 6, Marco +16.
-    assert "-€6.00" in page
-    assert "+€16.00" in page
+    assert "-6,00 €" in page
+    assert "+16,00 €" in page
 
 
 def test_void_expense_reverses_balance(client: TestClient) -> None:
@@ -187,7 +187,7 @@ def test_void_expense_reverses_balance(client: TestClient) -> None:
         },
     )
     page = client.get(f"/groups/{group_id}").text
-    assert "+€10.00" in page
+    assert "+10,00 €" in page
 
     # Trovo l'id della spesa e la annullo.
     import re as _re
@@ -198,7 +198,7 @@ def test_void_expense_reverses_balance(client: TestClient) -> None:
 
     page = client.get(f"/groups/{group_id}").text
     # Ora bilanci in equilibrio.
-    assert "+€10.00" not in page
+    assert "+10,00 €" not in page
     assert "Nessun debito" in page
 
 
@@ -227,7 +227,7 @@ def test_uneven_split_exact(client: TestClient) -> None:
     )
     assert r.status_code == 303, r.text
     page = client.get(f"/groups/{group_id}").text
-    assert "+€25.00" in page
+    assert "+25,00 €" in page
 
 
 def test_health(client: TestClient) -> None:
@@ -303,8 +303,8 @@ def test_void_payment_keeps_history_and_reverses_balance(client: TestClient) -> 
     assert "annullato" in page
     assert "is-voided" in page
     # Ma il suo effetto sui saldi è sparito.
-    assert "+€10.00" in page
-    assert "-€10.00" in page
+    assert "+10,00 €" in page
+    assert "-10,00 €" in page
 
 
 def test_group_filters_category_member_and_period(client: TestClient) -> None:

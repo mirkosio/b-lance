@@ -9,6 +9,7 @@ Il segno (chi deve a chi) è gestito altrove, qui parliamo solo di valore.
 
 from __future__ import annotations
 
+import re
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from typing import Union
 
@@ -66,20 +67,42 @@ def format_eur(minor: int, symbol: bool = True) -> int | str:
 
 
 def format_amount(minor: int, code: str = "EUR", symbol: bool = True) -> str:
-    """Formatta le unità minori secondo la valuta data.
+    """Formatta le unità minori in stile italiano, con simbolo dopo.
 
-    Risolve exponent e simbolo dal codice valuta.
-    1250 EUR -> "€12.50" ; 1250 JPY -> "¥1250" ; 1250 KWD -> "KD1.250".
+    1250 EUR -> "12,50 €" ; 1250 JPY -> "1.250 ¥" ; 1250 KWD -> "1,250 KD".
+    """
+    from .currencies import get_currency
+
+    cur = get_currency(code)
+    text = _italian_digits(to_major(minor, cur.exponent), cur.exponent)
+    if symbol:
+        return f"{text} {cur.symbol}"
+    return text
+
+
+def format_amount_plain(minor: int, code: str = "EUR") -> str:
+    """Solo numero, senza simbolo né separatore delle migliaia: "1234,56".
+
+    Serve a CSV e campi di input: i fogli di calcolo italiani leggono la
+    virgola e il parser accetta di nuovo il valore senza ambiguità.
     """
     from .currencies import get_currency
 
     cur = get_currency(code)
     value = to_major(minor, cur.exponent)
-    # Zero decimali: niente parte decimale.
     text = f"{value:.{cur.exponent}f}" if cur.exponent > 0 else f"{value:.0f}"
-    if symbol:
-        return f"{cur.symbol}{text}"
-    return text
+    return text.replace(".", ",")
+
+
+def _italian_digits(value: Decimal, exponent: int) -> str:
+    """1.234,56 (punto per le migliaia, virgola per i decimali)."""
+    text = f"{value:.{exponent}f}" if exponent > 0 else f"{value:.0f}"
+    if exponent > 0:
+        int_part, dec_part = text.split(".")
+    else:
+        int_part, dec_part = text, ""
+    int_part = f"{int(int_part):,}".replace(",", ".")
+    return f"{int_part},{dec_part}" if exponent > 0 else int_part
 
 
 def _check_minor(minor: int) -> None:
@@ -99,15 +122,27 @@ def parse_user_amount(raw: str, exponent: int = 2) -> int:
     if raw is None:
         raise MoneyError("importo mancante")
     cleaned = str(raw).strip()
-    # Tolgo simboli di valuta comuni e spazi.
-    for sym in ("€", "$", "¥", "£", "₹", "฿", "₩", "₫", "₱", "R$", "S$", "HK$", "Cr", " "):
-        cleaned = cleaned.replace(sym, "")
+    # Un importo negativo qui non ha senso: non lo trasformo in positivo.
+    if cleaned.startswith(("-", "−")):
+        raise MoneyError(f"importo negativo non ammesso qui: {raw!r}")
+    # Tolgo simboli, codici valuta, spazi e lettere: resta il numero.
+    cleaned = re.sub(r"[^0-9.,]", "", cleaned)
     if not cleaned:
         raise MoneyError("importo vuoto")
-    # Se ci sono più di un separatore decimale, è un casino: rifiuta.
-    if cleaned.count(",") > 1 or cleaned.count(".") > 1:
-        raise MoneyError(f"formato importo ambiguo: {raw!r}")
+    # Separatori: virgola decimale italiana, punto per le migliaia.
+    if "," in cleaned:
+        if cleaned.count(",") > 1:
+            raise MoneyError(f"formato importo ambiguo: {raw!r}")
+        cleaned = cleaned.replace(".", "").replace(",", ".")
+    elif cleaned.count(".") > 1 or (exponent == 0 and _looks_like_thousands(cleaned)):
+        cleaned = cleaned.replace(".", "")
     return to_minor(cleaned, exponent=exponent)
+
+
+def _looks_like_thousands(text: str) -> bool:
+    """True se i punti separano gruppi di tre cifre: "1.250", "12.345"."""
+    parts = text.split(".")
+    return len(parts) > 1 and all(len(p) == 3 for p in parts[1:])
 
 
 def convert_minor(amount_minor: int, rate: Decimal) -> int:

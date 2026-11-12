@@ -51,7 +51,7 @@ def test_minor_roundtrip(cents: int) -> None:
 @given(st.integers(min_value=0, max_value=10**7))
 def test_parse_and_format_consistent(cents: int) -> None:
     """Il formato con € si riparsing uguale."""
-    text = format_eur(cents)  # "€12.34"
+    text = format_eur(cents)  # "12,34 €"
     assert parse_user_amount(text) == cents
 
 

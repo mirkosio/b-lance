@@ -16,16 +16,16 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
 from .core.categories import category_label
-from .core.money import format_amount
+from .core.money import format_amount, format_amount_plain
 from .models import Expense, Group, Payment, User
 from .services import compute_balances
 
 
 def _num(minor: int, code: str) -> str:
-    """Importo con segno, in formato italiano (i saldi possono essere negativi)."""
+    """Importo con segno, per CSV: "1234,56" (virgola, niente migliaia)."""
     value = int(minor)
     sign = "-" if value < 0 else ""
-    return sign + format_amount(abs(value), code, symbol=False).replace(".", ",")
+    return sign + format_amount_plain(abs(value), code)
 
 
 def _money(minor: int, code: str) -> str:
