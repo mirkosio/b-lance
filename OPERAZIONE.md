@@ -42,34 +42,37 @@ L'UA `Dart/...` = app Android. `Python-urllib` = script di test.
 
 ## Build e rilascio APK
 
-Ambiente (una tantum):
+La release passa da GitHub Actions (`.github/workflows/release-apk.yml`), così
+non serve l'SDK Android sul computer locale:
 
 ```bash
-export ANDROID_HOME=/home/mirkosio/android-sdk
-export ANDROID_SDK_ROOT=/home/mirkosio/android-sdk
-export JAVA_HOME=/home/mirkosio/.bubblewrap/jdk/jdk-17.0.11+9   # il system è JRE-only
+# opzione A: tag (il workflow parte da solo)
+git tag v23 && git push origin v23
+
+# opzione B: manuale
+gh workflow run release-apk.yml -f tag=v23
 ```
 
-Build e rilascio:
+Il workflow esegue analyze + test, firma l'APK, crea la release GitHub con
+`APK_<versione>.apk` e il relativo `.sha256`.
+
+Firma: il keystore **non è nel repository**. È conservato come secret
+(`ANDROID_KEYSTORE_BASE64`, `ANDROID_STORE_PASSWORD`, `ANDROID_KEY_PASSWORD`,
+`ANDROID_KEY_ALIAS`) e in backup locale fuori dal repo:
+
+- `~/.b-lance/b-lance-release.jks` (alias `blance`)
+- `~/.b-lance/keystore.properties` (permessi 600)
+
+Senza quel keystore non si possono pubblicare aggiornamenti installabili sopra
+la 1.6.0: va conservato con un backup sicuro. La 1.5.0 e precedenti usavano una
+chiave diversa, quindi richiedono disinstallazione e reinstallazione.
+
+Build locale (solo se hai SDK e JDK 17):
 
 ```bash
 cd app-android
-# 1) bump di version: in pubspec.yaml (version: X.Y.Z+N, N = versionCode Android)
-#    e in lib/ui.dart (kAppVersion, mostrata nel Profilo)
-# 2) build (API_URL compilato dentro):
-/home/mirkosio/flutter/bin/flutter build apk --release \
-  --dart-define=API_URL=https://b-lance.vercel.app
-# 3) verifica
-/home/mirkosio/android-sdk/build-tools/36.1.0/apksigner verify \
-  build/app/outputs/flutter-apk/app-release.apk
-# 4) rilascio GitHub
-gh release delete vN --cleanup-tag -y
-gh release create vN+1 build/app/outputs/flutter-apk/app-release.apk \
-  --title "App Android nativa X.Y.Z" --notes "..."
+flutter build apk --release   # API_URL predefinito: https://b-lance.vercel.app
 ```
-
-Firma: keystore locale `app-android/android/app/upload-keystore.jks`
-(alias `android`), presente solo in locale (gitignored).
 
 Mai lanciare DUE build contemporaneamente: si corrompe il NDK (successo).
 
@@ -97,7 +100,7 @@ mano: cambia la geometria e rigenera.
 ## Test
 
 ```bash
-.venv/bin/python -m pytest tests/ -q           # suite locale (123 test)
+.venv/bin/python -m pytest tests/ -q           # suite locale (137 test)
 .venv/bin/python /tmp/opencode/e2e_phase1.py   # E2E produzione (Fase 1 + movimenti)
 cd app-android && flutter test                 # 36 test Dart (modelli, formati, Fase 3)
 ```
@@ -139,4 +142,4 @@ cd app-android && flutter test                 # 36 test Dart (modelli, formati,
 - Sito: https://b-lance.vercel.app
 - Release APK: https://github.com/mirkosio/b-lance/releases
 - Dashboard: https://vercel.com/mirkosios-projects/b-lance
-123 backend + 36 flutter = 159 totali
+137 backend + 36 flutter = 173 totali

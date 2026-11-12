@@ -109,16 +109,17 @@ release.
 ## Verifiche e deploy
 
 Al riferimento v23 risultavano verdi 124 test backend, 36 test Flutter e
-`flutter analyze`. Per eseguirli:
+`flutter analyze`. Con pagine informative, demo e scadenza dei link la suite
+backend è a **137 test**. Per eseguirli:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q
-cd app-android && flutter test
+.venv/bin/python -m pytest tests/ -q     # 137 test
+cd app-android && flutter test           # 36 test
 ```
 
 La suite backend usa SQLite e disattiva la rete BCE per test deterministici;
 copre flussi, multi-valuta, split, annullamenti, permessi, account, username,
-categorie, ricorrenze, export e App Links.
+categorie, ricorrenze, export, App Links, pagine informative e demo.
 
 Backend e sito sono su Vercel; health check: `https://b-lance.vercel.app/health`.
 Il deploy manuale è `npx vercel --prod --yes`. Le APK vengono pubblicate dal
@@ -138,5 +139,12 @@ sono da confermare con una prova d’uso prima di considerarli difetti osservati
 
 Prossimi: fiducia verificabile (testimonianze con consenso e schede community),
 link web/rivendicazione del Cassiere, PWA iOS, import CSV e link a wallet
-esterni. Promemoria email/push richiedono provider e credenziali. Social proof e
-metriche devono basarsi su consenso e dati verificati.
+esterni. Social proof e metriche devono basarsi su consenso e dati verificati.
+
+Fuori dal prodotto per scelta o per credenziali mancanti:
+
+- **Promemoria push/email e recupero password**: servono un provider email
+  (Resend/SMTP) o un progetto Firebase con `google-services.json`.
+- **Sentry**: serve il DSN del progetto.
+- **i18n IT/EN**: l’interfaccia è in italiano; la traduzione completa è
+  rimandata per non fare mezzo lavoro.

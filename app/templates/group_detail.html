@@ -225,6 +225,12 @@
   <div class="section-title">Riepilogo condivisibile</div>
   {% if share_token %}
     <p class="muted small">Link read-only per chi non ha l'app: vede solo saldi e bonifici, non spese, note o email. Puoi revocarlo quando vuoi.</p>
+    {% if share_expired %}
+    <p class="muted small">Il link è scaduto il {{ share_expires_at.strftime('%d/%m/%Y') if share_expires_at else '' }}. Rigeneralo per condividerlo di nuovo.</p>
+    <form method="post" action="/groups/{{ group.id }}/share">
+      <button class="btn" type="submit">Rigenera link</button>
+    </form>
+    {% else %}
     {% if share_expires_at %}
     <p class="muted small">Scade il {{ share_expires_at.strftime('%d/%m/%Y') }}. Dopo quella data il link non mostra più nulla.</p>
     {% endif %}
@@ -239,6 +245,7 @@
         <button class="btn sm ghost" type="submit">Revoca link</button>
       </form>
     </div>
+    {% endif %}
   {% else %}
     <p class="muted small">Crea un link per far vedere i saldi a chi non ha l'app. Nessun dettaglio delle spese: solo chi deve dare cosa a chi.</p>
     <form method="post" action="/groups/{{ group.id }}/share">
