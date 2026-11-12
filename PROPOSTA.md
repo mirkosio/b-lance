@@ -61,8 +61,9 @@ correggibili, link Cassiere revocabile e trasferimento esplicito.
   iOS e istruzioni di installazione in FAQ sono pronti. Resta da provare
   l’installazione da Safari su un iPhone reale e il comportamento offline; push
   dipende dal supporto iOS e dall’installazione PWA.
-- **Pagamenti esterni:** valutare PayPal, Satispay, Revolut e testo SEPA con
-  importo precompilato. Solo link/copia verso wallet esterni: b-lance non
+- **Pagamenti esterni:** ogni bonifico ha già “Copia” con chi paga chi e
+  l’importo, senza IBAN né email. Restano da valutare PayPal, Satispay, Revolut
+  e testo SEPA completo: solo link/copia verso wallet esterni, b-lance non
   gestisce transazioni.
 - **Import CSV:** Splitwise/Tricount con anteprima, mappatura, validazione e
   messaggi chiari; servono file campione dei formati da supportare.
