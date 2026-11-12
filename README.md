@@ -127,11 +127,11 @@ workflow `.github/workflows/release-apk.yml`.
 
 ## Stato e prossimi passi
 
-La release pubblicata è v23 / app 1.6.0. Nel ramo locale sono presenti split
-per articolo, PDF Cassiere, pagine informative separate, demo pubblica senza
-login, validazione inline, export account JSON, pagamento precompilato e offline
-account con coda idempotente. Dettagli e priorità sono in
-[PROPOSTA.md](PROPOSTA.md).
+La release pubblicata è v23 / app 1.6.0. Sul sito
+(`https://b-lance.vercel.app`) sono attivi split per articolo, PDF Cassiere,
+pagine informative separate, demo pubblica senza login, validazione inline,
+export account JSON, pagamento precompilato e offline account con coda
+idempotente. Dettagli e priorità sono in [PROPOSTA.md](PROPOSTA.md).
 
 Nota: la review del prodotto ha esaminato README e percorso pubblico senza login;
 non ha verificato account, gruppi autenticati, Android o offline. I relativi gap

@@ -1,7 +1,8 @@
 # Roadmap b-lance
 
-> Aggiornata l’11 novembre 2026. Base: release v23 / app 1.6.0 (`versionCode
-> 19`). Le modifiche presenti nel ramo di lavoro non sono ancora pubblicate.
+> Aggiornata il 12 novembre 2026. Base: release v23 / app 1.6.0 (`versionCode
+> 19`). Pagine informative, demo senza login e link a scadenza sono pubblicati
+> su `https://b-lance.vercel.app`.
 >
 > **Ambito della review DeepSeek (11/11):** ha letto README e percorso pubblico
 > onboarding/demo senza login. Punteggi e gap descrivono la prima impressione;
