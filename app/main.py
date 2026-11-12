@@ -730,8 +730,6 @@ _INFO_PAGES = {
         "cta": {
             "href": "https://github.com/mirkosio/b-lance/releases",
             "label": "Apri le release",
-            "auth_href": "/",
-            "auth_label": "Apri i tuoi gruppi",
         },
         "secondary": {"href": "/faq", "label": "Domande sull'app? Leggi le FAQ"},
     },

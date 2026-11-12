@@ -76,6 +76,19 @@ def test_android_page_explains_release_and_signature(client: TestClient) -> None
     assert "https://github.com/mirkosio/b-lance/releases" in r.text
 
 
+def test_android_release_link_remains_visible_when_logged_in(client: TestClient) -> None:
+    r = client.post(
+        "/register",
+        data={"name": "Luca", "email": "luca@example.com", "password": "secret123"},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    r = client.get("/android")
+    assert r.status_code == 200
+    assert "https://github.com/mirkosio/b-lance/releases" in r.text
+    assert "Apri le release" in r.text
+
+
 def test_authenticated_info_page_offers_in_app_cta(client: TestClient) -> None:
     r = client.post(
         "/register",
