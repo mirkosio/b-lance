@@ -138,6 +138,24 @@ def _migrate() -> None:
             conn.execute(
                 text("ALTER TABLE payments ADD COLUMN voided_at TIMESTAMP")
             )
+    if "client_id" not in payment_columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE payments ADD COLUMN client_id VARCHAR(36)"))
+    if "created_by" not in payment_columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE payments ADD COLUMN created_by INTEGER"))
+    if "client_id" not in expense_columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE expenses ADD COLUMN client_id VARCHAR(36)"))
+    with engine.begin() as conn:
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_expense_client_id "
+            "ON expenses (created_by, client_id)"
+        ))
+        conn.execute(text(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_payment_client_id "
+            "ON payments (created_by, client_id)"
+        ))
 
     group_columns = {c["name"] for c in inspect(engine).get_columns("groups")}
     if "share_token" not in group_columns:

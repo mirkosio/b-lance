@@ -9,12 +9,22 @@ Future<void> showPaymentSheet(
   required Api api,
   required GroupDetail detail,
   required VoidCallback onDone,
+  int? initialFromUser,
+  int? initialToUser,
+  String? initialAmount,
 }) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
-    builder: (_) => _PaymentSheet(api: api, detail: detail, onDone: onDone),
+    builder: (_) => _PaymentSheet(
+      api: api,
+      detail: detail,
+      onDone: onDone,
+      initialFromUser: initialFromUser,
+      initialToUser: initialToUser,
+      initialAmount: initialAmount,
+    ),
   );
 }
 
@@ -23,18 +33,24 @@ class _PaymentSheet extends StatefulWidget {
     required this.api,
     required this.detail,
     required this.onDone,
+    this.initialFromUser,
+    this.initialToUser,
+    this.initialAmount,
   });
 
   final Api api;
   final GroupDetail detail;
   final VoidCallback onDone;
+  final int? initialFromUser;
+  final int? initialToUser;
+  final String? initialAmount;
 
   @override
   State<_PaymentSheet> createState() => _PaymentSheetState();
 }
 
 class _PaymentSheetState extends State<_PaymentSheet> {
-  final _amount = TextEditingController();
+  late final _amount = TextEditingController(text: widget.initialAmount ?? '');
   final _note = TextEditingController();
 
   late final List<Member> _people = widget.detail.members
@@ -42,8 +58,8 @@ class _PaymentSheetState extends State<_PaymentSheet> {
       .toList();
 
   // Default sensati: chi deve -> chi e in credito.
-  late int? _from = _defaults()['from'];
-  late int? _to = _defaults()['to'];
+  late int? _from = widget.initialFromUser ?? _defaults()['from'];
+  late int? _to = widget.initialToUser ?? _defaults()['to'];
   bool _busy = false;
 
   Map<String, int?> _defaults() {
@@ -93,6 +109,12 @@ class _PaymentSheetState extends State<_PaymentSheet> {
       widget.onDone();
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('Pagamento registrato')));
+    } on PendingSyncException catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      widget.onDone();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     } on ApiException catch (e) {
       _snack(e.message);
       if (mounted) setState(() => _busy = false);

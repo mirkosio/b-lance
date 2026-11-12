@@ -6,94 +6,63 @@
 </p>
 
 <p align="center"><b>Dividi le spese, non le amicizie.</b><br>
-App Android nativa + sito web per tenere i conti di gruppo, al centesimo.</p>
+App Android nativa e sito web per i conti di gruppo, al centesimo.</p>
 
 ---
 
-## Cos'è
+## Cos’è
 
-b-lance è un'app per dividere spese tra amici, coinquilini e compagni di viaggio.
-Vacanze, cene, affitti, regali: ogni spesa resta nello storico e ogni saldo si
-ricalcola da zero. Non serve un foglio Excel e non serve fidarsi dei
-"te lo ridò dopo".
+b-lance aiuta amici, coinquilini e compagni di viaggio a tenere spese, pagamenti
+e saldi nello stesso posto. Il nome viene da *balance*: il conto deve tornare.
 
-Il nome viene da **balance**: il conto deve sempre tornare.
+## Funzioni
 
-## Cosa c'è dentro
-
-- **Gruppi con ruoli e permessi**: owner, membri, chi può gestire spese,
-  pagamenti, membri e impostazioni.
-- **Divisione precisa**: parti uguali, importi esatti o percentuali. Gli importi
-  sono in unità minori intere (`int`), mai float. Il resto viene distribuito al
-  centesimo.
-- **Pagamenti parziali**: "ha saldato 20 su 47,50" è uno stato reale, non una
-  nota a testo.
-- **Modalità cassiere locale**: gruppi senza account e senza rete, spese
-  modificabili con divisione uguale, esatta o percentuale, pagamenti, valuta per
-  gruppo e riepilogo condivisibile come immagine o testo.
-- **Annullamento, non cancellazione**: una spesa annullata resta nello storico,
-  barrata, e non entra nei saldi.
-- **Minimo numero di bonifici**: il motore calcola chi paga chi con il minor
-  numero di trasferimenti possibile.
-- **125 valute**: ogni valuta ha il suo exponent (JPY 0, KWD 3, EUR 2). I tassi
-  BCE vengono aggiornati ogni giorno con fallback statico; il tasso usato viene
-  salvato sulla spesa, quindi lo storico non cambia.
-- **Categorie**: 10 categorie fisse con icone, filtrabili nei movimenti.
-- **Ricerca e modifica**: ricerca globale e nel gruppo, modifica della spesa
-  con ricalcolo delle quote.
-- **Spese ricorrenti**: giornaliere, settimanali, mensili o annuali, con
-  intervallo 1/2/3/6. Il server crea la spesa alla scadenza.
-- **Export**: CSV dall'app, CSV e PDF dal sito.
-- **Inviti**: link, QR, condivisione nativa Android e aggiunta diretta tramite
-  `username`. Nessun caricamento della rubrica.
-- **Profilo e privacy**: nome, colore, `username`, cambio password, eliminazione
-  account con anonimizzazione ("Ex-membro"): email e username spariscono, le
-  spese restano per non rompere i saldi degli altri.
-- **Tema chiaro/scuro**, font Inter + Calistoga inclusi nell'app, motion
-  discreto e rispetto di `reduce motion`.
-- **Avvio curato**: splash nativo con il marchio e loader animato (il simbolo
-  respira e oscilla appena) durante il controllo della sessione.
-  Niente indirizzi server o dettagli tecnici a schermo.
-- **Marchio b/l**: una sola lettera, non due. L'asta e il piede bianchi sono
-  la `l`; l'anello salvia è la `b`, su badge nero. Nell'interfaccia compare
-  solo il simbolo; il wordmark `b-lance` resta nel README e nei lockup.
+- Gruppi con ruoli e permessi; spese e pagamenti parziali, modificabili o
+  annullabili mantenendo lo storico.
+- Split uguale, esatto o percentuale; importi in unità minori intere e saldi
+  regolati con il minor numero di trasferimenti.
+- Modalità Cassiere locale senza account o rete: valuta per gruppo, split per
+  articolo, riepilogo come immagine, testo o PDF creati sul telefono.
+- 125 valute, cambi BCE aggiornati ogni giorno e tasso storico conservato sulla
+  spesa; 10 categorie, ricerca e ricorrenze giornaliere, settimanali, mensili o
+  annuali.
+- Export CSV/PDF e archivio JSON completo dell’account; inviti via link, QR,
+  condivisione Android o username, senza accesso alla rubrica.
+- Pagamento rapido precompilato dalle proposte di saldo, sia sul sito sia in
+  Android.
+- Profilo con nome, colore e username; cambio password e cancellazione account
+  con anonimizzazione, mantenendo i saldi dei gruppi.
+- Tema chiaro/scuro, font Inter e Calistoga, motion ridotto e rispetto di
+  `reduce motion`; splash Android nativo e marchio b/l.
+- Link pubblici read-only con scadenza a 30 giorni e possibilità di revoca o
+  rigenerazione. Le pagine Come funziona, FAQ, Privacy e App Android sono
+  separate.
+- Demo pubblica su `/demo`: un conto di esempio con tre persone, spese
+  modificabili e saldi calcolati nel browser. Nessun dato viene inviato o
+  salvato; la CTA finale porta alla registrazione.
 
 ## Stack
 
 | Livello | Scelta |
 |---|---|
-| App | Flutter nativo Android (nessuna TWA, nessuna WebView) |
-| Backend | FastAPI + SQLAlchemy 2 |
+| App | Flutter nativo Android, senza TWA o WebView |
+| Backend | FastAPI, SQLAlchemy 2 |
 | Database | SQLite in locale, PostgreSQL/Neon in produzione |
-| Deploy | Vercel Python per API e sito |
-| Sito | Jinja2 + CSS/JS senza build step |
-| Auth | cookie di sessione firmati + bcrypt; token Bearer per l'app |
-| Test | pytest + hypothesis, flutter_test |
+| Sito e deploy | Jinja2, CSS/JS senza build step, Vercel |
+| Accesso | Cookie di sessione firmati e bcrypt; token Bearer per l’app |
+| Test | pytest, hypothesis, flutter_test |
 
 ## Struttura
 
-```
-app/
-  api.py                 # API JSON usata dall'app
-  main.py                # sito, pagine HTML, health, assetlinks
-  models.py              # utenti, gruppi, spese, quote, pagamenti, ricorrenze
-  database.py            # engine + migrazioni idempotenti
-  account.py             # anonimizzazione account condivisa API/sito
-  export.py              # CSV e PDF del gruppo
-  core/
-    money.py             # aritmetica in unità minori
-    currencies.py        # 125 valute ISO 4217
-    exchange.py          # tassi BCE + fallback + override manuale
-    splitting.py         # quote esatte e resto
-    settlement.py        # semplificazione debiti
-    categories.py        # categorie fisse
-    recurring.py         # materializzazione delle ricorrenze
-  templates/             # pagine Jinja2
-  static/                # CSS, icone, marchio SVG, service worker
-app-android/             # progetto Flutter
-design-system/b-lance/   # design system (MASTER.md)
-scripts/                 # icone, server locale, deploy
-tests/                   # suite backend
+```text
+app/                  API, sito, modelli, database, export e migrazioni
+  core/               importi, valute, cambi, split, saldi e ricorrenze
+  templates/          pagine Jinja2
+  static/             CSS, icone, marchio SVG e service worker
+app-android/          progetto Flutter
+ design-system/        design system b-lance
+scripts/               icone, server locale e deploy
+ tests/                suite backend
 ```
 
 ## Avvio locale
@@ -105,97 +74,67 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-Apri `http://127.0.0.1:8000`.
-
-Variabili utili:
+Apri `http://127.0.0.1:8000`. Variabili utili:
 
 ```bash
 DATABASE_URL=postgresql://...   # default: sqlite:///./b-lance.db
 SECRET_KEY=...                  # obbligatoria in produzione
-BLANCE_FX_LIVE=0                # disattiva la rete BCE (test/offline)
+BLANCE_FX_LIVE=0                # disattiva la rete BCE
 ```
 
-## App Android
+## Android
 
 ```bash
 cd app-android
 flutter pub get
-flutter test
 flutter analyze
-
-export PATH=/home/mirkosio/flutter/bin:$PATH
-export ANDROID_HOME=/home/mirkosio/android-sdk
-export JAVA_HOME=/home/mirkosio/.bubblewrap/jdk/jdk-17.0.11+9
-flutter build apk --release
+flutter test
 ```
 
-L'APK esce in `app-android/build/app/outputs/flutter-apk/app-release.apk`.
-La versione corrente è **1.6.0** (`versionCode 19`).
+L’APK si genera con `flutter build apk --release` e finisce in
+`app-android/build/app/outputs/flutter-apk/app-release.apk`. La release corrente
+è **1.6.0** (`versionCode 19`); le note e i file sono nella
+[pagina GitHub Releases](https://github.com/mirkosio/b-lance/releases).
+Gli App Links usano `https://b-lance.vercel.app/join/CODICE` e la verifica in
+`/.well-known/assetlinks.json`.
 
-Link diretti: `https://b-lance.vercel.app/join/CODICE` aprono l'app tramite
-App Links. La verifica dipende da `/.well-known/assetlinks.json` con package
-`com.mirkosio.blance` e fingerprint SHA-256 del keystore di release.
+**Firma:** la chiave della 1.5.0 è irrecuperabile. La 1.6.0 usa una nuova chiave,
+quindi per aggiornare dalla 1.5.0 occorre disinstallare la versione precedente;
+i gruppi Cassiere conservati solo sul telefono possono andare persi. I dati
+dell’account restano online. La nuova chiave va conservata per le prossime
+release.
 
-## Test
+## Verifiche e deploy
+
+Al riferimento v23 risultavano verdi 124 test backend, 36 test Flutter e
+`flutter analyze`. Per eseguirli:
 
 ```bash
-# backend (123 test)
 .venv/bin/python -m pytest tests/ -q
-
-# app (36 test)
 cd app-android && flutter test
 ```
 
-I test backend usano SQLite e disattivano la rete BCE (`tests/conftest.py`) per
-essere deterministici. La suite copre: flusso completo, multi-valuta, split
-esatto/percentuale, annullamenti, permessi, sessioni, movimenti globali,
-account e anonimizzazione, username, categorie, modifica spesa, ricorrenze,
-export CSV/PDF, assetlinks.
+La suite backend usa SQLite e disattiva la rete BCE per test deterministici;
+copre flussi, multi-valuta, split, annullamenti, permessi, account, username,
+categorie, ricorrenze, export e App Links.
 
-## Deploy
+Backend e sito sono su Vercel; health check: `https://b-lance.vercel.app/health`.
+Il deploy manuale è `npx vercel --prod --yes`. Le APK vengono pubblicate dal
+workflow `.github/workflows/release-apk.yml`.
 
-Backend e sito su Vercel:
+## Stato e prossimi passi
 
-```bash
-npx vercel --prod --yes
-```
+La release pubblicata è v23 / app 1.6.0. Nel ramo locale sono presenti split
+per articolo, PDF Cassiere, pagine informative separate, demo pubblica senza
+login, validazione inline, export account JSON, pagamento precompilato e offline
+account con coda idempotente. Dettagli e priorità sono in
+[PROPOSTA.md](PROPOSTA.md).
 
-Health check: `https://b-lance.vercel.app/health`.
-Le release APK sono su
-[github.com/mirkosio/b-lance/releases](https://github.com/mirkosio/b-lance/releases).
+Nota: la review del prodotto ha esaminato README e percorso pubblico senza login;
+non ha verificato account, gruppi autenticati, Android o offline. I relativi gap
+sono da confermare con una prova d’uso prima di considerarli difetti osservati.
 
-## Stato (ottobre 2026)
-
-Fase 1 "Solida", Fase 2 "Bella" e Fase 3 "Completa" sono implementate e in
-produzione.
-
-Non ancora dentro, per scelta o perché mancano credenziali esterne:
-
-- **Push Firebase**: serve un progetto Firebase e `google-services.json`.
-- **Sentry**: serve il DSN del progetto.
-- **Recupero password via email**: serve un provider email (Resend/SMTP).
-  Il cambio password da loggato è già disponibile.
-- **i18n IT/EN**: l'interfaccia è in italiano; la traduzione completa è
-  rimandata per non fare mezzo lavoro.
-
-Dettagli tecnici e decisioni: [`AUDIT.md`](AUDIT.md),
-[`OPERAZIONE.md`](OPERAZIONE.md) e
-[`design-system/b-lance/MASTER.md`](design-system/b-lance/MASTER.md).
-Modalità cassiere: implementata (gruppi locali, spese modificabili con split
-uguale/esatto/percentuale, pagamenti, valuta e riepilogo immagine o testo).
-Prossimo ciclo (offline con account, link/PDF del cassiere, rivendicazione):
-[`PROPOSTA.md`](PROPOSTA.md).
-
-## Privacy
-
-- Nessuna rubrica caricata.
-- Nessuna pubblicità, nessuna vendita di dati.
-- Gli errori non mostrano mai JSON o pagine tecniche al browser.
-- Eliminando l'account il profilo viene anonimizzato, non cancellato in modo
-  da rompere i saldi dei gruppi.
-
-## Informazioni
-
-Pagina pubblica: `https://b-lance.vercel.app/about`.
-Problemi e idee: [github.com/mirkosio/b-lance/issues](https://github.com/mirkosio/b-lance/issues).
-APK 1.5.0 rilasciato: APK_1.5.0.apk (58 MB, SHA-256: 1e661...)
+Prossimi: fiducia verificabile (testimonianze con consenso e schede community),
+link web/rivendicazione del Cassiere, PWA iOS, import CSV e link a wallet
+esterni. Promemoria email/push richiedono provider e credenziali. Social proof e
+metriche devono basarsi su consenso e dati verificati.

@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:ui' as ui;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -122,7 +123,10 @@ class _CashierHomeScreenState extends State<CashierHomeScreen> {
           decoration: const InputDecoration(labelText: 'Nome (es. Vacanza)'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Annulla')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: const Text('Annulla'),
+          ),
           FilledButton(
             onPressed: () {
               final v = name.text.trim();
@@ -145,13 +149,15 @@ class _CashierHomeScreenState extends State<CashierHomeScreen> {
     );
     if (currency == null || !mounted) return;
     setState(() {
-      _groups.add(CashierGroup(
-        id: DateTime.now().millisecondsSinceEpoch % 1000000000,
-        name: ok,
-        currency: currency,
-        members: [CashierPerson(id: 1, name: 'Tu')],
-        expenses: [],
-      ));
+      _groups.add(
+        CashierGroup(
+          id: DateTime.now().millisecondsSinceEpoch % 1000000000,
+          name: ok,
+          currency: currency,
+          members: [CashierPerson(id: 1, name: 'Tu')],
+          expenses: [],
+        ),
+      );
     });
     await _persist();
   }
@@ -161,10 +167,18 @@ class _CashierHomeScreenState extends State<CashierHomeScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Eliminare il gruppo?'),
-        content: const Text('Verrà eliminato dalla cassa locale, senza recupero.'),
+        content: const Text(
+          'Verrà eliminato dalla cassa locale, senza recupero.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Indietro')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Elimina')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Indietro'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Elimina'),
+          ),
         ],
       ),
     );
@@ -180,7 +194,11 @@ class _CashierHomeScreenState extends State<CashierHomeScreen> {
         titleSpacing: 16,
         title: const LogoMark(size: 32),
         actions: [
-          IconButton(tooltip: 'Nuovo gruppo', onPressed: _createGroup, icon: const Icon(Icons.add)),
+          IconButton(
+            tooltip: 'Nuovo gruppo',
+            onPressed: _createGroup,
+            icon: const Icon(Icons.add),
+          ),
         ],
       ),
       body: SafeArea(
@@ -196,50 +214,53 @@ class _CashierHomeScreenState extends State<CashierHomeScreen> {
                 ],
               )
             : _groups.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const LogoMark(size: 62),
-                          const SizedBox(height: 14),
-                          const Text(
-                            'Nessun gruppo cassiere',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontFamily: 'Calistoga', fontSize: 26),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Crea un gruppo locale: funziona senza account e senza rete.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: mutedOn(context), fontSize: 14),
-                          ),
-                          const SizedBox(height: 20),
-                          FilledButton(onPressed: _createGroup, child: const Text('Nuovo gruppo')),
-                        ],
-                      ),
-                    ),
-                  )
-                : ListView(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      for (final g in _groups) ...[
-                        _CashierGroupTile(
-                          group: g,
-                          onOpen: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => CashierGroupScreen(group: g),
-                              ),
-                            );
-                          },
-                          onDelete: () => _deleteGroup(g),
-                        ),
-                        const SizedBox(height: 12),
-                      ],
+                      const LogoMark(size: 62),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Nessun gruppo cassiere',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontFamily: 'Calistoga', fontSize: 26),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Crea un gruppo locale: funziona senza account e senza rete.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: mutedOn(context), fontSize: 14),
+                      ),
+                      const SizedBox(height: 20),
+                      FilledButton(
+                        onPressed: _createGroup,
+                        child: const Text('Nuovo gruppo'),
+                      ),
                     ],
                   ),
+                ),
+              )
+            : ListView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                children: [
+                  for (final g in _groups) ...[
+                    _CashierGroupTile(
+                      group: g,
+                      onOpen: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => CashierGroupScreen(group: g),
+                          ),
+                        );
+                      },
+                      onDelete: () => _deleteGroup(g),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ],
+              ),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createGroup,
@@ -251,7 +272,11 @@ class _CashierHomeScreenState extends State<CashierHomeScreen> {
 }
 
 class _CashierGroupTile extends StatelessWidget {
-  const _CashierGroupTile({required this.group, required this.onOpen, required this.onDelete});
+  const _CashierGroupTile({
+    required this.group,
+    required this.onOpen,
+    required this.onDelete,
+  });
   final CashierGroup group;
   final VoidCallback onOpen;
   final VoidCallback onDelete;
@@ -279,7 +304,9 @@ class _CashierGroupTile extends StatelessWidget {
                 child: Text(
                   group.name.characters.first.toUpperCase(),
                   style: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark ? sage : sageInk,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? sage
+                        : sageInk,
                     fontWeight: FontWeight.w800,
                     fontSize: 19,
                   ),
@@ -290,7 +317,13 @@ class _CashierGroupTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(group.name, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15.5)),
+                    Text(
+                      group.name,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15.5,
+                      ),
+                    ),
                     const SizedBox(height: 3),
                     Text(
                       '${group.members.length} membri · ${group.expenses.length} spese · ${group.currency}',
@@ -316,6 +349,35 @@ class _CashierGroupTile extends StatelessWidget {
   }
 }
 
+class _CashierItemDraft {
+  _CashierItemDraft({
+    CashierExpenseItem? item,
+    required Iterable<int> defaultMembers,
+    required int exponent,
+    String description = '',
+    int amountMinor = 0,
+  }) : id = item?.id ?? DateTime.now().microsecondsSinceEpoch,
+       description = TextEditingController(
+         text: item?.description ?? description,
+       ),
+       amount = TextEditingController(
+         text: cashierAmountInput(item?.amountMinor ?? amountMinor, exponent),
+       ),
+       participants = (item?.memberIds.isNotEmpty ?? false)
+           ? item!.memberIds.toSet()
+           : defaultMembers.toSet();
+
+  final int id;
+  final TextEditingController description;
+  final TextEditingController amount;
+  final Set<int> participants;
+
+  void dispose() {
+    description.dispose();
+    amount.dispose();
+  }
+}
+
 class CashierGroupScreen extends StatefulWidget {
   const CashierGroupScreen({super.key, required this.group});
   final CashierGroup group;
@@ -337,8 +399,10 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
   List<CashierBalance> get _balances => cashierBalances(_group);
   List<List<int>> get _transfers => cashierTransfers(_balances);
 
-  CashierPerson _personById(int id) =>
-      _group.members.firstWhere((m) => m.id == id, orElse: () => CashierPerson(id: id, name: '?'));
+  CashierPerson _personById(int id) => _group.members.firstWhere(
+    (m) => m.id == id,
+    orElse: () => CashierPerson(id: id, name: '?'),
+  );
 
   String _personName(int id) => _personById(id).name;
 
@@ -356,6 +420,244 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
   Future<void> _editExpense(CashierExpense existing) =>
       _expenseSheet(existing: existing);
 
+  Future<void> _storeExpense(CashierExpense expense) async {
+    setState(() {
+      final index = _group.expenses.indexWhere((item) => item.id == expense.id);
+      if (index < 0) {
+        _group.expenses.add(expense);
+      } else {
+        _group.expenses[index] = expense;
+      }
+    });
+    await _persist();
+  }
+
+  Future<List<CashierExpenseItem>?> _manageExpenseItems(
+    CashierExpense seed,
+  ) async {
+    final expo = _exponentOf(_group.currency);
+    final drafts = <_CashierItemDraft>[
+      for (final item in seed.items)
+        _CashierItemDraft(
+          item: item,
+          defaultMembers: seed.memberIds,
+          exponent: expo,
+        ),
+    ];
+    if (drafts.isEmpty) {
+      drafts.add(
+        _CashierItemDraft(
+          defaultMembers: seed.memberIds,
+          exponent: expo,
+          description: seed.description,
+          amountMinor: seed.amountMinor,
+        ),
+      );
+    }
+
+    final result = await showModalBottomSheet<List<CashierExpenseItem>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModal) {
+          int amountOf(_CashierItemDraft item) =>
+              parseCashierAmount(item.amount.text, expo) ?? 0;
+          final total = drafts.fold<int>(
+            0,
+            (sum, item) => sum + amountOf(item),
+          );
+          final difference = seed.amountMinor - total;
+          return SafeArea(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(
+                16,
+                12,
+                16,
+                MediaQuery.of(ctx).viewInsets.bottom + 16,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      'Dividi per articolo',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Assegna ogni voce alle persone che l’hanno condivisa. Il totale deve essere ${formatCashier(seed.amountMinor, expo)} ${_group.currency}.',
+                      style: TextStyle(color: mutedOn(ctx), fontSize: 13),
+                    ),
+                    const SizedBox(height: 12),
+                    for (var i = 0; i < drafts.length; i++)
+                      Card(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      'Articolo ${i + 1}',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                  IconButton(
+                                    tooltip: 'Rimuovi articolo ${i + 1}',
+                                    onPressed: drafts.length <= 1
+                                        ? null
+                                        : () => setModal(
+                                            () => drafts.removeAt(i).dispose(),
+                                          ),
+                                    icon: const Icon(Icons.delete_outline),
+                                  ),
+                                ],
+                              ),
+                              TextField(
+                                controller: drafts[i].description,
+                                decoration: const InputDecoration(
+                                  labelText: 'Descrizione',
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: drafts[i].amount,
+                                keyboardType:
+                                    const TextInputType.numberWithOptions(
+                                      decimal: true,
+                                    ),
+                                decoration: InputDecoration(
+                                  labelText: 'Importo',
+                                  prefixText: '${_group.currency} ',
+                                ),
+                                onChanged: (_) => setModal(() {}),
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                children: [
+                                  for (final member in _group.members)
+                                    FilterChip(
+                                      label: Text(member.name),
+                                      selected: drafts[i].participants.contains(
+                                        member.id,
+                                      ),
+                                      onSelected: (selected) => setModal(() {
+                                        if (selected) {
+                                          drafts[i].participants.add(member.id);
+                                        } else {
+                                          drafts[i].participants.remove(
+                                            member.id,
+                                          );
+                                        }
+                                      }),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        onPressed: () => setModal(
+                          () => drafts.add(
+                            _CashierItemDraft(
+                              defaultMembers: seed.memberIds,
+                              exponent: expo,
+                            ),
+                          ),
+                        ),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Aggiungi articolo'),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      difference == 0
+                          ? 'Totale corretto.'
+                          : difference > 0
+                          ? 'Mancano ${formatCashier(difference, expo)} ${_group.currency}.'
+                          : 'Hai superato il totale di ${formatCashier(-difference, expo)} ${_group.currency}.',
+                      style: TextStyle(
+                        color: difference == 0 ? posOn(ctx) : negOn(ctx),
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Annulla'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: FilledButton(
+                            onPressed: () {
+                              final valid =
+                                  difference == 0 &&
+                                  drafts.every(
+                                    (item) =>
+                                        item.description.text
+                                            .trim()
+                                            .isNotEmpty &&
+                                        amountOf(item) > 0 &&
+                                        item.participants.isNotEmpty,
+                                  );
+                              if (!valid) {
+                                ScaffoldMessenger.of(ctx).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      'Completa gli articoli e fai tornare il totale.',
+                                    ),
+                                  ),
+                                );
+                                return;
+                              }
+                              Navigator.pop(ctx, [
+                                for (final item in drafts)
+                                  CashierExpenseItem(
+                                    id: item.id,
+                                    description: item.description.text.trim(),
+                                    amountMinor: amountOf(item),
+                                    memberIds: item.participants.toList(),
+                                  ),
+                              ]);
+                            },
+                            child: const Text('Salva articoli'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+    for (final draft in drafts) {
+      draft.dispose();
+    }
+    return result;
+  }
+
   Future<void> _expenseSheet({CashierExpense? existing}) async {
     final expo = _exponentOf(_group.currency);
     final description = TextEditingController(
@@ -366,7 +668,8 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
           ? ''
           : cashierAmountInput(existing.amountMinor, expo),
     );
-    int paidById = existing?.paidById ??
+    int paidById =
+        existing?.paidById ??
         (_group.members.isNotEmpty ? _group.members.first.id : 0);
     final selected = <int>{
       ...(existing?.memberIds ?? _group.members.map((m) => m.id)),
@@ -579,10 +882,7 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                         const SizedBox(height: 6),
                         Builder(
                           builder: (_) {
-                            final minor = parseCashierAmount(
-                              amount.text,
-                              expo,
-                            );
+                            final minor = parseCashierAmount(amount.text, expo);
                             if (splitMode == 'exact') {
                               final sum = selected.fold<int>(
                                 0,
@@ -603,9 +903,7 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                                     : 'Superato di ${formatCashier(-diff, expo)} ${_group.currency}',
                                 style: TextStyle(
                                   fontSize: 12.5,
-                                  color: diff == 0
-                                      ? posOn(ctx)
-                                      : mutedOn(ctx),
+                                  color: diff == 0 ? posOn(ctx) : mutedOn(ctx),
                                 ),
                               );
                             }
@@ -613,10 +911,7 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                               0,
                               (s, id) =>
                                   s +
-                                  (parseCashierAmount(
-                                        pctCtrl(id).text,
-                                        2,
-                                      ) ??
+                                  (parseCashierAmount(pctCtrl(id).text, 2) ??
                                       0),
                             );
                             final pct = sum / 100;
@@ -634,6 +929,16 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                         ),
                       ],
                     ],
+                    const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => Navigator.pop(ctx, 'items'),
+                      icon: const Icon(Icons.receipt_long_outlined),
+                      label: Text(
+                        existing?.items.isNotEmpty ?? false
+                            ? 'Modifica articoli'
+                            : 'Dividi per articolo',
+                      ),
+                    ),
                     const SizedBox(height: 18),
                     Row(
                       children: [
@@ -668,8 +973,7 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                                   minor <= 0 ||
                                   paidById == 0 ||
                                   selected.isEmpty) {
-                                error =
-                                    'Compila descrizione, importo, pagante e partecipanti';
+                                error = 'Compila descrizione, importo, pagante e partecipanti';
                               } else if ((existing?.items.isEmpty ?? true) &&
                                   splitMode == 'exact') {
                                 final parsed = <int, int?>{};
@@ -709,9 +1013,9 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                                 }
                               }
                               if (error != null) {
-                                ScaffoldMessenger.of(ctx).showSnackBar(
-                                  SnackBar(content: Text(error)),
-                                );
+                                ScaffoldMessenger.of(
+                                  ctx,
+                                ).showSnackBar(SnackBar(content: Text(error)));
                                 return;
                               }
                               Navigator.pop(ctx, 'save');
@@ -731,6 +1035,58 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
         );
       },
     );
+
+    if (action == 'items') {
+      final minor = parseCashierAmount(amount.text, expo);
+      if (description.text.trim().isEmpty ||
+          minor == null ||
+          minor <= 0 ||
+          paidById == 0) {
+        return;
+      }
+      final exact = <int, int>{};
+      final pct = <int, int>{};
+      if (splitMode == 'exact') {
+        for (final id in selected) {
+          exact[id] = parseCashierAmount(exactCtrl(id).text, expo) ?? 0;
+        }
+      } else if (splitMode == 'percent') {
+        for (final id in selected) {
+          pct[id] = parseCashierAmount(pctCtrl(id).text, 2) ?? 0;
+        }
+      }
+      final seed = CashierExpense(
+        id: existing?.id ?? DateTime.now().millisecondsSinceEpoch % 1000000000,
+        description: description.text.trim(),
+        amountMinor: minor,
+        paidById: paidById,
+        memberIds: selected.toList(),
+        currency: _group.currency,
+        items: existing?.items ?? const [],
+        splitMode: splitMode,
+        exactMinor: exact,
+        percentBp: pct,
+      );
+      final items = await _manageExpenseItems(seed);
+      if (items == null) return;
+      final participants = items
+          .expand((item) => item.memberIds)
+          .toSet()
+          .toList();
+      await _storeExpense(
+        CashierExpense(
+          id: seed.id,
+          description: seed.description,
+          amountMinor: seed.amountMinor,
+          paidById: seed.paidById,
+          memberIds: participants,
+          currency: seed.currency,
+          items: items,
+          splitMode: 'equal',
+        ),
+      );
+      return;
+    }
 
     if (action == 'delete' && existing != null) {
       if (!mounted) return;
@@ -777,8 +1133,7 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
     }
     setState(() {
       final updated = CashierExpense(
-        id: existing?.id ??
-            DateTime.now().millisecondsSinceEpoch % 1000000000,
+        id: existing?.id ?? DateTime.now().millisecondsSinceEpoch % 1000000000,
         description: description.text.trim(),
         amountMinor: minor,
         paidById: paidById,
@@ -1010,7 +1365,10 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
           decoration: const InputDecoration(labelText: 'Nome'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, null), child: const Text('Annulla')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, null),
+            child: const Text('Annulla'),
+          ),
           FilledButton(
             onPressed: () {
               final v = name.text.trim();
@@ -1023,7 +1381,8 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
     );
     if (ok == null || !mounted) return;
     setState(() {
-      final newId = (_group.members.map((m) => m.id).reduce((a, b) => a > b ? a : b) + 1);
+      final newId =
+          (_group.members.map((m) => m.id).reduce((a, b) => a > b ? a : b) + 1);
       _group.members.add(CashierPerson(id: newId, name: ok));
     });
     _persist();
@@ -1040,10 +1399,18 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Rimuovere partecipante?'),
-        content: const Text('Le sue spese restano, ma non dividerà più le nuove.'),
+        content: const Text(
+          'Le sue spese restano, ma non dividerà più le nuove.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Indietro')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Rimuovi')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Indietro'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Rimuovi'),
+          ),
         ],
       ),
     );
@@ -1063,10 +1430,18 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Eliminare il gruppo?'),
-        content: const Text('Verrà eliminato dalla cassa locale, senza recupero.'),
+        content: const Text(
+          'Verrà eliminato dalla cassa locale, senza recupero.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Indietro')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Elimina')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Indietro'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Elimina'),
+          ),
         ],
       ),
     );
@@ -1112,6 +1487,32 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                         data.buffer.asUint8List(),
                         mimeType: 'image/png',
                         name: 'b-lance-$safeName.png',
+                      ),
+                    ],
+                    text: 'Riepilogo di ${_group.name}',
+                    subject: 'b-lance · ${_group.name}',
+                  ),
+                );
+              } finally {
+                if (ctx.mounted) setModal(() => busy = false);
+              }
+            }
+
+            Future<void> sharePdf() async {
+              if (busy) return;
+              setModal(() => busy = true);
+              try {
+                final bytes = await cashierSummaryPdf(_group, exponent: expo);
+                final safeName = _group.name
+                    .replaceAll(RegExp(r'[^A-Za-z0-9_-]+'), '-')
+                    .replaceAll(RegExp(r'-+'), '-');
+                await SharePlus.instance.share(
+                  ShareParams(
+                    files: [
+                      XFile.fromData(
+                        Uint8List.fromList(bytes),
+                        mimeType: 'application/pdf',
+                        name: 'b-lance-$safeName.pdf',
                       ),
                     ],
                     text: 'Riepilogo di ${_group.name}',
@@ -1207,13 +1608,16 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                       ],
                     ),
                     const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      onPressed: busy ? null : sharePdf,
+                      icon: const Icon(Icons.picture_as_pdf_outlined),
+                      label: const Text('Condividi PDF'),
+                    ),
+                    const SizedBox(height: 10),
                     Text(
-                      "L'immagine viene creata sul telefono: nessun dato caricato.",
+                      "Immagine e PDF vengono creati sul telefono: nessun dato caricato.",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: mutedOn(ctx),
-                        fontSize: 12.5,
-                      ),
+                      style: TextStyle(color: mutedOn(ctx), fontSize: 12.5),
                     ),
                   ],
                 ),
@@ -1231,12 +1635,18 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
       final raw = prefs.getString(_cashierKey);
       final groups = <CashierGroup>[];
       if (raw != null) {
-        groups.addAll((jsonDecode(raw) as List<dynamic>)
-            .map((e) => CashierGroup.fromJson(e as Map<String, dynamic>)));
+        groups.addAll(
+          (jsonDecode(raw) as List<dynamic>).map(
+            (e) => CashierGroup.fromJson(e as Map<String, dynamic>),
+          ),
+        );
       }
       groups.removeWhere((g) => g.id == _group.id);
       groups.add(_group);
-      await prefs.setString(_cashierKey, jsonEncode(groups.map((g) => g.toJson()).toList()));
+      await prefs.setString(
+        _cashierKey,
+        jsonEncode(groups.map((g) => g.toJson()).toList()),
+      );
     } catch (_) {}
   }
 
@@ -1251,10 +1661,21 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 16,
-        title: Text(group.name, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+        title: Text(
+          group.name,
+          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+        ),
         actions: [
-          IconButton(tooltip: 'Aggiungi partecipante', onPressed: _addMember, icon: const Icon(Icons.person_add_outlined)),
-          IconButton(tooltip: 'Condividi riepilogo', onPressed: _share, icon: const Icon(Icons.share_outlined)),
+          IconButton(
+            tooltip: 'Aggiungi partecipante',
+            onPressed: _addMember,
+            icon: const Icon(Icons.person_add_outlined),
+          ),
+          IconButton(
+            tooltip: 'Condividi riepilogo',
+            onPressed: _share,
+            icon: const Icon(Icons.share_outlined),
+          ),
           PopupMenuButton<String>(
             tooltip: 'Altre azioni',
             onSelected: (v) {
@@ -1266,10 +1687,7 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                 value: 'payment',
                 child: Text('Registra pagamento'),
               ),
-              PopupMenuItem(
-                value: 'delete',
-                child: Text('Elimina gruppo'),
-              ),
+              PopupMenuItem(value: 'delete', child: Text('Elimina gruppo')),
             ],
           ),
         ],
@@ -1291,13 +1709,22 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                   Container(
                     width: 10,
                     height: 10,
-                    decoration: BoxDecoration(color: _offline ? negOn(context) : posOn(context), shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                      color: _offline ? negOn(context) : posOn(context),
+                      shape: BoxShape.circle,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      _offline ? 'Salvato solo su questo telefono' : 'Online — sincronizzato',
-                      style: TextStyle(fontSize: 12.5, color: _offline ? negOn(context) : posOn(context), fontWeight: FontWeight.w600),
+                      _offline
+                          ? 'Salvato solo su questo telefono'
+                          : 'Online — sincronizzato',
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        color: _offline ? negOn(context) : posOn(context),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -1321,7 +1748,9 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                         '${formatMinor(total, expo)} ${group.currency}',
                         style: TextStyle(
                           fontWeight: FontWeight.w800,
-                          color: Theme.of(context).brightness == Brightness.dark ? sage : sageInk,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? sage
+                              : sageInk,
                         ),
                       ),
                       child: Column(
@@ -1440,7 +1869,9 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                                   width: 10,
                                   height: 10,
                                   decoration: BoxDecoration(
-                                    color: parseHexColor(_personById(b.personId).color),
+                                    color: parseHexColor(
+                                      _personById(b.personId).color,
+                                    ),
                                     shape: BoxShape.circle,
                                   ),
                                 ),
@@ -1473,7 +1904,11 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                                 Text(
                                   b.netMinor == 0
                                       ? 'in pari'
-                                      : formatSigned(b.netMinor, expo, group.currency),
+                                      : formatSigned(
+                                          b.netMinor,
+                                          expo,
+                                          group.currency,
+                                        ),
                                   style: TextStyle(
                                     fontWeight: FontWeight.w800,
                                     color: b.netMinor > 0
@@ -1503,12 +1938,21 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                                   Expanded(
                                     child: Text(
                                       '${_personName(t[0])} → ${_personName(t[1])}',
-                                      style: TextStyle(fontWeight: FontWeight.w600),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
                                   Text(
                                     formatCashier(t[2], expo),
-                                    style: TextStyle(fontWeight: FontWeight.w800, color: Theme.of(context).brightness == Brightness.dark ? sage : sageInk),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      color:
+                                          Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? sage
+                                          : sageInk,
+                                    ),
                                   ),
                                 ],
                               ),

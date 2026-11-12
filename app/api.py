@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import re
 import secrets
+import uuid
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 
@@ -207,6 +208,7 @@ class GroupPatchIn(BaseModel):
 
 
 class ExpenseIn(BaseModel):
+    client_id: str | None = None
     description: str
     amount: str
     paid_by: int
@@ -231,6 +233,7 @@ class RecurringPatchIn(BaseModel):
 
 
 class PaymentIn(BaseModel):
+    client_id: str | None = None
     from_user: int
     to_user: int
     amount: str
@@ -1271,6 +1274,22 @@ def api_add_expense(
 ):
     """Registra una spesa: stessa logica della rotta web, stessi controlli."""
     group = _group_for_user(db, group_id, user)
+    client_id = None
+    if data.client_id is not None:
+        try:
+            client_id = str(uuid.UUID(data.client_id))
+        except (ValueError, AttributeError):
+            raise HTTPException(status_code=400, detail="client_id non valido")
+        existing = db.scalar(
+            select(Expense)
+            .options(selectinload(Expense.shares))
+            .where(Expense.created_by == user.id, Expense.client_id == client_id)
+        )
+        if existing is not None:
+            if existing.group_id != group.id:
+                raise HTTPException(status_code=409, detail="client_id già usato")
+            names = {m.user_id: m.name for m in compute_balances(db, group).members}
+            return _expense_json(existing, names)
     try:
         parsed = _prepare_expense(db, group, data)
         expense = Expense(
@@ -1285,6 +1304,7 @@ def api_add_expense(
             fx_rate=parsed["fx_rate"],
             split_method=parsed["method"].value,
             created_by=user.id,
+            client_id=client_id,
         )
         db.add(expense)
         db.flush()
@@ -1388,6 +1408,32 @@ def api_add_payment(
 ):
     """Registra un pagamento (anche parziale) fra due membri."""
     group = _group_for_user(db, group_id, user)
+    client_id = None
+    if data.client_id is not None:
+        try:
+            client_id = str(uuid.UUID(data.client_id))
+        except (ValueError, AttributeError):
+            raise HTTPException(status_code=400, detail="client_id non valido")
+        existing = db.scalar(
+            select(Payment).where(
+                Payment.created_by == user.id, Payment.client_id == client_id
+            )
+        )
+        if existing is not None:
+            if existing.group_id != group.id:
+                raise HTTPException(status_code=409, detail="client_id già usato")
+            names = {m.user_id: m.name for m in compute_balances(db, group).members}
+            return {
+                "id": existing.id,
+                "from_user": existing.from_user,
+                "from_name": names.get(existing.from_user, "?"),
+                "to_user": existing.to_user,
+                "to_name": names.get(existing.to_user, "?"),
+                "amount_minor": existing.amount_minor,
+                "currency": existing.currency,
+                "note": existing.note,
+                "created_at": existing.created_at.isoformat() if existing.created_at else None,
+            }
     try:
         amount_minor = parse_user_amount(data.amount, exponent=2)
         if amount_minor <= 0:
@@ -1404,6 +1450,8 @@ def api_add_payment(
             amount_minor=amount_minor,
             currency=group.base_currency,
             note=data.note.strip() or None,
+            created_by=user.id,
+            client_id=client_id,
         )
         db.add(payment)
         db.commit()

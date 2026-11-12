@@ -309,6 +309,53 @@ ThemeData darkTheme() => _theme(
 Color mutedOn(BuildContext context) =>
     Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
 
+class OfflineCacheNotice extends StatelessWidget {
+  const OfflineCacheNotice({
+    super.key,
+    this.fromCache = false,
+    this.pendingChanges = 0,
+    this.syncError,
+  });
+
+  final bool fromCache;
+  final int pendingChanges;
+  final String? syncError;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final message = syncError != null
+        ? 'Sincronizzazione in pausa: $syncError'
+        : pendingChanges > 0
+        ? '$pendingChanges ${pendingChanges == 1 ? 'modifica' : 'modifiche'} in attesa di sincronizzazione${fromCache ? ' · dati offline' : ''}.'
+        : 'Offline · stai vedendo l’ultima copia salvata sul telefono.';
+    return Container(
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.cloud_off_outlined,
+            size: 18,
+            color: colors.onSurfaceVariant,
+          ),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Text(
+              message,
+              style: TextStyle(color: colors.onSurfaceVariant, fontSize: 12.5),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Converte "#RRGGBB" / "#AARRGGBB" in Color, con fallback.
 Color parseHexColor(String hex, {Color fallback = sage}) {
   var h = hex.replaceFirst('#', '');

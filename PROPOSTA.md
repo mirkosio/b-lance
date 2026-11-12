@@ -1,114 +1,106 @@
-# Prossimo ciclo — funzioni Android native
+# Roadmap b-lance
 
-> **Stato al 11 novembre 2026:** la modalità cassiere è implementata (gruppi
-> locali, spese modificabili con split uguale/esatto/percentuale, pagamenti,
-> valuta per gruppo, riepilogo immagine o testo).
-> Restano link/PDF del cassiere, rivendicazione del gruppo e offline con account.
+> Aggiornata l’11 novembre 2026. Base: release v23 / app 1.6.0 (`versionCode
+> 19`). Le modifiche presenti nel ramo di lavoro non sono ancora pubblicate.
+>
+> **Ambito della review DeepSeek (11/11):** ha letto README e percorso pubblico
+> onboarding/demo senza login. Punteggi e gap descrivono la prima impressione;
+> account, gruppi autenticati, flussi Android e offline non sono stati provati.
+> Le priorità sotto distinguono quindi suggerimenti pubblici da lavoro tecnico
+> già presente nella roadmap: i gap non osservati direttamente vanno verificati.
 
-Stato di partenza: **1.4.1** (`versionCode 17`), marchio b/l, service worker
-corretto, 118 test backend e 25 test Flutter verdi. Questa è la proposta per il
-salto da “app per gruppi” a “cassiere di viaggio”; non è ancora implementata.
+## Già fatto
 
-## 1. Modalità cassiere (un telefono per tutto il gruppo)
+- **Release:** APK 1.6.0, workflow CI e checksum. La chiave 1.5.0 è perduta:
+  l’aggiornamento richiede la disinstallazione e può cancellare i gruppi
+  Cassiere salvati solo sul telefono. Conservare la nuova chiave.
+- **Cassiere:** spese modificabili, pagamenti parziali, valute, split uguale,
+  esatto, percentuale e per articolo; riepilogo immagine, testo e PDF locale.
+- **Sito e fiducia:** FAQ, Privacy, Come funziona e App Android su pagine
+  separate; validazione inline, alias nella pagina pubblica, link pubblici a
+  scadenza e revoca, export account JSON. Aggiunti anche CTA di pagamento
+  precompilate dalle proposte di saldo.
+- **Demo senza login:** `/demo` con tre persone, tre spese iniziali, aggiunta di
+  una spesa e ricalcolo di saldi e bonifici nel browser. Nessun dato viene
+  inviato o salvato; la CTA finale porta alla registrazione.
+- **Offline account:** cache di gruppi e movimenti, coda persistente di spese e
+  pagamenti, `client_id` idempotenti e indicatore di sincronizzazione. Il retry
+  parte al successivo aggiornamento online.
 
-**Problema.** Oggi ogni partecipante deve installare l’app o aprire il sito per
-vedere i conti. In vacanza non è realistico: molti vogliono solo “quanto devo
-dare a Marco?”.
+## P0 — Primo utilizzo e fiducia (review pubblica)
 
-**Proposta.**
-- Un solo telefono crea un **gruppo locale** senza account: nome gruppo,
-  partecipanti inseriti a mano, valuta.
-- Il cassiere registra spese e pagamenti; i saldi si calcolano sul telefono.
-- Alla fine (o in qualsiasi momento) genera un **riepilogo condivisibile**:
-  link web read-only, immagine/PDF o messaggio WhatsApp con saldi e bonifici.
-- Chi ha un account può **rivendicare** il gruppo in un secondo momento: il
-  gruppo locale viene caricato e diventa un gruppo normale, senza perdere lo
-  storico.
-- Chi non ha l’app non deve registrarsi: il link apre una pagina web con il
-  riepilogo, senza modifiche.
+1. **Demo senza login:** fatta su `/demo`: gruppo fittizio con spese e saldi,
+   modificabile ma non persistente, con CTA finale per creare un account.
+2. **Onboarding/homepage:** verificare CTA sopra la piega; spiegazione in tre
+   passaggi e breve demo visiva. Semplificare il testo informativo.
+3. **Fiducia:** testimonianze solo con consenso, link open source e metriche
+   verificabili. Product Hunt/community solo con revisione e pubblicazione
+   autorizzata; non inventare recensioni o conteggi.
+4. **Promemoria debiti:** frequenza configurabile e opt-out. Email/push sono
+   proposte della review, da definire dopo aver configurato provider e credenziali;
+   la review non ha verificato i flussi autenticati.
 
-**Perché è forte.** Riduce l’attrito dell’invito a zero e trasforma b-lance in
-uno strumento che funziona anche quando il gruppo non è “digitale”.
+**Accettazione:** demo in un clic senza salvataggio; primo gruppo facile da
+creare; CTA e spiegazione comprensibili; testimonianze reali e approvate.
+Promemoria disattivabili e consegnati correttamente quando attivati.
 
-**Decisioni da prendere.**
-- Il riepilogo pubblico è un’istantanea (solo lettura) o un link sempre
-  aggiornato? Consiglio: link firmato, sempre aggiornato, con scadenza.
-- Il gruppo locale vive in SQLite cifrato? Sì, con backup/export.
-- Chi può rivendicare il gruppo? Solo chi lo ha creato sul telefono, tramite
-  codice monouso.
+## P0 tecnico — Roadmap già aperta
 
-## 2. Offline e viaggio
+- Gestire invii offline rifiutati e conflitti tra dispositivi.
+- Link web read-only del Cassiere e rivendicazione sicura del gruppo locale,
+  con accesso revocabile e privacy chiara.
 
-**Problema.** In aereo, in montagna o all’estero la rete manca. Oggi l’app
-dipende dall’API per leggere i gruppi e calcolare i saldi.
+Questi sono gap del piano tecnico, non risultati verificati dalla review senza
+login. Accettazione: stato offline comprensibile, modifiche rivedibili e
+correggibili, link Cassiere revocabile e trasferimento esplicito.
 
-**Proposta.**
-- **Cache locale di lettura** di gruppi, spese, pagamenti e saldi: l’app apre
-  l’ultimo stato anche senza rete.
-- **Coda di scrittura** per nuove spese/pagamenti: ogni operazione ha un
-  `client_id` UUID, viene salvata in locale e inviata quando torna la rete.
-- **Idempotenza** lato server: lo stesso `client_id` non crea duplicati.
-- **Conflitti**: il server resta la fonte di verità; in caso di modifica
-  concorrente vince l’ultima operazione con timestamp server, ma l’app mostra
-  “questo dato è stato aggiornato da un altro dispositivo”.
-- **Tassi di cambio** e categorie restano disponibili offline con l’ultima
-  copia scaricata.
-- Indicatore chiaro “Offline — modifiche in attesa” e pulsante “Sincronizza”.
+## P1 — Migrazione e pagamenti
 
-**Fasi.**
-1. Lettura offline (cache + schermate vuote informative).
-2. Scrittura offline in coda, solo spese e pagamenti.
-3. Risoluzione conflitti e sync automatica su riconnessione.
+- **PWA iOS:** completare e verificare l’installazione da home screen, istruzioni,
+  icone e comportamento offline. Manifest e service worker esistono già; push
+  dipende dal supporto iOS e dall’installazione PWA.
+- **Pagamenti esterni:** valutare PayPal, Satispay, Revolut e testo SEPA con
+  importo precompilato. Solo link/copia verso wallet esterni: b-lance non
+  gestisce transazioni.
+- **Import CSV:** Splitwise/Tricount con anteprima, mappatura, validazione e
+  messaggi chiari; servono file campione dei formati da supportare.
+- **Go-to-market:** schede su Product Hunt/AlternativeTo e presentazioni a
+  community solo con revisione e pubblicazione autorizzata. Chiedere feedback a
+  beta tester; conteggi e recensioni devono essere reali, consensuali e verificati.
 
-## 3. Inviti e riepiloghi senza attrito
+**Accettazione P1:** installazione iOS provata su dispositivi supportati; almeno
+3 link di pagamento verificati; importazione di file campione con anteprima e
+rifiuto sicuro dei formati errati.
 
-- Link invito già esistente: mantenerlo, ma aggiungere **anteprima del gruppo**
-  e “partecipa senza account” per il riepilogo.
-- Riepilogo condivisibile con:
-  - totali per persona;
-  - “chi paga chi” già semplificato;
-  - elenco spese raggruppate per categoria;
-  - note e pagamenti parziali.
-- Formati: link web, immagine verticale per WhatsApp, PDF.
-- Nessuna rubrica, nessun upload di contatti.
+## P2 — Automazione e scoperta
 
-## 4. Novità Android native
+- OCR ricevute on-device con revisione manuale prima del salvataggio; obiettivo
+  iniziale: importo corretto in almeno l’80% di un set di ricevute concordato.
+- Split facoltativo proporzionale al reddito, con quote e dati chiaramente
+  visibili ai membri; richiede regole condivise nel gruppo.
+- SEO IT/EN, contenuti utili e pagina “Chi siamo”; misurare l’effetto solo con
+  analytics privacy-friendly e configurati nel rispetto del consenso.
+- Sostegno/donazioni con pagina trasparente; eventuale piano Supporter solo dopo
+  aver definito costi e funzionalità senza limitare l’uso gratuito essenziale.
+- Widget Android “Il mio saldo” e notifiche locali per ricorrenze/conto da
+  chiudere; Firebase push richiede progetto e credenziali.
 
-- **Widget** “Il mio saldo” con aggiornamento periodico.
-- **Quick action** “Nuova spesa” e “Nuovo gruppo” dal launcher.
-- **Notifiche locali** per ricorrenze e “conto da chiudere” (senza Firebase).
-- **Condivisione nativa** già presente: immagine del riepilogo fatta; restano
-  PDF e link del cassiere.
-- **App Links** già presenti: aggiungere fallback web se l’app non è installata.
-- **Material You** per il tema dinamico, mantenendo i token b-lance come
-  fallback.
+## P3 — Estensioni
 
-## Priorità consigliata
+- Calendario per ricorrenze; QR del riepilogo; statistiche e budget;
+  internazionalizzazione completa IT/EN (poi eventuali altre lingue).
+- Allegati e scansione ricevute oltre il solo OCR; rifiniture e feedback utenti.
 
-| Priorità | Intervento | Perché | Stima |
-|---|---|---|---|
-| P0 | Cache di lettura offline + stato “offline” | evita schermate vuote in viaggio | 1–2 giorni |
-| P0 | Riepilogo condivisibile read-only | chiude il cerchio con chi non ha l’app | 2–3 giorni |
-| P1 | Modalità cassiere con gruppo locale | il differenziatore di prodotto | 3–5 giorni |
-| P1 | Coda di scrittura offline + idempotenza | rende l’offline utile davvero | 3–4 giorni |
-| P2 | Rivendicazione gruppo locale | ponte verso gli account | 2–3 giorni |
-| P2 | Widget e quick action | presenza quotidiana | 2 giorni |
+## Metriche da introdurre
 
-## Rischi tecnici
+Conversione visita→registrazione, gruppi creati, utenti attivi, completamento
+“gruppo→spesa→saldo”, tempo alla prima spesa, feedback verificati e installazioni
+PWA. La scorecard 7.5/10 e i target della review sono valutazioni preliminari,
+non benchmark misurati: definire baseline, consenso e fattibilità prima di adottarli.
 
-- **Doppia fonte di verità** tra gruppo locale e server: serve un protocollo
-  chiaro di merge e un codice di rivendicazione monouso.
-- **Privacy del riepilogo**: il link deve essere firmato, non indicizzabile,
-  con scadenza e possibilità di revoca.
-- **Dati sensibili sul telefono**: SQLite cifrato e export esplicito.
-- **Test**: servono test di sincronizzazione, idempotenza, conflitti e
-  migrazione locale → server; non basta testare le singole schermate.
+## Dipendenze e ordine
 
-## Domande per il proprietario
-
-1. Il riepilogo condiviso deve essere **sempre aggiornato** o una fotografia
-   del momento?
-2. La modalità cassiere deve funzionare **senza alcun account** anche per il
-   creatore, o basta un account per salvare?
-3. Il primo rilascio offline deve coprire solo **lettura** o anche scrittura?
-4. Widget e quick action sono utili subito o meglio dopo la modalità cassiere?
+Provider email, Firebase/FCM, esempi CSV, credenziali di donazione e consenso
+per testimonianze sono prerequisiti, non attività già disponibili. Procedere da
+P0, poi P1; evitare di avviare promozione, raccolta recensioni o misurazione
+esterna senza revisione e autorizzazione.

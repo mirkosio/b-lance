@@ -182,6 +182,14 @@ class _HomeScreenState extends State<HomeScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
               children: [
+                if (widget.api.lastResponseFromCache ||
+                    widget.api.pendingMutationCount > 0 ||
+                    widget.api.pendingMutationError != null)
+                  OfflineCacheNotice(
+                    fromCache: widget.api.lastResponseFromCache,
+                    pendingChanges: widget.api.pendingMutationCount,
+                    syncError: widget.api.pendingMutationError,
+                  ),
                 Text(
                   'Ciao, ${widget.user.name}',
                   style: Theme.of(context).textTheme.headlineSmall,

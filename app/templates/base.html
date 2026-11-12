@@ -33,11 +33,11 @@
   <meta name="apple-mobile-web-app-title" content="b-lance">
   <link rel="apple-touch-icon" href="/static/icons/icon-192.png?v=5">
   <link rel="icon" type="image/png" sizes="64x64" href="/static/icons/favicon-64.png?v=5">
-  <meta name="description" content="Dividi le spese con amici: weekend, gite, vacanze. Preciso al centesimo.">
+  <meta name="description" content="{% block meta_description %}Dividi le spese con amici: weekend, gite, vacanze. Preciso al centesimo.{% endblock %}">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="b-lance">
   <meta property="og:title" content="{% block og_title %}b-lance — dividi le spese, non le amicizie{% endblock %}">
-  <meta property="og:description" content="App Android e web per i conti di gruppo, al centesimo.">
+  <meta property="og:description" content="{% block og_description %}App Android e web per i conti di gruppo, al centesimo.{% endblock %}">
   <meta property="og:image" content="{{ request.base_url }}static/og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -47,7 +47,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=19">
+  <link rel="stylesheet" href="/static/app.css?v=21">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
 <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -152,12 +152,12 @@
 
     <div class="side-label">Strumenti</div>
     <a class="side-link cta" href="/groups/new">Nuovo gruppo</a>
-    <a class="side-link" href="/about#come-funziona">Come funziona</a>
-    <a class="side-link" href="/about#app">App Android</a>
-    <a class="side-link" href="/about#faq">FAQ</a>
+    <a class="side-link" href="/come-funziona">Come funziona</a>
+    <a class="side-link" href="/android">App Android</a>
+    <a class="side-link" href="/faq">FAQ</a>
 
     <div class="side-label">Account</div>
-    <a class="side-link" href="/about#privacy">Privacy</a>
+    <a class="side-link" href="/privacy">Privacy</a>
     <button class="side-link" type="button" data-theme-toggle>Tema chiaro / scuro</button>
     <form method="post" action="/logout" class="side-form">
       <button class="side-link" type="submit">Esci</button>
@@ -202,11 +202,12 @@
     <img class="brand-badge" src="/static/logo-mark.svg?v=5" alt="">
   </a>
   <nav class="public-links" aria-label="Sezioni del sito">
-    <a href="/#come-funziona">Come funziona</a>
+    <a href="/come-funziona">Come funziona</a>
+    <a href="/demo">Demo</a>
     <a href="/#funzioni">Funzioni</a>
-    <a href="/#app">App Android</a>
-    <a href="/#faq">FAQ</a>
-    <a href="/about">Informazioni</a>
+    <a href="/android">App Android</a>
+    <a href="/faq">FAQ</a>
+    <a href="/privacy">Privacy</a>
   </nav>
   <span class="right">
     <button class="icon-btn" type="button" data-theme-toggle aria-label="Cambia tema">
@@ -222,12 +223,13 @@
   {% block content %}{% endblock %}
 </main>
 
-<footer>b-lance — dividiamo, regoliamo, bilanci in equilibrio. · <a href="/about">Informazioni</a></footer>
+<footer>b-lance — dividiamo, regoliamo, bilanci in equilibrio. · <a href="/come-funziona">Come funziona</a> · <a href="/demo">Demo</a> · <a href="/faq">FAQ</a> · <a href="/privacy">Privacy</a> · <a href="/android">App Android</a> · <a href="/about">Informazioni</a></footer>
 
 {% if not user %}
 <!-- Navigazione pubblica mobile: solo testo, niente icone decorative. -->
 <nav class="bottomnav guest-nav" aria-label="Navigazione principale">
   <a class="bn-item {% if request.url.path == '/' %}active{% endif %}" href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Home</a>
+  <a class="bn-item {% if request.url.path == '/demo' %}active{% endif %}" href="/demo" {% if request.url.path == '/demo' %}aria-current="page"{% endif %}>Demo</a>
   <a class="bn-item" href="/login">Accedi</a>
   <a class="bn-item strong" href="/register">Registrati</a>
 </nav>
@@ -460,6 +462,130 @@
         });
     });
   }
+</script>
+<script>
+  // Errori accanto ai campi e riepilogo raggiungibile da tastiera.
+  (function () {
+    var forms = document.querySelectorAll('form[data-inline-validation]');
+    var nextId = 0;
+
+    function messageFor(field) {
+      var validity = field.validity;
+      if (validity.valueMissing) return 'Compila questo campo.';
+      if (validity.typeMismatch) return field.type === 'email' ? 'Inserisci un indirizzo email valido.' : 'Controlla il formato inserito.';
+      if (validity.tooShort) return 'Inserisci almeno ' + field.minLength + ' caratteri.';
+      if (validity.tooLong) return 'Usa al massimo ' + field.maxLength + ' caratteri.';
+      if (validity.patternMismatch) return field.name === 'handle'
+        ? 'Usa 3-20 caratteri: lettere minuscole, numeri o _.'
+        : 'Controlla il formato inserito.';
+      if (validity.rangeUnderflow) return 'Il valore è troppo basso.';
+      if (validity.rangeOverflow) return 'Il valore è troppo alto.';
+      return 'Controlla il valore inserito.';
+    }
+
+    forms.forEach(function (form) {
+      var summary = null;
+      var fields = Array.from(form.querySelectorAll('input, select, textarea'));
+
+      function clearFieldError(field) {
+        field.removeAttribute('aria-invalid');
+        var error = field.dataset.inlineErrorId && document.getElementById(field.dataset.inlineErrorId);
+        if (error) error.remove();
+        if (field.dataset.inlineDescription !== undefined) {
+          if (field.dataset.inlineDescription) field.setAttribute('aria-describedby', field.dataset.inlineDescription);
+          else field.removeAttribute('aria-describedby');
+          delete field.dataset.inlineDescription;
+          delete field.dataset.inlineErrorId;
+        }
+      }
+
+      function showFieldError(field) {
+        if (!field.willValidate || field.validity.valid) {
+          clearFieldError(field);
+          return false;
+        }
+        field.setAttribute('aria-invalid', 'true');
+        if (!field.id) field.id = 'inline-field-' + (++nextId);
+        if (!field.dataset.inlineErrorId) {
+          field.dataset.inlineErrorId = 'inline-error-' + (++nextId);
+          field.dataset.inlineDescription = field.getAttribute('aria-describedby') || '';
+          var error = document.createElement('small');
+          error.className = 'field-error';
+          error.id = field.dataset.inlineErrorId;
+          error.setAttribute('role', 'alert');
+          field.insertAdjacentElement('afterend', error);
+        }
+        var describedBy = [field.dataset.inlineDescription, field.dataset.inlineErrorId].filter(Boolean).join(' ');
+        field.setAttribute('aria-describedby', describedBy);
+        document.getElementById(field.dataset.inlineErrorId).textContent = messageFor(field);
+        return true;
+      }
+
+      function refreshSummary() {
+        if (!summary) return;
+        var invalidFields = fields.filter(function (field) { return field.willValidate && !field.validity.valid; });
+        if (!invalidFields.length) {
+          summary.remove();
+          summary = null;
+          return;
+        }
+        var list = summary.querySelector('ul');
+        list.replaceChildren();
+        invalidFields.forEach(function (field) {
+          var item = document.createElement('li');
+          var link = document.createElement('a');
+          var label = field.labels && field.labels[0];
+          link.href = '#' + field.id;
+          link.textContent = (label ? label.textContent.trim() : 'Campo') + ': ' + messageFor(field);
+          link.addEventListener('click', function (event) {
+            event.preventDefault();
+            field.focus();
+          });
+          item.appendChild(link);
+          list.appendChild(item);
+        });
+      }
+
+      form.addEventListener('focusout', function (event) {
+        if (fields.includes(event.target)) {
+          showFieldError(event.target);
+          refreshSummary();
+        }
+      });
+      form.addEventListener('input', function (event) {
+        if (fields.includes(event.target) && event.target.getAttribute('aria-invalid') === 'true') {
+          showFieldError(event.target);
+          refreshSummary();
+        }
+      });
+      form.addEventListener('change', function (event) {
+        if (fields.includes(event.target) && event.target.getAttribute('aria-invalid') === 'true') {
+          showFieldError(event.target);
+          refreshSummary();
+        }
+      });
+      form.addEventListener('submit', function (event) {
+        var invalidFields = fields.filter(showFieldError);
+        if (!invalidFields.length) return;
+        event.preventDefault();
+        if (!summary) {
+          summary = document.createElement('div');
+          summary.className = 'alert form-error-summary';
+          summary.tabIndex = -1;
+          summary.setAttribute('role', 'alert');
+          summary.setAttribute('aria-labelledby', 'error-summary-title-' + (++nextId));
+          var title = document.createElement('h2');
+          title.id = summary.getAttribute('aria-labelledby');
+          title.textContent = 'Controlla questi campi';
+          summary.appendChild(title);
+          summary.appendChild(document.createElement('ul'));
+          form.insertAdjacentElement('beforebegin', summary);
+        }
+        refreshSummary();
+        summary.focus();
+      });
+    });
+  })();
 </script>
 </body>
 </html>

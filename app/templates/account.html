@@ -5,13 +5,13 @@
   <h1 class="section-title">Il tuo account</h1>
   {% if error or err %}<p class="error">{{ error or err }}</p>{% endif %}
   {% if ok %}<p class="muted small">Salvato.</p>{% endif %}
-  <form method="post" action="/account">
+  <form method="post" action="/account" data-inline-validation novalidate>
     <label for="account-name">Nome</label>
     <input type="text" id="account-name" name="name" value="{{ user.name }}" required maxlength="60" autocomplete="name">
 
     <label for="account-handle">username</label>
     <input type="text" id="account-handle" name="handle" value="{{ user.handle or '' }}"
-           placeholder="es. mirkosio" maxlength="20" autocapitalize="none"
+           placeholder="es. mirkosio" minlength="3" maxlength="20" pattern="[a-z0-9_]{3,20}" autocapitalize="none"
            aria-describedby="account-handle-help">
     <p class="muted small" id="account-handle-help">
       Serve per farti invitare nei gruppi senza condividere la rubrica.
@@ -32,7 +32,7 @@
 
 <div class="card">
   <h2 class="section-title">Password</h2>
-  <form method="post" action="/account/password">
+  <form method="post" action="/account/password" data-inline-validation novalidate>
     <label for="account-current">Password attuale</label>
     <input type="password" id="account-current" name="current" required autocomplete="current-password">
     <label for="account-new">Nuova password</label>
@@ -45,6 +45,12 @@
     Il recupero via email non è attivo: se hai perso la password, chiedi
     assistenza. Il cambio qui richiede di essere già dentro.
   </p>
+</div>
+
+<div class="card">
+  <h2 class="section-title">Scarica i tuoi dati</h2>
+  <p class="muted small">Esporta il profilo, i gruppi di cui fai parte e le spese e i pagamenti collegati al tuo account.</p>
+  <a class="btn ghost" href="/account/export">Scarica archivio JSON</a>
 </div>
 
 <div class="card">

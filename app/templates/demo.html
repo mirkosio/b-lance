@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% block title %}Prova la demo — b-lance{% endblock %}
+{% block meta_description %}Prova b-lance senza registrarti: aggiungi una spesa, guarda saldi e bonifici aggiornarsi. I dati restano nel browser.{% endblock %}
+{% block og_title %}Prova la demo — b-lance{% endblock %}
+{% block og_description %}Un conto di gruppo vero, senza account. Aggiungi una spesa e guarda saldi e bonifici.{% endblock %}
+{% block body_class %}demo-page {% if user %}authed{% else %}guest{% endif %}{% endblock %}
+{% block content %}
+<article class="demo-shell">
+  <header class="demo-hero">
+    <span class="eyebrow">Prova senza registrarti</span>
+    <h1>Fai un conto vero,<br><em>senza account.</em></h1>
+    <p>
+      Questa è una demo. Aggiungi una spesa e guarda saldi e bonifici
+      aggiornarsi. I dati restano in questa pagina e non vengono salvati.
+    </p>
+    <p class="demo-banner">
+      <svg width="18" height="18" aria-hidden="true"><use href="#i-info"></use></svg>
+      <span>Stai provando la demo. Nessun dato viene inviato.</span>
+    </p>
+  </header>
+
+  <div class="demo-grid">
+    <section class="card demo-card" aria-labelledby="demo-expenses-title">
+      <div class="demo-card-head">
+        <div>
+          <span class="eyebrow">Il conto</span>
+          <h2 id="demo-expenses-title">Weekend a Bologna</h2>
+        </div>
+        <button class="btn sm ghost" type="button" id="demo-reset">Azzera</button>
+      </div>
+
+      <ul class="demo-list" id="demo-list" aria-live="polite"></ul>
+
+      <form class="demo-form" id="demo-form" novalidate>
+        <h3>Aggiungi una spesa</h3>
+        <div class="demo-form-grid">
+          <div>
+            <label for="demo-desc">Descrizione</label>
+            <input id="demo-desc" name="desc" type="text" maxlength="60" placeholder="Es. Pranzo, taxi, museo" required>
+          </div>
+          <div>
+            <label for="demo-amount">Importo</label>
+            <input id="demo-amount" name="amount" type="text" inputmode="decimal" placeholder="Es. 24,50" required>
+          </div>
+          <div>
+            <label for="demo-paid">Ha pagato</label>
+            <select id="demo-paid" name="paid">
+              <option value="marco">Marco</option>
+              <option value="sara">Sara</option>
+              <option value="luca">Luca</option>
+            </select>
+          </div>
+        </div>
+        <p class="demo-hint">La spesa viene divisa in parti uguali tra Marco, Sara e Luca.</p>
+        <p class="demo-error" id="demo-error" role="alert" hidden></p>
+        <button class="btn" type="submit">
+          <svg width="17" height="17" aria-hidden="true"><use href="#i-plus"></use></svg>
+          Aggiungi spesa
+        </button>
+      </form>
+    </section>
+
+    <aside class="card demo-summary" aria-labelledby="demo-summary-title">
+      <div class="demo-card-head">
+        <div>
+          <span class="eyebrow">Il risultato</span>
+          <h2 id="demo-summary-title">Saldi e bonifici</h2>
+        </div>
+      </div>
+      <ul class="demo-balances" id="demo-balances" aria-live="polite"></ul>
+      <div class="demo-transfer-box">
+        <h3>Per saldare</h3>
+        <ul class="demo-transfers" id="demo-transfers" aria-live="polite"></ul>
+        <p class="demo-transfer-note" id="demo-transfer-note"></p>
+      </div>
+      <div class="demo-cta">
+        <p>Ti serve davvero? Crea il tuo gruppo: è gratis.</p>
+        {% if user %}
+        <a class="btn" href="/groups/new">Crea un gruppo</a>
+        <a class="info-secondary" href="/">Torna ai tuoi gruppi</a>
+        {% else %}
+        <a class="btn" href="/register">Crea il tuo gruppo</a>
+        <a class="info-secondary" href="/login">Ho già un account</a>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+
+  <p class="demo-footnote">
+    Nella demo la divisione è sempre in parti uguali. Nell'app puoi usare
+    importi esatti, percentuali e il Cassiere per assegnare i singoli articoli.
+    <a href="/come-funziona">Scopri come funziona</a>.
+  </p>
+</article>
+
+<script>
+(function () {
+  var people = [
+    { id: 'marco', name: 'Marco' },
+    { id: 'sara', name: 'Sara' },
+    { id: 'luca', name: 'Luca' }
+  ];
+  var initial = [
+    { desc: 'Cena', amount: 9000, paid: 'marco' },
+    { desc: 'Benzina', amount: 6000, paid: 'sara' },
+    { desc: 'Casa', amount: 24000, paid: 'luca' }
+  ];
+  var expenses = initial.slice();
+
+  var list = document.getElementById('demo-list');
+  var balances = document.getElementById('demo-balances');
+  var transfers = document.getElementById('demo-transfers');
+  var transferNote = document.getElementById('demo-transfer-note');
+  var form = document.getElementById('demo-form');
+  var error = document.getElementById('demo-error');
+  var desc = document.getElementById('demo-desc');
+  var amount = document.getElementById('demo-amount');
+  var paid = document.getElementById('demo-paid');
+  var reset = document.getElementById('demo-reset');
+
+  function money(cents) {
+    return (cents / 100).toLocaleString('it-IT', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }) + ' €';
+  }
+
+  function personName(id) {
+    for (var i = 0; i < people.length; i++) {
+      if (people[i].id === id) return people[i].name;
+    }
+    return id;
+  }
+
+  function splitEqual(total, count) {
+    var base = Math.floor(total / count);
+    var rest = total - base * count;
+    var shares = [];
+    for (var i = 0; i < count; i++) shares.push(base + (i < rest ? 1 : 0));
+    return shares;
+  }
+
+  function calculate() {
+    var paidBy = {};
+    var owedBy = {};
+    people.forEach(function (p) { paidBy[p.id] = 0; owedBy[p.id] = 0; });
+
+    expenses.forEach(function (expense) {
+      paidBy[expense.paid] += expense.amount;
+      var shares = splitEqual(expense.amount, people.length);
+      people.forEach(function (p, index) { owedBy[p.id] += shares[index]; });
+    });
+
+    var net = people.map(function (p) {
+      return { id: p.id, name: p.name, amount: paidBy[p.id] - owedBy[p.id] };
+    });
+
+    var creditors = net.filter(function (p) { return p.amount > 0; })
+      .map(function (p) { return { name: p.name, amount: p.amount }; })
+      .sort(function (a, b) { return b.amount - a.amount; });
+    var debtors = net.filter(function (p) { return p.amount < 0; })
+      .map(function (p) { return { name: p.name, amount: -p.amount }; })
+      .sort(function (a, b) { return b.amount - a.amount; });
+
+    var moves = [];
+    var i = 0;
+    var j = 0;
+    while (i < debtors.length && j < creditors.length) {
+      var value = Math.min(debtors[i].amount, creditors[j].amount);
+      if (value > 0) moves.push({ from: debtors[i].name, to: creditors[j].name, amount: value });
+      debtors[i].amount -= value;
+      creditors[j].amount -= value;
+      if (debtors[i].amount === 0) i++;
+      if (creditors[j].amount === 0) j++;
+    }
+    return { net: net, moves: moves };
+  }
+
+  function render() {
+    list.replaceChildren();
+    expenses.forEach(function (expense) {
+      var li = document.createElement('li');
+      li.className = 'demo-row';
+
+      var copy = document.createElement('div');
+      var title = document.createElement('b');
+      title.textContent = expense.desc;
+      var detail = document.createElement('span');
+      detail.textContent = 'pagata da ' + personName(expense.paid) + ' · divisa in 3';
+      copy.appendChild(title);
+      copy.appendChild(detail);
+
+      var value = document.createElement('span');
+      value.className = 'num';
+      value.textContent = money(expense.amount);
+
+      li.appendChild(copy);
+      li.appendChild(value);
+      list.appendChild(li);
+    });
+
+    var result = calculate();
+    balances.replaceChildren();
+    result.net.forEach(function (person) {
+      var li = document.createElement('li');
+      li.className = 'demo-balance';
+
+      var name = document.createElement('span');
+      name.textContent = person.name;
+      var value = document.createElement('b');
+      value.className = 'num ' + (person.amount > 0 ? 'pos' : person.amount < 0 ? 'neg' : '');
+      value.textContent = (person.amount > 0 ? '+' : person.amount < 0 ? '−' : '') + money(Math.abs(person.amount));
+      li.appendChild(name);
+      li.appendChild(value);
+      balances.appendChild(li);
+    });
+
+    transfers.replaceChildren();
+    result.moves.forEach(function (move) {
+      var li = document.createElement('li');
+      li.className = 'demo-transfer';
+      var text = document.createElement('span');
+      text.textContent = move.from + ' → ' + move.to;
+      var value = document.createElement('b');
+      value.className = 'num';
+      value.textContent = money(move.amount);
+      li.appendChild(text);
+      li.appendChild(value);
+      transfers.appendChild(li);
+    });
+
+    transferNote.textContent = result.moves.length
+      ? 'Con ' + result.moves.length + (result.moves.length === 1 ? ' bonifico' : ' bonifici') + ' il conto è saldato.'
+      : 'Nessun debito in sospeso. Conto saldato.';
+  }
+
+  function parseAmount(raw) {
+    var clean = String(raw).replace(/[€\s]/g, '').replace(',', '.');
+    if (!/^\d+(\.\d{1,2})?$/.test(clean)) return null;
+    var cents = Math.round(parseFloat(clean) * 100);
+    if (!Number.isFinite(cents) || cents <= 0 || cents > 99999999) return null;
+    return cents;
+  }
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    error.hidden = true;
+    var cents = parseAmount(amount.value);
+    var text = desc.value.trim();
+    if (!text) {
+      error.textContent = 'Scrivi una descrizione per la spesa.';
+      error.hidden = false;
+      desc.focus();
+      return;
+    }
+    if (cents === null) {
+      error.textContent = 'Inserisci un importo valido, per esempio 24,50.';
+      error.hidden = false;
+      amount.focus();
+      return;
+    }
+    expenses.push({ desc: text, amount: cents, paid: paid.value });
+    desc.value = '';
+    amount.value = '';
+    desc.focus();
+    render();
+  });
+
+  reset.addEventListener('click', function () {
+    expenses = initial.slice();
+    error.hidden = true;
+    desc.value = '';
+    amount.value = '';
+    render();
+  });
+
+  render();
+})();
+</script>
+{% endblock %}

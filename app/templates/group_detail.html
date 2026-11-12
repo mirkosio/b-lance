@@ -114,6 +114,11 @@
           <span class="arrow">→</span>
           <span>{{ view.member_name(t.payee_id) }}</span>
           <span style="margin-left:auto;font-weight:700">{{ t.amount_minor | money(group.base_currency) }}</span>
+          <button type="button" class="btn sm ghost transfer-quick"
+                  data-pay-from="{{ t.payer_id }}" data-pay-to="{{ t.payee_id }}"
+                  data-pay-amount="{{ t.amount_minor | money_input(group.base_currency) }}">
+            Registra
+          </button>
         </div>
       {% endfor %}
       <p class="muted small" style="margin-top:10px">
@@ -572,6 +577,16 @@ expForm.addEventListener('submit', function (e) {
 
 // --- Pagamento: mai dalla stessa persona verso se stessa ---
 var payForm = document.getElementById('payment-form');
+document.querySelectorAll('.transfer-quick').forEach(function (button) {
+  button.addEventListener('click', function () {
+    document.getElementById('pay-from').value = button.dataset.payFrom;
+    document.getElementById('pay-to').value = button.dataset.payTo;
+    document.getElementById('pay-amount').value = button.dataset.payAmount;
+    document.getElementById('pay-note').value = '';
+    payForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('pay-amount').focus({ preventScroll: true });
+  });
+});
 payForm.addEventListener('submit', function (e) {
   var f = payForm.querySelector('[name="from_user"]');
   var t = payForm.querySelector('[name="to_user"]');

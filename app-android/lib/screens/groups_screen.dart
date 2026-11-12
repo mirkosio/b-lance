@@ -162,6 +162,14 @@ class _GroupsScreenState extends State<GroupsScreen> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
               children: [
+                if (widget.api.lastResponseFromCache ||
+                    widget.api.pendingMutationCount > 0 ||
+                    widget.api.pendingMutationError != null)
+                  OfflineCacheNotice(
+                    fromCache: widget.api.lastResponseFromCache,
+                    pendingChanges: widget.api.pendingMutationCount,
+                    syncError: widget.api.pendingMutationError,
+                  ),
                 Text(
                   '${groups.length} '
                   '${groups.length == 1 ? 'gruppo' : 'gruppi'}',

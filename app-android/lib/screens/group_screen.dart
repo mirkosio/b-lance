@@ -623,6 +623,14 @@ class _GroupScreenState extends State<GroupScreen> {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
               children: [
+                if (widget.api.lastResponseFromCache ||
+                    widget.api.pendingMutationCount > 0 ||
+                    widget.api.pendingMutationError != null)
+                  OfflineCacheNotice(
+                    fromCache: widget.api.lastResponseFromCache,
+                    pendingChanges: widget.api.pendingMutationCount,
+                    syncError: widget.api.pendingMutationError,
+                  ),
                 if (me != null) ...[
                   HeroBalance(
                     nets: {d.baseCurrency: me.netMinor},
@@ -715,6 +723,22 @@ class _GroupScreenState extends State<GroupScreen> {
                                         ? sage
                                         : sageInk,
                                   ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Registra questo pagamento',
+                                  onPressed: () => showPaymentSheet(
+                                    context,
+                                    api: widget.api,
+                                    detail: d,
+                                    onDone: _reload,
+                                    initialFromUser: t.payerId,
+                                    initialToUser: t.payeeId,
+                                    initialAmount: formatMinor(
+                                      t.amountMinor,
+                                      expo,
+                                    ),
+                                  ),
+                                  icon: const Icon(Icons.check_circle_outline),
                                 ),
                               ],
                             ),

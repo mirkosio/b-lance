@@ -11,6 +11,7 @@ Punti di forza rispetto ai competitor:
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import secrets
 from contextlib import asynccontextmanager
@@ -22,7 +23,7 @@ from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request, Respo
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 from sqlalchemy.orm import Session, selectinload
@@ -288,6 +289,7 @@ async def assetlinks():
 def _jinja_filters() -> None:
     # Formattazione generica (default EUR).
     templates.env.filters["money"] = lambda minor, code="EUR": format_amount(int(minor), code)
+    templates.env.filters["money_input"] = lambda minor, code="EUR": format_amount(int(minor), code, symbol=False)
     templates.env.filters["eur"] = lambda minor: format_amount(int(minor), "EUR")
     templates.env.filters["euro_major"] = lambda minor: f"{int(minor) / 100:.2f}"
     # Valute senza tasso automatico: il form deve chiedere il tasso a mano.
@@ -420,7 +422,7 @@ def robots(request: Request) -> Response:
 @app.get("/sitemap.xml")
 def sitemap(request: Request) -> Response:
     base = str(request.base_url).rstrip("/")
-    urls = ["/", "/about", "/login", "/register"]
+    urls = ["/", "/about", "/come-funziona", "/android", "/faq", "/privacy", "/demo", "/login", "/register"]
     items = "".join(f"<url><loc>{base}{path}</loc></url>" for path in urls)
     body = (
         '<?xml version="1.0" encoding="UTF-8"?>'
@@ -594,6 +596,383 @@ def about_page(
     )
 
 
+_INFO_PAGES = {
+    "come-funziona": {
+        "eyebrow": "In pochi passaggi",
+        "title": "Come funziona",
+        "intro": (
+            "Segna le spese mentre siete insieme. b-lance tiene il conto e, "
+            "alla fine, ti dice chi paga chi con il minor numero di bonifici."
+        ),
+        "facts": ["Al centesimo", "Pagamenti parziali", "Bonifici minimi"],
+        "layout": "steps",
+        "example": {
+            "eyebrow": "Un esempio concreto",
+            "title": "Weekend a Bologna, in tre",
+            "body": (
+                "Tre amici, tre spese pagate da persone diverse. Nessuno deve "
+                "rifare i calcoli o ricordare chi ha anticipato cosa."
+            ),
+            "rows": [
+                {"label": "Cena", "detail": "pagata da Marco", "amount": "90,00 €"},
+                {"label": "Benzina", "detail": "pagata da Sara", "amount": "60,00 €"},
+                {"label": "Casa", "detail": "pagata da Luca", "amount": "240,00 €"},
+            ],
+            "total": "390,00 €",
+            "result": (
+                "Alla fine bastano due bonifici: Marco versa 40,00 € a Luca "
+                "e Sara 70,00 € a Luca. Il conto è saldato."
+            ),
+        },
+        "sections": [
+            {
+                "mark": "01",
+                "title": "Crea il gruppo",
+                "body": (
+                    "Dai un nome al viaggio, alla casa o alla cena. Invita chi "
+                    "partecipa con un link, un QR o il suo username: la rubrica "
+                    "del telefono resta fuori."
+                ),
+            },
+            {
+                "mark": "02",
+                "title": "Aggiungi le spese",
+                "body": (
+                    "Scrivi chi ha pagato e come dividere: parti uguali, importi "
+                    "esatti o percentuali. Puoi anche segnare una spesa "
+                    "ricorrente, come l'affitto o l'abbonamento."
+                ),
+            },
+            {
+                "mark": "03",
+                "title": "Registra i pagamenti",
+                "body": (
+                    "Quando qualcuno salda, anche solo in parte, registralo. Il "
+                    "saldo scende subito e il resto resta visibile a tutti."
+                ),
+            },
+            {
+                "mark": "04",
+                "title": "Chiudi i conti",
+                "body": (
+                    "Il riepilogo propone i trasferimenti necessari. Puoi "
+                    "condividerlo come link, immagine o PDF senza mostrare le "
+                    "spese."
+                ),
+            },
+        ],
+        "closing": (
+            "Non serve un foglio Excel e non serve ricordare chi ha pagato cosa: "
+            "lo storico resta nel gruppo, anche quando una spesa viene annullata."
+        ),
+        "cta": {
+            "href": "/register",
+            "label": "Crea il tuo primo gruppo",
+            "auth_href": "/groups/new",
+            "auth_label": "Crea un gruppo",
+        },
+        "secondary": {"href": "/faq", "label": "Hai una domanda? Leggi le FAQ"},
+    },
+    "android": {
+        "eyebrow": "Sempre con te",
+        "title": "App Android",
+        "intro": (
+            "L'app Android è Flutter nativo: usa la stessa API del sito, ma è "
+            "pensata per essere usata con una mano. Il Cassiere funziona anche "
+            "senza rete."
+        ),
+        "facts": ["Nativa, non WebView", "Cassiere offline", "Aggiornamenti da GitHub"],
+        "layout": "steps",
+        "sections": [
+            {
+                "mark": "01",
+                "title": "Scarica l'APK",
+                "body": (
+                    "Apri la pagina delle release e scarica l'ultima versione "
+                    "(1.6.0). Android potrebbe chiederti di consentire "
+                    "l'installazione da questa fonte: è normale per un'app "
+                    "distribuita fuori dal Play Store."
+                ),
+            },
+            {
+                "mark": "02",
+                "title": "Accedi o usa il Cassiere",
+                "body": (
+                    "Con l'account ritrovi i gruppi online. Il Cassiere, invece, "
+                    "resta sul telefono: utile per una cena o una gita senza "
+                    "connessione."
+                ),
+            },
+            {
+                "mark": "03",
+                "title": "Aggiorna senza sorprese",
+                "body": (
+                    "Le prossime versioni manterranno la stessa firma. Se passi "
+                    "dalla 1.5.0 alla 1.6.0, disinstalla prima la vecchia "
+                    "versione: la chiave di firma è cambiata. I gruppi online "
+                    "restano; quelli solo Cassiere possono andare persi."
+                ),
+            },
+            {
+                "mark": "04",
+                "title": "Requisiti",
+                "body": (
+                    "Serve Android 7.0 o successivo. Il sito resta completo su "
+                    "iPhone e su qualsiasi browser, anche senza installare "
+                    "nulla."
+                ),
+            },
+        ],
+        "closing": (
+            "L'app non chiede la rubrica e non usa la posizione. I permessi "
+            "servono solo per condividere un file o aprire un link del gruppo."
+        ),
+        "cta": {
+            "href": "https://github.com/mirkosio/b-lance/releases",
+            "label": "Apri le release",
+            "auth_href": "/",
+            "auth_label": "Apri i tuoi gruppi",
+        },
+        "secondary": {"href": "/faq", "label": "Domande sull'app? Leggi le FAQ"},
+    },
+    "faq": {
+        "eyebrow": "Risposte semplici",
+        "title": "Domande frequenti",
+        "intro": (
+            "Le risposte rapide su gruppi, pagamenti e dati. Se non trovi la "
+            "tua domanda, apri una issue su GitHub: il progetto è aperto."
+        ),
+        "facts": ["Gratis", "Senza rubrica", "Link a scadenza"],
+        "layout": "faq",
+        "sections": [
+            {
+                "title": "b-lance è gratis?",
+                "body": (
+                    "Sì. Le funzioni disponibili sono gratuite, senza "
+                    "pubblicità e senza vendita di dati. Il codice è aperto su "
+                    "GitHub."
+                ),
+            },
+            {
+                "title": "Devo caricare la rubrica del telefono?",
+                "body": (
+                    "No. Inviti le persone con un link, un QR o il loro "
+                    "username. La rubrica non viene mai richiesta né caricata."
+                ),
+            },
+            {
+                "title": "Come posso dividere una spesa?",
+                "body": (
+                    "In parti uguali, con importi esatti o percentuali. Nel "
+                    "Cassiere puoi anche assegnare i singoli articoli alle "
+                    "persone, come su uno scontrino."
+                ),
+            },
+            {
+                "title": "Posso registrare un pagamento parziale?",
+                "body": (
+                    "Sì. Il saldo scende dell'importo versato e il resto resta "
+                    "in evidenza. Serve per chi salda a rate o in contanti."
+                ),
+            },
+            {
+                "title": "Cosa succede quando annullo una spesa?",
+                "body": (
+                    "Resta nello storico in grigio e barrata, ma non conta più "
+                    "nei saldi. Nessuno cancella la storia del gruppo."
+                ),
+            },
+            {
+                "title": "Funziona su iPhone?",
+                "body": (
+                    "Sì, dal browser. L'app nativa è per Android; il sito ha le "
+                    "stesse funzioni principali e si adatta al telefono."
+                ),
+            },
+            {
+                "title": "Il link condiviso scade?",
+                "body": (
+                    "Sì, dopo 30 giorni. Puoi revocarlo prima o rigenerarlo dal "
+                    "gruppo. Mostra solo saldi e bonifici, non le spese, le "
+                    "note o le email."
+                ),
+            },
+            {
+                "title": "I dati del Cassiere vanno online?",
+                "body": (
+                    "No. I gruppi Cassiere restano sul dispositivo. Se cancelli "
+                    "i dati dell'app o disinstalli, possono andare persi."
+                ),
+            },
+            {
+                "title": "Posso esportare i conti?",
+                "body": (
+                    "Sì: CSV e PDF per ogni gruppo, più un archivio JSON "
+                    "dell'account dalle impostazioni del profilo."
+                ),
+            },
+            {
+                "title": "Come elimino l'account?",
+                "body": (
+                    "Dalle impostazioni del profilo. Il profilo viene "
+                    "anonimizzato: email, password e username spariscono, "
+                    "mentre le spese restano nei gruppi per non rompere i saldi "
+                    "degli altri."
+                ),
+            },
+            {
+                "title": "Come aggiorno l'app Android?",
+                "body": (
+                    "Dalla pagina delle release. La 1.6.0 usa una nuova firma: "
+                    "se arrivi dalla 1.5.0, disinstalla prima la vecchia "
+                    "versione."
+                ),
+            },
+        ],
+        "closing": (
+            "Una risposta chiara vale più di un'informativa lunga. Se qualcosa "
+            "non torna, scrivilo nelle issue: aiuta anche gli altri."
+        ),
+        "cta": {
+            "href": "/register",
+            "label": "Prova b-lance gratis",
+            "auth_href": "/",
+            "auth_label": "Torna ai tuoi gruppi",
+        },
+        "secondary": {"href": "/come-funziona", "label": "Scopri come funziona"},
+        "aside_note": "Non trovi la risposta?",
+        "aside_link": {
+            "href": "https://github.com/mirkosio/b-lance/issues",
+            "label": "Apri una issue su GitHub",
+        },
+    },
+    "privacy": {
+        "eyebrow": "I tuoi dati, con chiarezza",
+        "title": "Privacy",
+        "intro": (
+            "Usiamo solo i dati che servono a far funzionare gruppi, spese e "
+            "pagamenti. Niente rubrica, niente pubblicità, niente vendita di "
+            "dati."
+        ),
+        "facts": ["Niente pubblicità", "Niente rubrica", "Dati minimi"],
+        "layout": "prose",
+        "sections": [
+            {
+                "title": "Cosa raccogliamo",
+                "body": (
+                    "Per l'account: nome, email, password (salvata come hash), "
+                    "colore e, se vuoi, username. Per i gruppi: spese, "
+                    "pagamenti, membri e note che inserisci."
+                ),
+            },
+            {
+                "title": "Cosa non facciamo",
+                "body": (
+                    "Non leggiamo la rubrica, non chiediamo il numero di "
+                    "telefono, non usiamo i tuoi dati per pubblicità o "
+                    "profilazione e non li vendiamo."
+                ),
+                "list": [
+                    "Nessun accesso ai contatti del telefono.",
+                    "Nessun cookie pubblicitario o pixel di tracciamento.",
+                    "Nessuna condivisione dei dati con inserzionisti.",
+                ],
+            },
+            {
+                "title": "Link condivisi",
+                "body": (
+                    "Un link pubblico mostra solo saldi e bonifici, non spese, "
+                    "note o email. Scade dopo 30 giorni e può essere revocato o "
+                    "rigenerato in qualsiasi momento."
+                ),
+            },
+            {
+                "title": "Modalità Cassiere",
+                "body": (
+                    "I gruppi Cassiere sono salvati sul dispositivo e non "
+                    "vengono caricati sui server. Se cancelli i dati dell'app o "
+                    "disinstalli, possono andare persi: per questo il riepilogo "
+                    "si può esportare come immagine o PDF."
+                ),
+            },
+            {
+                "title": "Conservazione e cancellazione",
+                "body": (
+                    "I dati restano finché l'account è attivo. Se elimini "
+                    "l'account, email, password e username vengono rimossi e il "
+                    "profilo diventa \"Ex-membro\"; le spese restano nei gruppi "
+                    "per non alterare i saldi degli altri."
+                ),
+            },
+            {
+                "title": "Cookie e preferenze",
+                "body": (
+                    "Usiamo un cookie di sessione per l'accesso e la memoria "
+                    "locale per tema e stato della sidebar. Non usiamo cookie "
+                    "pubblicitari."
+                ),
+            },
+            {
+                "title": "I tuoi diritti",
+                "body": (
+                    "Puoi esportare i dati dell'account in JSON, correggere nome "
+                    "e username, cambiare password o eliminare l'account dalle "
+                    "impostazioni. Per altre richieste, apri una issue su "
+                    "GitHub."
+                ),
+            },
+        ],
+        "closing": (
+            "Se qualcosa non è chiaro, chiedi: una risposta comprensibile vale "
+            "più di un'informativa lunga."
+        ),
+        "cta": {
+            "href": "/register",
+            "label": "Crea un account",
+            "auth_href": "/account",
+            "auth_label": "Gestisci il tuo account",
+        },
+        "secondary": {"href": "/faq", "label": "Leggi le domande frequenti"},
+    },
+}
+
+
+def _info_topic(request: Request, slug: str, user: User | None):
+    return templates.TemplateResponse(
+        request,
+        "info_topic.html",
+        {"request": request, "user": user, "info": _INFO_PAGES[slug]},
+    )
+
+
+@app.get("/come-funziona")
+def how_it_works_page(request: Request, user: User | None = Depends(current_user)):
+    return _info_topic(request, "come-funziona", user)
+
+
+@app.get("/android")
+def android_page(request: Request, user: User | None = Depends(current_user)):
+    return _info_topic(request, "android", user)
+
+
+@app.get("/faq")
+def faq_page(request: Request, user: User | None = Depends(current_user)):
+    return _info_topic(request, "faq", user)
+
+
+@app.get("/privacy")
+def privacy_page(request: Request, user: User | None = Depends(current_user)):
+    return _info_topic(request, "privacy", user)
+
+
+@app.get("/demo")
+def demo_page(request: Request, user: User | None = Depends(current_user)):
+    """Demo client-side: nessun dato viene salvato sul server."""
+    return templates.TemplateResponse(
+        request, "demo.html", {"request": request, "user": user}
+    )
+
+
 # ---------------------------------------------------------------- account
 @app.get("/account")
 def account_page(
@@ -606,6 +985,156 @@ def account_page(
         request,
         "account.html",
         {"request": request, "user": user, "ok": bool(ok), "err": err},
+    )
+
+
+@app.get("/account/export")
+def account_export(
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Esporta i dati dell’account e le attività che lo riguardano."""
+    memberships = db.scalars(
+        select(GroupMember)
+        .options(selectinload(GroupMember.group))
+        .where(GroupMember.user_id == user.id)
+    ).all()
+    group_ids = [membership.group_id for membership in memberships]
+    group_names = {m.group_id: m.group.name for m in memberships}
+
+    expense_query = select(Expense).options(selectinload(Expense.shares)).where(
+        or_(Expense.created_by == user.id, Expense.paid_by == user.id)
+    )
+    if group_ids:
+        expense_query = select(Expense).options(selectinload(Expense.shares)).where(
+            or_(
+                Expense.created_by == user.id,
+                Expense.paid_by == user.id,
+                Expense.group_id.in_(group_ids),
+            )
+        )
+    expenses = db.scalars(expense_query.order_by(Expense.created_at)).all()
+    payment_query = select(Payment).where(
+        or_(
+            Payment.created_by == user.id,
+            Payment.from_user == user.id,
+            Payment.to_user == user.id,
+        )
+    )
+    if group_ids:
+        payment_query = select(Payment).where(
+            or_(
+                Payment.created_by == user.id,
+                Payment.from_user == user.id,
+                Payment.to_user == user.id,
+                Payment.group_id.in_(group_ids),
+            )
+        )
+    payments = db.scalars(payment_query.order_by(Payment.created_at)).all()
+    recurring = (
+        db.scalars(
+            select(RecurringExpense)
+            .where(RecurringExpense.group_id.in_(group_ids))
+            .order_by(RecurringExpense.created_at)
+        ).all()
+        if group_ids
+        else []
+    )
+
+    def iso(value):
+        return value.isoformat() if value else None
+
+    payload = {
+        "exported_at": date.today().isoformat(),
+        "account": {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email,
+            "handle": user.handle,
+            "color": user.color,
+            "created_at": iso(user.created_at),
+        },
+        "memberships": [
+            {
+                "group_id": m.group_id,
+                "group_name": m.group.name,
+                "role": m.role,
+                "permissions": m.perms,
+                "joined_at": iso(m.joined_at),
+            }
+            for m in memberships
+        ],
+        "expenses": [
+            {
+                "id": e.id,
+                "group_id": e.group_id,
+                "group_name": group_names.get(e.group_id),
+                "description": e.description,
+                "category": e.category,
+                "amount_minor": e.amount_minor,
+                "currency": e.currency,
+                "base_amount_minor": e.base_amount_minor,
+                "base_currency": e.base_currency,
+                "fx_rate": e.fx_rate,
+                "paid_by": e.paid_by,
+                "created_by": e.created_by,
+                "created_at": iso(e.created_at),
+                "updated_at": iso(e.updated_at),
+                "voided_at": iso(e.voided_at),
+                "shares": [
+                    {"user_id": share.user_id, "amount_minor": share.amount_minor}
+                    for share in e.shares
+                ],
+            }
+            for e in expenses
+        ],
+        "payments": [
+            {
+                "id": payment.id,
+                "group_id": payment.group_id,
+                "group_name": group_names.get(payment.group_id),
+                "from_user": payment.from_user,
+                "to_user": payment.to_user,
+                "amount_minor": payment.amount_minor,
+                "currency": payment.currency,
+                "note": payment.note,
+                "created_at": iso(payment.created_at),
+                "voided_at": iso(payment.voided_at),
+            }
+            for payment in payments
+        ],
+        "recurring_expenses": [
+            {
+                "id": rule.id,
+                "group_id": rule.group_id,
+                "group_name": group_names.get(rule.group_id),
+                "description": rule.description,
+                "category": rule.category,
+                "amount_minor": rule.amount_minor,
+                "currency": rule.currency,
+                "base_amount_minor": rule.base_amount_minor,
+                "base_currency": rule.base_currency,
+                "fx_rate": rule.fx_rate,
+                "split_method": rule.split_method,
+                "paid_by": rule.paid_by,
+                "members": json.loads(rule.members_json or "[]"),
+                "values": json.loads(rule.values_json or "{}"),
+                "shares": json.loads(rule.shares_json or "{}"),
+                "frequency": rule.frequency,
+                "interval": rule.interval,
+                "next_run": iso(rule.next_run),
+                "last_run_at": iso(rule.last_run_at),
+                "active": rule.active,
+                "created_at": iso(rule.created_at),
+            }
+            for rule in recurring
+        ],
+    }
+    filename = f"b-lance-export-{date.today():%Y%m%d}.json"
+    return Response(
+        content=json.dumps(payload, ensure_ascii=False, indent=2),
+        media_type="application/json",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
 
@@ -1411,7 +1940,31 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
         else None
     )
     expires = share_expires_at(group.share_created_at)
-    
+    handles = dict(
+        db.execute(
+            select(GroupMember.user_id, User.handle)
+            .join(User, User.id == GroupMember.user_id)
+            .where(GroupMember.group_id == group.id)
+        ).all()
+    )
+
+    def public_member_name(member) -> str:
+        alias = handles.get(member.user_id)
+        alias_html = (
+            f'<small style="display:block;color:var(--muted);font-size:.78rem">'
+            f'@{escape(alias)}</small>'
+            if alias
+            else ""
+        )
+        initials = escape(member.name[:1].upper() or "?")
+        return (
+            '<div class="person">'
+            f'<span class="avatar" style="background:{escape(member.color)}">{initials}</span>'
+            '<span>'
+            f'<strong>{escape(member.name)}</strong>{alias_html}'
+            '</span></div>'
+        )
+
     html = f"""<!doctype html>
 <html lang="it">
 <head>
@@ -1432,7 +1985,7 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=19">
+  <link rel="stylesheet" href="/static/app.css?v=20">
 </head>
 <body class="guest">
 <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -1459,7 +2012,7 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
 
   <div class="card" style="margin-bottom:20px">
     <div class="section-title">Saldi dei membri</div>
-    {"".join(f'<div class="balance-row"><div class="person"><span class="avatar" style="background:{m.color}">{m.name[0].upper()}</span><span>{escape(m.name)}</span></div><span style="font-weight:700" class="{"pos" if m.net_minor > 0 else "neg" if m.net_minor < 0 else ""}">{m.display(group.base_currency)}</span></div>' for m in view.members if m.active)}
+    {"".join(f'<div class="balance-row">{public_member_name(m)}<span style="font-weight:700" class="{"pos" if m.net_minor > 0 else "neg" if m.net_minor < 0 else ""}">{m.display(group.base_currency)}</span></div>' for m in view.members if m.active)}
     <p class="muted small" style="margin-top:10px">+ verde = gli devono · - rosso = deve · 0 = in pari</p>
   </div>
 

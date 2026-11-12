@@ -236,6 +236,12 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
           ),
         ),
       );
+    } on PendingSyncException catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      widget.onDone();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
     } on ApiException catch (e) {
       _snack(e.message);
       if (mounted) setState(() => _busy = false);

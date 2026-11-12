@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}{{ info.title }} — b-lance{% endblock %}
+{% block meta_description %}{{ info.intro }}{% endblock %}
+{% block og_title %}{{ info.title }} — b-lance{% endblock %}
+{% block og_description %}{{ info.intro }}{% endblock %}
+{% block body_class %}info-page {% if user %}authed{% else %}guest{% endif %}{% endblock %}
+{% block content %}
+<article class="info-shell">
+  <header class="info-hero">
+    <a class="info-back" href="/" aria-label="Torna alla home">← <span>Home</span></a>
+    <span class="eyebrow">{{ info.eyebrow }}</span>
+    <h1>{{ info.title }}</h1>
+    <p>{{ info.intro }}</p>
+    {% if info.facts %}
+    <ul class="info-facts" aria-label="In breve">
+      {% for fact in info.facts %}
+      <li><svg width="16" height="16" aria-hidden="true"><use href="#i-check"></use></svg>{{ fact }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </header>
+
+  {% if info.example %}
+  <section class="info-example" aria-labelledby="info-example-title">
+    <div class="info-example-copy">
+      <span class="eyebrow">{{ info.example.eyebrow }}</span>
+      <h2 id="info-example-title">{{ info.example.title }}</h2>
+      <p>{{ info.example.body }}</p>
+      <p class="info-example-result">
+        <svg width="18" height="18" aria-hidden="true"><use href="#i-swap"></use></svg>
+        <span>{{ info.example.result }}</span>
+      </p>
+    </div>
+    <div class="info-example-card">
+      <div class="info-example-head">
+        <span>Conto del weekend</span>
+        <span class="chip">EUR</span>
+      </div>
+      {% for row in info.example.rows %}
+      <div class="info-example-row">
+        <div>
+          <b>{{ row.label }}</b>
+          <span>{{ row.detail }}</span>
+        </div>
+        <span class="num">{{ row.amount }}</span>
+      </div>
+      {% endfor %}
+      <div class="info-example-total">
+        <span>Totale</span>
+        <b class="num">{{ info.example.total }}</b>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  <div class="info-content">
+    <div class="info-main">
+      {% if info.layout == 'faq' %}
+      <div class="faq-list info-faq">
+        {% for item in info.sections %}
+        <details class="faq-item">
+          <summary>{{ item.title }}</summary>
+          <p>{{ item.body }}</p>
+        </details>
+        {% endfor %}
+      </div>
+      {% elif info.layout == 'prose' %}
+      <div class="info-prose">
+        {% for item in info.sections %}
+        <section class="info-prose-block">
+          <h2>{{ item.title }}</h2>
+          <p>{{ item.body }}</p>
+          {% if item.list %}
+          <ul>
+            {% for line in item.list %}
+            <li>{{ line }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </section>
+        {% endfor %}
+      </div>
+      {% else %}
+      <ol class="info-steps">
+        {% for item in info.sections %}
+        <li class="info-step">
+          <span class="info-step-mark" aria-hidden="true">{{ item.mark }}</span>
+          <div>
+            <h2>{{ item.title }}</h2>
+            <p>{{ item.body }}</p>
+          </div>
+        </li>
+        {% endfor %}
+      </ol>
+      {% endif %}
+      {% if info.closing %}
+      <p class="info-closing">{{ info.closing }}</p>
+      {% endif %}
+    </div>
+
+    <aside class="info-aside">
+      <img src="/static/logo-mark.svg?v=5" width="42" height="42" alt="">
+      <p>Conti chiari, tempo insieme.</p>
+      {% if user and info.cta.auth_href %}
+      <a class="btn" href="{{ info.cta.auth_href }}">{{ info.cta.auth_label }}</a>
+      {% else %}
+      <a class="btn" href="{{ info.cta.href }}" {% if info.cta.href.startswith('https://') %}rel="noopener"{% endif %}>{{ info.cta.label }}</a>
+      {% endif %}
+      {% if info.secondary %}
+      <a class="info-secondary" href="{{ info.secondary.href }}">{{ info.secondary.label }}</a>
+      {% endif %}
+      {% if info.aside_note and info.aside_link %}
+      <p class="info-aside-note">{{ info.aside_note }}</p>
+      <a class="info-secondary" href="{{ info.aside_link.href }}" rel="noopener">{{ info.aside_link.label }}</a>
+      {% endif %}
+    </aside>
+  </div>
+</article>
+{% endblock %}

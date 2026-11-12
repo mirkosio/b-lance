@@ -10,6 +10,7 @@ library;
 
 import 'dart:convert';
 import 'dart:io' as io;
+import 'dart:math';
 
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart' show IOClient;
@@ -30,6 +31,16 @@ class ApiException implements Exception {
 
   @override
   String toString() => message;
+}
+
+class PendingSyncException implements Exception {
+  const PendingSyncException(this.pendingCount);
+
+  final int pendingCount;
+
+  String get message => pendingCount == 1
+      ? 'Salvato offline: 1 modifica verrà sincronizzata al prossimo aggiornamento online.'
+      : 'Salvato offline: $pendingCount modifiche verranno sincronizzate al prossimo aggiornamento online.';
 }
 
 /// Messaggio leggibile per qualsiasi errore, con la coda tecnica vera
@@ -156,8 +167,86 @@ class Api {
 
   final String base;
   String? token;
+  bool lastResponseFromCache = false;
 
   static const _tokenKey = 'bl_token';
+  static const _cachePrefix = 'bl_api_cache_v1_';
+  static const _queuePrefix = 'bl_pending_mutations_v1_';
+  int pendingMutationCount = 0;
+  String? pendingMutationError;
+  bool _flushingMutations = false;
+
+  String _cacheScope([String? value]) {
+    final active = value ?? token ?? '';
+    try {
+      final payload = active.split('.').first;
+      final decoded = jsonDecode(
+        utf8.decode(base64Url.decode(base64Url.normalize(payload))),
+      );
+      if (decoded is Map && decoded['uid'] is int) {
+        return 'u${decoded['uid']}';
+      }
+    } catch (_) {
+      // Token di test o formato futuro: usa un identificatore stabile opaco.
+    }
+    var hash = 2166136261;
+    for (final byte in utf8.encode(active)) {
+      hash = ((hash ^ byte) * 16777619) & 0xffffffff;
+    }
+    return hash.toRadixString(16);
+  }
+
+  String _cacheKey(String path) =>
+      '$_cachePrefix${_cacheScope()}_${Uri.encodeComponent(base)}_${Uri.encodeComponent(path)}';
+
+  String get _queueKey => '$_queuePrefix${_cacheScope()}';
+
+  bool _queueableMutation(String method, String path) =>
+      token != null &&
+      method == 'POST' &&
+      RegExp(r'^/api/groups/[0-9]+/(expenses|payments)$').hasMatch(path);
+
+  bool _cacheableGet(String method, String path) =>
+      method == 'GET' &&
+      token != null &&
+      (path == '/api/groups' ||
+          RegExp(r'^/api/groups/[0-9]+$').hasMatch(path) ||
+          path.startsWith('/api/activity'));
+
+  Future<String?> _readCachedGet(String path) async {
+    if (token == null) return null;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_cacheKey(path));
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _writeCachedGet(String path, String value) async {
+    if (token == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_cacheKey(path), value);
+    } catch (_) {
+      // La cache migliora l’uso offline ma non deve bloccare l’uso online.
+    }
+  }
+
+  Future<void> _clearCachedNamespace(String scope) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final prefix = '$_cachePrefix${scope}_';
+      for (final key in prefs.getKeys().where(
+        (key) => key.startsWith(prefix),
+      )) {
+        await prefs.remove(key);
+      }
+      if (scope == _cacheScope()) pendingMutationCount = 0;
+    } catch (_) {
+      // Il logout resta valido anche se la pulizia locale non riesce.
+    }
+  }
 
   Future<void> loadToken() async {
     try {
@@ -170,10 +259,123 @@ class Api {
     }
   }
 
+  String _newClientId() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(16, (_) => random.nextInt(256));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    final hex = bytes.map((b) => b.toRadixString(16).padLeft(2, '0')).join();
+    return '${hex.substring(0, 8)}-${hex.substring(8, 12)}-'
+        '${hex.substring(12, 16)}-${hex.substring(16, 20)}-${hex.substring(20)}';
+  }
+
+  Future<List<Map<String, dynamic>>> _readMutationQueue() async {
+    if (token == null) return [];
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_queueKey);
+      if (raw == null) return [];
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return [];
+      return decoded
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> _writeMutationQueue(List<Map<String, dynamic>> queue) async {
+    if (token == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    if (queue.isEmpty) {
+      await prefs.remove(_queueKey);
+    } else {
+      await prefs.setString(_queueKey, jsonEncode(queue));
+    }
+    pendingMutationCount = queue.length;
+  }
+
+  Future<void> _enqueueMutation(String path, Map<String, dynamic> body) async {
+    final queue = await _readMutationQueue();
+    final clientId = body['client_id'] as String;
+    if (queue.any((item) => item['client_id'] == clientId)) return;
+    queue.add({
+      'path': path,
+      'body': body,
+      'client_id': clientId,
+      'queued_at': DateTime.now().toUtc().toIso8601String(),
+    });
+    await _writeMutationQueue(queue);
+  }
+
+  Future<void> _removeQueuedMutation(String clientId) async {
+    final queue = await _readMutationQueue();
+    queue.removeWhere((item) => item['client_id'] == clientId);
+    await _writeMutationQueue(queue);
+    if (queue.isEmpty) pendingMutationError = null;
+  }
+
+  /// Invia in ordine le operazioni in coda. Ogni POST conserva lo stesso
+  /// client_id: un retry dopo una risposta persa non duplica la modifica.
+  Future<void> flushPendingMutations() async {
+    if (_flushingMutations || token == null) return;
+    _flushingMutations = true;
+    try {
+      final queue = await _readMutationQueue();
+      pendingMutationCount = queue.length;
+      if (queue.isEmpty) {
+        pendingMutationError = null;
+        return;
+      }
+      final remaining = <Map<String, dynamic>>[];
+      pendingMutationError = null;
+      final headers = await _headers();
+      for (var index = 0; index < queue.length; index++) {
+        final item = queue[index];
+        try {
+          final response = await _send(
+            'POST',
+            Uri.parse('$base${item['path']}'),
+            headers,
+            Map<String, dynamic>.from(item['body'] as Map),
+            timeout: const Duration(seconds: 8),
+          );
+          if (response.$1 >= 200 && response.$1 < 300) continue;
+          if (response.$1 >= 400 && response.$1 < 500) {
+            try {
+              final decoded = jsonDecode(utf8.decode(response.$2));
+              if (decoded is Map && decoded['detail'] is String) {
+                pendingMutationError = decoded['detail'] as String;
+              }
+            } catch (_) {
+              pendingMutationError =
+                  'Il server ha rifiutato una modifica in coda.';
+            }
+          }
+        } on Exception {
+          // Riprova al prossimo caricamento o aggiornamento manuale.
+        }
+        remaining.addAll(queue.skip(index));
+        break;
+      }
+      await _writeMutationQueue(remaining);
+    } finally {
+      _flushingMutations = false;
+    }
+  }
+
   Future<void> saveToken(String? value) async {
+    final oldScope = token == null ? null : _cacheScope(token);
+    final newScope = value == null ? null : _cacheScope(value);
     // Prima in memoria: anche se lo storage non scrive, per questa
     // sessione il login funziona comunque.
     token = value;
+    if (oldScope != null && oldScope != newScope) {
+      await _clearCachedNamespace(oldScope);
+      pendingMutationCount = 0;
+    }
     try {
       final prefs = await SharedPreferences.getInstance();
       if (value == null) {
@@ -198,29 +400,82 @@ class Api {
   Future<dynamic> _req(String method, String path, {Object? body}) async {
     final uri = Uri.parse('$base$path');
     final headers = await _headers();
+    if (_cacheableGet(method, path)) await flushPendingMutations();
+    Object? requestBody = body;
+    if (_queueableMutation(method, path) && body is Map) {
+      requestBody = Map<String, dynamic>.from(body);
+      (requestBody as Map<String, dynamic>).putIfAbsent(
+        'client_id',
+        _newClientId,
+      );
+    }
+    final queuedClientId =
+        _queueableMutation(method, path) && requestBody is Map<String, dynamic>
+        ? requestBody['client_id'] as String
+        : null;
+    if (queuedClientId != null) {
+      await _enqueueMutation(path, requestBody as Map<String, dynamic>);
+    }
     int status;
     List<int> bytes;
+    final requestTimeout = _queueableMutation(method, path)
+        ? const Duration(seconds: 8)
+        : const Duration(seconds: 50);
     try {
-      (status, bytes) = await _send(method, uri, headers, body);
-    } on Exception catch (e) {
-      if (!_isDnsFailure(e)) rethrow;
-      // Il resolver di sistema del telefono non risolve il server:
-      // riprovo con il DNS cifrato di riserva.
-      final fallback = _dohClient(uri.host, await _dohResolve(uri.host));
       try {
         (status, bytes) = await _send(
           method,
           uri,
           headers,
-          body,
-          client: fallback,
+          requestBody,
+          timeout: requestTimeout,
         );
-      } finally {
-        fallback.close();
+      } on Exception catch (e) {
+        if (!_isDnsFailure(e)) rethrow;
+        // Il resolver di sistema del telefono non risolve il server:
+        // riprovo con il DNS cifrato di riserva.
+        final fallback = _dohClient(uri.host, await _dohResolve(uri.host));
+        try {
+          (status, bytes) = await _send(
+            method,
+            uri,
+            headers,
+            requestBody,
+            client: fallback,
+            timeout: requestTimeout,
+          );
+        } finally {
+          fallback.close();
+        }
       }
+    } on Exception {
+      if (queuedClientId != null) {
+        throw PendingSyncException(pendingMutationCount);
+      }
+      if (_cacheableGet(method, path)) {
+        final cached = await _readCachedGet(path);
+        if (cached != null) {
+          lastResponseFromCache = true;
+          return jsonDecode(cached);
+        }
+      }
+      rethrow;
     }
 
+    if (status >= 500 && queuedClientId != null) {
+      throw PendingSyncException(pendingMutationCount);
+    }
+    if (status >= 500 && _cacheableGet(method, path)) {
+      final cached = await _readCachedGet(path);
+      if (cached != null) {
+        lastResponseFromCache = true;
+        return jsonDecode(cached);
+      }
+    }
     if (status >= 400) {
+      if (queuedClientId != null) {
+        await _removeQueuedMutation(queuedClientId);
+      }
       String detail = 'Errore $status';
       try {
         final decoded = jsonDecode(utf8.decode(bytes));
@@ -232,8 +487,16 @@ class Api {
       }
       throw ApiException(status, detail);
     }
+    if (queuedClientId != null) {
+      await _removeQueuedMutation(queuedClientId);
+    }
     if (bytes.isEmpty) return null;
-    return jsonDecode(utf8.decode(bytes));
+    final raw = utf8.decode(bytes);
+    if (_cacheableGet(method, path)) {
+      lastResponseFromCache = false;
+      await _writeCachedGet(path, raw);
+    }
+    return jsonDecode(raw);
   }
 
   Future<(int, List<int>)> _send(
@@ -242,15 +505,15 @@ class Api {
     Map<String, String> headers,
     Object? body, {
     http.Client? client,
+    Duration timeout = const Duration(seconds: 50),
   }) async {
     final own = client == null;
     final c = client ?? http.Client();
     try {
       final req = http.Request(method, uri)..headers.addAll(headers);
       if (method != 'GET') req.body = jsonEncode(body ?? {});
-      final streamed = await c.send(req).timeout(const Duration(seconds: 50));
-      final resp = await http.Response.fromStream(streamed)
-          .timeout(const Duration(seconds: 50));
+      final streamed = await c.send(req).timeout(timeout);
+      final resp = await http.Response.fromStream(streamed).timeout(timeout);
       return (resp.statusCode, resp.bodyBytes);
     } finally {
       if (own) c.close();

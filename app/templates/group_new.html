@@ -7,12 +7,12 @@
 </div>
 
 <div class="card" style="max-width:470px">
-  <form method="post" action="/groups/new">
+  <form method="post" action="/groups/new" data-inline-validation novalidate>
     <label for="group-name">Nome</label>
-    <input type="text" id="group-name" name="name" required autofocus placeholder="Es. Weekend a Rimini">
+    <input type="text" id="group-name" name="name" required maxlength="160" autofocus placeholder="Es. Weekend a Rimini">
 
     <label for="group-kind">Tipo</label>
-    <select id="group-kind" name="kind">
+    <select id="group-kind" name="kind" required>
       <option value="other">Altro</option>
       <option value="trip">Viaggio</option>
       <option value="home">Casa / roommate</option>
@@ -20,7 +20,7 @@
     </select>
 
     <label for="group-currency">Valuta del gruppo</label>
-    <select id="group-currency" name="base_currency">
+    <select id="group-currency" name="base_currency" required>
       {% for c in currencies %}
         <option value="{{ c.code }}" {% if c.code == 'EUR' %}selected{% endif %}>
           {{ c.code }} — {{ c.name }}

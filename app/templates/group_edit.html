@@ -7,7 +7,7 @@
 </div>
 
 <div class="card" style="max-width:470px">
-  <form method="post" action="/groups/{{ group.id }}/edit">
+  <form method="post" action="/groups/{{ group.id }}/edit" data-inline-validation novalidate>
     <label for="group-edit-name">Nome</label>
     <input type="text" id="group-edit-name" name="name" required maxlength="160" value="{{ group.name }}">
 
@@ -28,7 +28,7 @@
         {{ group.base_currency }}. Cambiarla renderebbe incoerenti i saldi.
       </p>
     {% else %}
-      <select id="group-edit-currency-change" name="base_currency">
+      <select id="group-edit-currency-change" name="base_currency" required>
         {% for c in currencies %}
           <option value="{{ c.code }}" {% if c.code == group.base_currency %}selected{% endif %}>
             {{ c.code }} — {{ c.name }}

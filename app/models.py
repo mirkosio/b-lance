@@ -105,6 +105,9 @@ class GroupMember(Base):
 
 class Expense(Base):
     __tablename__ = "expenses"
+    __table_args__ = (
+        UniqueConstraint("created_by", "client_id", name="uq_expense_client_id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), index=True)
@@ -127,6 +130,7 @@ class Expense(Base):
     voided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    client_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     group: Mapped[Group] = relationship(back_populates="expenses")
@@ -157,6 +161,9 @@ class Payment(Base):
     """
 
     __tablename__ = "payments"
+    __table_args__ = (
+        UniqueConstraint("created_by", "client_id", name="uq_payment_client_id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
     group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), index=True)
@@ -165,6 +172,8 @@ class Payment(Base):
     amount_minor: Mapped[int] = mapped_column(Integer)
     currency: Mapped[str] = mapped_column(String(3), default="EUR")
     note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    client_id: Mapped[str | None] = mapped_column(String(36), nullable=True)
     # Annullato invece di cancellato: resta nello storico barrato.
     voided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

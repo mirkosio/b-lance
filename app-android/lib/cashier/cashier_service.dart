@@ -5,6 +5,9 @@ library;
 
 import 'cashier_models.dart';
 
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+
 /// Saldo di un membro: positivo = gli devono, negativo = deve.
 class CashierBalance {
   CashierBalance(this.personId, this.netMinor);
@@ -77,7 +80,9 @@ List<CashierBalance> cashierBalances(CashierGroup group) {
     if (e.items.isNotEmpty) {
       // split a livello di singolo articolo
       for (final item in e.items) {
-        final participants = item.memberIds.isEmpty ? e.memberIds : item.memberIds;
+        final participants = item.memberIds.isEmpty
+            ? e.memberIds
+            : item.memberIds;
         if (participants.isEmpty) continue;
         final shares = cashierEqualShares(item.amountMinor, participants);
         for (var i = 0; i < participants.length; i++) {
@@ -98,7 +103,7 @@ List<CashierBalance> cashierBalances(CashierGroup group) {
   }
   final ids = <int>{...paid.keys, ...owed.keys};
   return [
-    for (final id in ids) CashierBalance(id, (paid[id] ?? 0) - (owed[id] ?? 0))
+    for (final id in ids) CashierBalance(id, (paid[id] ?? 0) - (owed[id] ?? 0)),
   ];
 }
 
@@ -146,16 +151,15 @@ String cashierSummaryText(CashierGroup group, {int exponent = 2}) {
   final b = StringBuffer();
   b.writeln('b-lance · ${group.name} · valuta ${group.currency}');
   b.writeln(
-    'Totale speso: ${formatCashier(
-      group.expenses.fold<int>(0, (s, e) => s + e.amountMinor),
-      exponent,
-    )} ${group.currency}',
+    'Totale speso: ${formatCashier(group.expenses.fold<int>(0, (s, e) => s + e.amountMinor), exponent)} ${group.currency}',
   );
   b.writeln('');
   b.writeln('Saldi:');
   for (final bal in cashierBalances(group)) {
     final name = _personName(group, bal.personId);
-    b.writeln('  $name: ${formatSignedCashier(bal.netMinor, exponent, group.currency)}');
+    b.writeln(
+      '  $name: ${formatSignedCashier(bal.netMinor, exponent, group.currency)}',
+    );
   }
   final transfers = cashierTransfers(cashierBalances(group));
   if (transfers.isEmpty) {
@@ -166,10 +170,293 @@ String cashierSummaryText(CashierGroup group, {int exponent = 2}) {
     for (final t in transfers) {
       final from = _personName(group, t[0]);
       final to = _personName(group, t[1]);
-      b.writeln('  $from -> $to: ${formatCashier(t[2], exponent)} ${group.currency}');
+      b.writeln(
+        '  $from -> $to: ${formatCashier(t[2], exponent)} ${group.currency}',
+      );
     }
   }
   return b.toString();
+}
+
+/// PDF del riepilogo creato in memoria sul dispositivo, senza richieste di rete.
+Future<List<int>> cashierSummaryPdf(
+  CashierGroup group, {
+  int exponent = 2,
+}) async {
+  final createdAt = DateTime.now();
+  final document = pw.Document(
+    title: 'b-lance - ${group.name}',
+    author: 'b-lance',
+  );
+  final ink = PdfColor.fromInt(0xff242b27);
+  final muted = PdfColor.fromInt(0xff5f6a62);
+  final green = PdfColor.fromInt(0xff47684f);
+  final border = PdfColor.fromInt(0xffe5e2d8);
+  final total = group.expenses.fold<int>(
+    0,
+    (sum, expense) => sum + expense.amountMinor,
+  );
+  final balances = cashierBalances(group);
+  final transfers = cashierTransfers(balances);
+  String personName(int id) => _personName(group, id);
+  pw.Widget heading(String value) => pw.Padding(
+    padding: const pw.EdgeInsets.only(top: 18, bottom: 8),
+    child: pw.Text(
+      value,
+      style: pw.TextStyle(
+        fontSize: 14,
+        fontWeight: pw.FontWeight.bold,
+        color: ink,
+      ),
+    ),
+  );
+  pw.Widget cell(
+    String value, {
+    bool bold = false,
+    pw.Alignment align = pw.Alignment.centerLeft,
+  }) => pw.Container(
+    alignment: align,
+    padding: const pw.EdgeInsets.symmetric(vertical: 7, horizontal: 6),
+    child: pw.Text(
+      value,
+      style: pw.TextStyle(
+        fontSize: 9.5,
+        fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+        color: ink,
+      ),
+    ),
+  );
+
+  document.addPage(
+    pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.fromLTRB(42, 40, 42, 44),
+      footer: (context) => pw.Container(
+        padding: const pw.EdgeInsets.only(top: 9),
+        decoration: pw.BoxDecoration(
+          border: pw.Border(top: pw.BorderSide(color: border)),
+        ),
+        child: pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+          children: [
+            pw.Text(
+              'b-lance - creato sul dispositivo',
+              style: pw.TextStyle(fontSize: 8, color: muted),
+            ),
+            pw.Text(
+              '${context.pageNumber} / ${context.pagesCount}',
+              style: pw.TextStyle(fontSize: 8, color: muted),
+            ),
+          ],
+        ),
+      ),
+      build: (context) => [
+        pw.Row(
+          children: [
+            pw.Container(
+              width: 30,
+              height: 30,
+              alignment: pw.Alignment.center,
+              decoration: pw.BoxDecoration(
+                color: green,
+                borderRadius: pw.BorderRadius.circular(9),
+              ),
+              child: pw.Text(
+                'b',
+                style: pw.TextStyle(
+                  fontSize: 18,
+                  fontWeight: pw.FontWeight.bold,
+                  color: PdfColors.white,
+                ),
+              ),
+            ),
+            pw.SizedBox(width: 10),
+            pw.Text(
+              'b-lance',
+              style: pw.TextStyle(
+                fontSize: 14,
+                fontWeight: pw.FontWeight.bold,
+                color: ink,
+              ),
+            ),
+            pw.Spacer(),
+            pw.Text(
+              '${createdAt.day.toString().padLeft(2, '0')}/${createdAt.month.toString().padLeft(2, '0')}/${createdAt.year}',
+              style: pw.TextStyle(fontSize: 9, color: muted),
+            ),
+          ],
+        ),
+        pw.SizedBox(height: 26),
+        pw.Text(
+          group.name,
+          style: pw.TextStyle(
+            fontSize: 24,
+            fontWeight: pw.FontWeight.bold,
+            color: ink,
+          ),
+        ),
+        pw.SizedBox(height: 4),
+        pw.Text(
+          'Riepilogo spese e saldi - ${group.currency}',
+          style: pw.TextStyle(fontSize: 10, color: muted),
+        ),
+        pw.SizedBox(height: 18),
+        pw.Container(
+          width: double.infinity,
+          padding: const pw.EdgeInsets.all(16),
+          decoration: pw.BoxDecoration(
+            color: PdfColor.fromInt(0xffeef2ed),
+            borderRadius: pw.BorderRadius.circular(12),
+          ),
+          child: pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                'Totale speso',
+                style: pw.TextStyle(fontSize: 9, color: muted),
+              ),
+              pw.SizedBox(height: 3),
+              pw.Text(
+                '${formatCashier(total, exponent)} ${group.currency}',
+                style: pw.TextStyle(
+                  fontSize: 21,
+                  fontWeight: pw.FontWeight.bold,
+                  color: green,
+                ),
+              ),
+            ],
+          ),
+        ),
+        heading('Saldi'),
+        pw.Table(
+          border: pw.TableBorder(
+            horizontalInside: pw.BorderSide(color: border),
+          ),
+          columnWidths: const {
+            0: pw.FlexColumnWidth(2),
+            1: pw.FlexColumnWidth(1),
+          },
+          children: [
+            for (final balance in balances)
+              pw.TableRow(
+                children: [
+                  cell(personName(balance.personId)),
+                  cell(
+                    balance.netMinor == 0
+                        ? 'In pari'
+                        : formatSignedCashier(
+                            balance.netMinor,
+                            exponent,
+                            group.currency,
+                          ),
+                    align: pw.Alignment.centerRight,
+                    bold: true,
+                  ),
+                ],
+              ),
+          ],
+        ),
+        heading('Chi paga a chi'),
+        if (transfers.isEmpty)
+          pw.Text(
+            'Conto saldato.',
+            style: pw.TextStyle(fontSize: 9.5, color: muted),
+          )
+        else
+          pw.Table(
+            border: pw.TableBorder(
+              horizontalInside: pw.BorderSide(color: border),
+            ),
+            columnWidths: const {
+              0: pw.FlexColumnWidth(2),
+              1: pw.FlexColumnWidth(1),
+            },
+            children: [
+              for (final transfer in transfers)
+                pw.TableRow(
+                  children: [
+                    cell(
+                      '${personName(transfer[0])} paga ${personName(transfer[1])}',
+                    ),
+                    cell(
+                      '${formatCashier(transfer[2], exponent)} ${group.currency}',
+                      align: pw.Alignment.centerRight,
+                      bold: true,
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        heading('Spese'),
+        if (group.expenses.isEmpty)
+          pw.Text(
+            'Nessuna spesa registrata.',
+            style: pw.TextStyle(fontSize: 9.5, color: muted),
+          )
+        else
+          for (final expense in group.expenses) ...[
+            pw.Container(
+              margin: const pw.EdgeInsets.only(top: 8),
+              padding: const pw.EdgeInsets.symmetric(
+                vertical: 8,
+                horizontal: 10,
+              ),
+              decoration: pw.BoxDecoration(
+                color: PdfColor.fromInt(0xfff6f5ef),
+                borderRadius: pw.BorderRadius.circular(8),
+              ),
+              child: pw.Row(
+                children: [
+                  pw.Expanded(
+                    child: pw.Text(
+                      expense.description,
+                      style: pw.TextStyle(
+                        fontSize: 10,
+                        fontWeight: pw.FontWeight.bold,
+                        color: ink,
+                      ),
+                    ),
+                  ),
+                  pw.Text(
+                    '${formatCashier(expense.amountMinor, exponent)} ${expense.currency}',
+                    style: pw.TextStyle(
+                      fontSize: 10,
+                      fontWeight: pw.FontWeight.bold,
+                      color: ink,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            pw.Padding(
+              padding: const pw.EdgeInsets.only(left: 10, top: 4),
+              child: pw.Text(
+                'Pagato da ${personName(expense.paidById)}',
+                style: pw.TextStyle(fontSize: 8.5, color: muted),
+              ),
+            ),
+            if (expense.items.isNotEmpty)
+              for (final item in expense.items)
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(left: 10, top: 3),
+                  child: pw.Text(
+                    '${item.description} - ${formatCashier(item.amountMinor, exponent)} ${expense.currency} - ${((item.memberIds.isEmpty ? expense.memberIds : item.memberIds).map(personName)).join(', ')}',
+                    style: pw.TextStyle(fontSize: 8.5, color: muted),
+                  ),
+                )
+            else
+              pw.Padding(
+                padding: const pw.EdgeInsets.only(left: 10, top: 3),
+                child: pw.Text(
+                  'Partecipano: ${expense.memberIds.map(personName).join(', ')}',
+                  style: pw.TextStyle(fontSize: 8.5, color: muted),
+                ),
+              ),
+          ],
+      ],
+    ),
+  );
+  return document.save();
 }
 
 String _personName(CashierGroup group, int id) {
@@ -275,6 +562,8 @@ String cashierAmountInput(int minor, int exponent) {
 
 int _pow10(int e) {
   var r = 1;
-  for (var i = 0; i < e; i++) { r *= 10; }
+  for (var i = 0; i < e; i++) {
+    r *= 10;
+  }
   return r;
 }
