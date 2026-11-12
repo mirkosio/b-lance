@@ -432,7 +432,17 @@ def robots(request: Request) -> Response:
 @app.get("/sitemap.xml")
 def sitemap(request: Request) -> Response:
     base = str(request.base_url).rstrip("/")
-    urls = ["/", "/about", "/come-funziona", "/android", "/faq", "/privacy", "/demo", "/login", "/register"]
+    urls = [
+        "/",
+        "/about",
+        "/come-funziona",
+        "/android",
+        "/faq",
+        "/privacy",
+        "/demo",
+        "/login",
+        "/register",
+    ]
     items = "".join(f"<url><loc>{base}{path}</loc></url>" for path in urls)
     body = (
         '<?xml version="1.0" encoding="UTF-8"?>'
@@ -806,6 +816,16 @@ _INFO_PAGES = {
                     "nulla."
                 ),
             },
+            {
+                "mark": "05",
+                "title": "Link web per chi non ha l'app",
+                "body": (
+                    "Dal foglio \"Condividi riepilogo\" scegli \"Link web\": chi "
+                    "lo apre vede saldi e bonifici nel browser, senza account. "
+                    "I dati stanno dentro il link, dopo il simbolo #, quindi il "
+                    "server non li riceve."
+                ),
+            },
         ],
         "closing": (
             "L'app non chiede la rubrica e non usa la posizione. I permessi "
@@ -905,7 +925,29 @@ _INFO_PAGES = {
                 "title": "I dati del Cassiere vanno online?",
                 "body": (
                     "No. I gruppi Cassiere restano sul dispositivo. Se cancelli "
-                    "i dati dell'app o disinstalli, possono andare persi."
+                    "i dati dell'app o disinstalli, possono andare persi. Puoi "
+                    "comunque condividere un riepilogo di sola lettura: i dati "
+                    "viaggiano nel link, non vengono caricati su un server."
+                ),
+            },
+            {
+                "title": "Come condivido un riepilogo del Cassiere?",
+                "body": (
+                    "Dall'app, in \"Condividi riepilogo\", scegli \"Link web\". "
+                    "Chi lo apre vede saldi e bonifici senza installare niente e "
+                    "senza accedere. Il link contiene i dati dopo il simbolo #: "
+                    "il server non li riceve. Se lo incolli in un messaggio "
+                    "pubblico, però, chiunque lo apra può leggerlo: trattalo come "
+                    "un documento, non come una password."
+                ),
+            },
+            {
+                "title": "Il link del Cassiere scade?",
+                "body": (
+                    "No: non c'è una data di scadenza perché non c'è un server "
+                    "che lo custodisce. Chi riceve il link lo conserva finché non "
+                    "lo cancella. Se vuoi revocarlo, smetti di condividerlo: i "
+                    "dati restano solo nei messaggi già inviati."
                 ),
             },
             {
@@ -991,6 +1033,16 @@ _INFO_PAGES = {
                 ),
             },
             {
+                "title": "Link del Cassiere",
+                "body": (
+                    "Il riepilogo di un gruppo solo-casella si apre come pagina "
+                    "di sola lettura: i dati stanno dopo il simbolo # del link, "
+                    "quindi il server non li riceve e non li conserva. Non c'è "
+                    "scadenza né revoca da remoto: se il link circola, chi lo ha "
+                    "ricevuto lo può rileggere."
+                ),
+            },
+            {
                 "title": "Modalità Cassiere",
                 "body": (
                     "I gruppi Cassiere sono salvati sul dispositivo e non "
@@ -1067,6 +1119,23 @@ def faq_page(request: Request, user: User | None = Depends(current_user)):
 @app.get("/privacy")
 def privacy_page(request: Request, user: User | None = Depends(current_user)):
     return _info_topic(request, "privacy", user)
+
+
+@app.get("/cashier-link")
+def cashier_link_page(
+    request: Request, user: User | None = Depends(current_user)
+):
+    """Pagina read-only di un riepilogo del Cassiere.
+
+    I dati arrivano DOPO il cancelletto (`#c=...`), quindi il browser non li
+    invia al server: qui non c'è nessun dato da leggere, solo il guscio della
+    pagina. La logica di saldi gira nel browser.
+    """
+    return templates.TemplateResponse(
+        request,
+        "cashier_link.html",
+        {"request": request, "user": user},
+    )
 
 
 @app.get("/demo")

@@ -1498,6 +1498,26 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
               }
             }
 
+            Future<void> shareLink() async {
+              if (busy) return;
+              setModal(() => busy = true);
+              try {
+                final url = cashierShareUrl(
+                  _group,
+                  baseUrl: kApiBase,
+                  exponent: expo,
+                );
+                await SharePlus.instance.share(
+                  ShareParams(
+                    text: 'Riepilogo di ${_group.name}: saldi e bonifici.\n$url',
+                    subject: 'b-lance · ${_group.name}',
+                  ),
+                );
+              } finally {
+                if (ctx.mounted) setModal(() => busy = false);
+              }
+            }
+
             Future<void> sharePdf() async {
               if (busy) return;
               setModal(() => busy = true);
@@ -1609,13 +1629,21 @@ class _CashierGroupScreenState extends State<CashierGroupScreen> {
                     ),
                     const SizedBox(height: 10),
                     OutlinedButton.icon(
+                      onPressed: busy ? null : shareLink,
+                      icon: const Icon(Icons.link_outlined),
+                      label: const Text('Link web'),
+                    ),
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
                       onPressed: busy ? null : sharePdf,
                       icon: const Icon(Icons.picture_as_pdf_outlined),
                       label: const Text('Condividi PDF'),
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      "Immagine e PDF vengono creati sul telefono: nessun dato caricato.",
+                      "Immagine e PDF vengono creati sul telefono: nessun dato caricato. "
+                      "Anche il link porta i dati dopo il simbolo #: il server non li riceve. "
+                      "Chi ha il link può rileggerlo, quindi non incollarlo dove capita.",
                       textAlign: TextAlign.center,
                       style: TextStyle(color: mutedOn(ctx), fontSize: 12.5),
                     ),

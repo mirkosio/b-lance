@@ -3,6 +3,9 @@
 /// Importi in centesimi interi. Deterministico: stesso storico -> stessi saldi.
 library;
 
+import 'dart:convert';
+import 'dart:io';
+
 import 'cashier_models.dart';
 
 import 'package:pdf/pdf.dart';
@@ -144,6 +147,70 @@ List<List<int>> cashierTransfers(List<CashierBalance> balances) {
     }
   }
   return out;
+}
+
+/// URL di sola lettura per un riepilogo del Cassiere.
+///
+/// I dati viaggiano DOPO il cancelletto: il browser non li invia al server,
+/// quindi b-lance non li riceve e non li conserva. Il JSON viene compresso
+/// (deflate) e codificato base64url per stare in un link ragionevole.
+String cashierShareUrl(
+  CashierGroup group, {
+  String baseUrl = 'https://b-lance.vercel.app',
+  int exponent = 2,
+}) {
+  final payload = <String, dynamic>{
+    'v': 1,
+    'name': group.name,
+    'currency': group.currency,
+    // Quante cifre decimali ha la valuta: 2 per l'euro, 0 per lo yen.
+    'exponent': exponent,
+    'members': group.members
+        .map(
+          (m) => {
+            'id': m.id,
+            'name': m.name,
+            'color': m.color,
+          },
+        )
+        .toList(),
+    'expenses': group.expenses
+        .map(
+          (e) => {
+            'id': e.id,
+            'description': e.description,
+            'amount_minor': e.amountMinor,
+            'paid_by_id': e.paidById,
+            'member_ids': e.memberIds,
+            'split_mode': e.splitMode,
+            'exact_minor': e.exactMinor,
+            'percent_bp': e.percentBp,
+            'items': e.items
+                .map(
+                  (i) => {
+                    'amount_minor': i.amountMinor,
+                    'member_ids': i.memberIds,
+                  },
+                )
+                .toList(),
+          },
+        )
+        .toList(),
+    'payments': group.payments
+        .map(
+          (p) => {
+            'from_id': p.fromId,
+            'to_id': p.toId,
+            'amount_minor': p.amountMinor,
+          },
+        )
+        .toList(),
+  };
+
+  final raw = utf8.encode(jsonEncode(payload));
+  final compressed = gzip.encode(raw);
+  final encoded = base64Url.encode(compressed).replaceAll('=', '');
+  return '$baseUrl/cashier-link#c=$encoded';
 }
 
 /// Testo piano per condividere il riepilogo.

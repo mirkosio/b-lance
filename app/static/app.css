@@ -1974,6 +1974,37 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
 }
 .undo-banner span { flex: 1 1 240px; }
 
+/* --------------------------------------------- riepilogo del Cassiere */
+.cashier-link-shell {
+  width: 100%;
+  max-width: 680px;
+  margin-inline: auto;
+}
+.cashier-link-shell .cl-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.cashier-link-shell .cl-head h2 {
+  margin: 4px 0 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3.2vw, 2rem);
+  font-weight: 400;
+  line-height: 1.15;
+}
+.cashier-link-shell .card { margin-bottom: 16px; }
+.cashier-link-shell .card:last-child { margin-bottom: 0; }
+.cashier-link-shell .cl-note { text-align: left; }
+
+@media print {
+  .topbar, footer, .bottomnav, .cl-note .row { display: none !important; }
+  .cashier-link-shell { max-width: none; }
+  .cashier-link-shell .card { break-inside: avoid; box-shadow: none; }
+}
+
 .recovery-codes {
   margin: 10px 0 0;
   padding: 14px 16px;

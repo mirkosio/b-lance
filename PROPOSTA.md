@@ -75,9 +75,11 @@ dichiarare risolti.
   precompilata; undo immediato su spese e pagamenti annullati.
 - Recupero password senza provider email: codici monouso generati
   dall’account, usabili una sola volta e con revoca di tutte le sessioni.
-- Verifica: 150 test backend, Lighthouse 100/100 su accessibilità, best
-  practice e SEO per home, dashboard, gruppo, demo, FAQ, Come funziona,
-  Privacy, recupero password e account.
+- Link web del Cassiere: riepilogo di sola lettura che si apre nel browser,
+  con i dati dentro il link e nessun passaggio dal telefono al server.
+- Verifica: 151 test backend, 9 test JavaScript, Lighthouse 100/100 su
+  accessibilità, best practice e SEO per home, dashboard, gruppo, demo, FAQ,
+  Come funziona, Privacy, recupero password, account e riepilogo Cassiere.
 
 ## P0 — Web-app (completato)
 
@@ -105,9 +107,11 @@ coperti da test dedicati (`tests/test_webapp_ui.py`).
 
 ## P1 — Fiducia, continuità e import (4–6 settimane)
 
-- **Link web del Cassiere** read-only, con rivendicazione sicura del gruppo
-  locale, accesso revocabile e privacy chiara. Nessun dato locale caricato
-  senza consenso esplicito.
+- **Link web del Cassiere (fatto 12/11):** dall’app si condivide un link di
+  sola lettura (`/cashier-link#c=…`). I dati viaggiano dopo il cancelletto,
+  quindi il server non li riceve e non li conserva; saldi e bonifici si
+  calcolano nel browser. Non c’è scadenza né revoca da remoto: chi ha il link
+  lo può rileggere, e il sito lo dice apertamente.
 - **Conflitti offline** tra dispositivi: stato comprensibile, modifiche
   rivedibili, scelta esplicita di quale versione tenere, nessuna perdita silenziosa.
 - **Recupero password (fatto 12/11)**: 8 codici monouso generati
@@ -128,6 +132,11 @@ coperti da test dedicati (`tests/test_webapp_ui.py`).
 **Accettazione:** link Cassiere revocabile e testato; conflitto offline
 riprodotto e risolto in due dispositivi; import dei file campione con anteprima;
 installazione iOS provata; almeno una pagina di fiducia pubblicata.
+
+Il link del Cassiere è fatto, ma senza revoca da remoto: è un link che
+porta i dati dentro, non un riferimento a una pagina sul server. Se in futuro
+servisse revocarlo, servirebbe caricare il riepilogo sul server con consenso
+esplicito e scadenza, al prezzo di un dato che oggi non esce dal telefono.
 
 ## P2 — Misurare e farsi trovare (2–3 mesi)
 

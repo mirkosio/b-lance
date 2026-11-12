@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:blance/cashier/cashier_models.dart';
@@ -324,6 +327,52 @@ void main() {
       expect(find.text('Weekend'), findsOneWidget);
       expect(find.text('B  →  A'), findsOneWidget);
       expect(find.text('5,00 EUR'), findsOneWidget);
+    });
+
+    test('share link keeps data after the hash and round-trips', () {
+      final group = CashierGroup(
+        id: 1,
+        name: 'Weekend al mare',
+        currency: 'EUR',
+        members: [
+          CashierPerson(id: 1, name: 'Marco', color: '#5F8D6E'),
+          CashierPerson(id: 2, name: 'Sara', color: '#B4813F'),
+        ],
+        expenses: [
+          CashierExpense(
+            id: 1,
+            description: 'Cena',
+            amountMinor: 1000,
+            paidById: 1,
+            memberIds: [1, 2],
+          ),
+        ],
+        payments: [
+          CashierPayment(id: 1, fromId: 2, toId: 1, amountMinor: 300),
+        ],
+      );
+
+      final url = cashierShareUrl(group);
+      expect(url.startsWith('https://b-lance.vercel.app/cashier-link#c='), isTrue);
+      expect(url.contains('Marco'), isFalse);
+      expect(url.contains('Cena'), isFalse);
+      expect(url.length, lessThan(600));
+
+      final encoded = url.split('#c=').last;
+      var padded = encoded;
+      while (padded.length % 4 != 0) {
+        padded += '=';
+      }
+      final payload = jsonDecode(
+        utf8.decode(gzip.decode(base64Url.decode(padded))),
+      ) as Map<String, dynamic>;
+      expect(payload['name'], 'Weekend al mare');
+      expect(payload['currency'], 'EUR');
+      expect((payload['members'] as List).length, 2);
+      expect((payload['expenses'] as List).first['amount_minor'], 1000);
+      expect((payload['expenses'] as List).first['paid_by_id'], 1);
+      expect((payload['payments'] as List).first['amount_minor'], 300);
+      expect((payload['payments'] as List).first['from_id'], 2);
     });
   });
 }

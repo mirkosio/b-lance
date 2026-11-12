@@ -51,6 +51,9 @@ e saldi nello stesso posto. Il nome viene da *balance*: il conto deve tornare.
 - Recupero password senza email: 8 codici monouso generati dall’account, con
   hash HMAC nel database. Un codice usato non vale più e il rientro revoca
   tutte le sessioni.
+- Link web del Cassiere: dall’app si condivide un riepilogo di sola lettura
+  che si apre nel browser di chi lo riceve. I dati stanno dopo il `#` del link,
+  quindi il server non li riceve; saldi e bonifici si calcolano nel browser.
 - PWA installabile senza store: manifest, service worker e icone (180×180 per
   iOS). Le istruzioni per Android e iPhone sono nelle FAQ.
 
@@ -122,12 +125,15 @@ release.
 ## Verifiche e deploy
 
 Al riferimento v23 risultavano verdi 124 test backend, 36 test Flutter e
-`flutter analyze`. Con pagine informative, demo e scadenza dei link la suite
-backend è a **150 test**. Per eseguirli:
+`flutter analyze`. Con pagine informative, demo, scadenza dei link e
+l’interfaccia web-app la suite backend è a **151 test**, più 9 test
+JavaScript per la logica del riepilogo Cassiere e 37 test Flutter.
+Per eseguirli:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q     # 150 test
-cd app-android && flutter test           # 36 test
+.venv/bin/python -m pytest tests/ -q     # 151 test
+node --test tests/js/*.test.mjs          # 9 test JavaScript
+cd app-android && flutter test           # 37 test
 ```
 
 La suite backend usa SQLite e disattiva la rete BCE per test deterministici;

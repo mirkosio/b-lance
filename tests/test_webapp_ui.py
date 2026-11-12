@@ -105,6 +105,23 @@ def test_group_new_suggests_names_and_explains_currency(client: TestClient) -> N
     assert "Per l'Italia va" in page
 
 
+def test_cashier_link_is_a_shell_and_stays_out_of_the_sitemap(
+    client: TestClient,
+) -> None:
+    page = client.get("/cashier-link").text
+    assert 'id="cl-error"' in page
+    assert 'id="cl-content"' in page
+    assert 'id="cl-balances"' in page
+    assert 'id="cl-transfers-list"' in page
+    # Il server non conosce il gruppo: nessun dato del Cassiere nel markup.
+    assert "Weekend" not in page
+    assert "Marco" not in page
+
+    # Il guscio vuoto non deve finire tra i risultati di ricerca.
+    sitemap = client.get("/sitemap.xml").text
+    assert "/cashier-link" not in sitemap
+
+
 def test_void_expense_offers_immediate_undo(client: TestClient) -> None:
     _register(client)
     group_id = _create_group(client)

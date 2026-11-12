@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Riepilogo del Cassiere — b-lance{% endblock %}
+{% block meta_description %}Apri un riepilogo del Cassiere ricevuto da un amico: saldi e bonifici calcolati nel browser, senza caricare dati sul server.{% endblock %}
+{% block content %}
+<div class="cashier-link-shell">
+  <div class="pagehead">
+    <span class="eyebrow">Riepilogo del Cassiere</span>
+    <h1 id="cl-title">Lettura del riepilogo</h1>
+    <p id="cl-subtitle">
+      I dati stanno nel link, non sul server. Se il riepilogo non si apre,
+      chiedi di inoltrarlo di nuovo per intero.
+    </p>
+  </div>
+
+  <div class="card" id="cl-error" hidden>
+    <div class="section-title">Link non valido</div>
+    <p class="muted small" id="cl-error-text">
+      Manca il contenuto del riepilogo dopo il simbolo #.
+    </p>
+    <a class="btn ghost" href="/">Vai alla home</a>
+  </div>
+
+  <div id="cl-content" hidden>
+    <div class="card cl-head">
+      <div>
+        <span class="eyebrow">Riepilogo</span>
+        <h2 id="cl-name">Gruppo</h2>
+      </div>
+      <span class="chip" id="cl-currency">EUR</span>
+    </div>
+
+    <div class="summary">
+      <div class="stat">
+        <div class="num" id="cl-total">0,00 €</div>
+        <div class="lbl">Totale speso</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="cl-count">0</div>
+        <div class="lbl">Persone</div>
+      </div>
+      <div class="stat">
+        <div class="num" id="cl-transfers">0</div>
+        <div class="lbl">Bonifici per chiudere</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Saldi</div>
+      <div id="cl-balances"></div>
+      <p class="muted small" style="margin:10px 0 0">
+        <span class="pos">+ verde</span> = gli devono ·
+        <span class="neg">- rosso</span> = deve ·
+        0 = in pari
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Chi paga a chi</div>
+      <div id="cl-transfers-list"></div>
+    </div>
+
+    <div class="card cl-note">
+      <p class="muted small" style="margin:0">
+        Questi numeri arrivano dal telefono di chi ha condiviso il riepilogo:
+        b-lance non li ha ricevuti né salvati. Nessun dato viene inviato
+        aprendo questa pagina.
+      </p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn ghost" type="button" id="cl-print">Stampa o salva PDF</button>
+        <a class="btn ghost" href="/register">Crea il tuo gruppo</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/cashier-link.js?v=1" defer></script>
+{% endblock %}

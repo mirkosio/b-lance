@@ -16,6 +16,8 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: python -m pytest tests/ -q
+      - name: Test JavaScript (logica del riepilogo Cassiere)
+        run: node --test tests/js/*.test.mjs
       - name: Flutter analyze
         uses: subosito/flutter-action@v2
         with:
