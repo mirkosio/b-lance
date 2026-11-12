@@ -95,6 +95,8 @@ L’APK si genera con `flutter build apk --release` e finisce in
 `app-android/build/app/outputs/flutter-apk/app-release.apk`. La release corrente
 è **1.6.0** (`versionCode 19`); le note e i file sono nella
 [pagina GitHub Releases](https://github.com/mirkosio/b-lance/releases).
+APK 1.6.0: `APK_1.6.0.apk` (58,8 MB), SHA-256
+`72e13cf6896697d5397d7c28e9d53b65a31b606f248d92681176c84843a400c6`.
 Gli App Links usano `https://b-lance.vercel.app/join/CODICE` e la verifica in
 `/.well-known/assetlinks.json`.
 
