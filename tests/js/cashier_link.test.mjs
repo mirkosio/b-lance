@@ -87,8 +87,6 @@ async function run(payload) {
     Blob,
     Response,
     DecompressionStream,
-    atob,
-    btoa,
     console,
     window: { console, print() {} },
   };
@@ -335,4 +333,34 @@ test('payload rovinato: avviso, non crash', async () => {
   const { elements } = await run('non-e-un-link');
   assert.equal(elements['cl-error'].hidden, false);
   assert.match(elements['cl-error-text'].textContent, /rovinato|incompleto|troncato/);
+});
+
+test('base64url: il link si apre anche con - e _ (niente atob)', async () => {
+  // In Node atob rifiuta i caratteri base64url: la decodifica deve essere
+  // nostra, altrimenti lo stesso link si apre nel browser e non nei test.
+  const payload = encode({
+    v: 1,
+    name: 'Simboli',
+    currency: 'EUR',
+    exponent: 2,
+    members: members.slice(0, 2),
+    expenses: [
+      {
+        id: 1,
+        description: 'Cena',
+        amount_minor: 1000,
+        paid_by_id: 1,
+        member_ids: [1, 2],
+        split_mode: 'equal',
+        exact_minor: {},
+        percent_bp: {},
+        items: [],
+      },
+    ],
+    payments: [],
+  });
+  assert.match(payload, /^[A-Za-z0-9_-]+$/);
+  const { elements } = await run(payload);
+  assert.equal(elements['cl-error'].hidden, true);
+  assert.equal(elements['cl-name'].textContent, 'Simboli');
 });

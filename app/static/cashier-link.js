@@ -23,13 +23,31 @@
     if (title) title.textContent = 'Riepilogo non leggibile';
   }
 
+  // Decodifica base64url scritta a mano: `atob` accetta solo base64
+  // standard e in alcuni ambienti (Node in CI) è più severo del browser.
+  // Così il link si apre identico ovunque.
+  var B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+
   function base64ToBytes(value) {
-    var normalized = value.replace(/-/g, '+').replace(/_/g, '/');
-    while (normalized.length % 4) normalized += '=';
-    var binary = atob(normalized);
-    var bytes = new Uint8Array(binary.length);
-    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-    return bytes;
+    var clean = String(value).replace(/[=]+$/, '');
+    var bytes = new Uint8Array(Math.floor((clean.length * 3) / 4));
+    var bits = 0;
+    var acc = 0;
+    var index = 0;
+    for (var i = 0; i < clean.length; i++) {
+      var position = B64.indexOf(clean.charAt(i));
+      if (position === -1) {
+        // Carattere non valido: il link è corrotto.
+        throw new Error('base64 non valido');
+      }
+      acc = (acc << 6) | position;
+      bits += 6;
+      if (bits >= 8) {
+        bits -= 8;
+        bytes[index++] = (acc >> bits) & 0xff;
+      }
+    }
+    return bytes.subarray(0, index);
   }
 
   // Ritorna una Promise con il testo JSON.
