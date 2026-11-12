@@ -16,6 +16,13 @@
         </a>
         <a href="/demo" class="btn ghost">Prova la demo</a>
       </div>
+      <form class="quick-split" id="quick-split" aria-label="Calcola la quota a testa">
+        <label for="qs-total">Totale</label>
+        <input type="text" id="qs-total" inputmode="decimal" value="120,00" autocomplete="off">
+        <label for="qs-people">Persone</label>
+        <input type="number" id="qs-people" inputmode="numeric" min="2" max="50" value="4">
+        <output id="qs-result" for="qs-total qs-people">30,00 € a testa</output>
+      </form>
       <ul class="hero-points" aria-label="In breve">
         <li><svg width="17" height="17"><use href="#i-check"></use></svg> Preciso al centesimo</li>
         <li><svg width="17" height="17"><use href="#i-check"></use></svg> Nessuna rubrica caricata</li>
@@ -67,7 +74,7 @@
   </div>
 </section>
 
-<section id="come-funziona" class="landing-section">
+<section id="come-funziona" class="landing-section reveal" data-reveal>
   <div class="landing-inner">
     <header class="section-head">
       <span class="eyebrow">Come funziona</span>
@@ -101,7 +108,7 @@
   </div>
 </section>
 
-<section id="funzioni" class="landing-section alt">
+<section id="funzioni" class="landing-section alt reveal" data-reveal>
   <div class="landing-inner">
     <header class="section-head">
       <span class="eyebrow">Funzioni</span>
@@ -162,7 +169,7 @@
   </div>
 </section>
 
-<section id="app" class="landing-section">
+<section id="app" class="landing-section reveal" data-reveal>
   <div class="landing-inner app-panel">
     <div class="app-copy">
       <span class="eyebrow">App Android</span>
@@ -192,7 +199,7 @@
   </div>
 </section>
 
-<section id="faq" class="landing-section">
+<section id="faq" class="landing-section reveal" data-reveal>
   <div class="landing-inner faq-layout">
     <header class="section-head faq-head">
       <span class="eyebrow">Domande frequenti</span>
@@ -237,4 +244,46 @@
     </div>
   </div>
 </section>
+
+<script>
+// Calcolatore rapido: importo totale / persone, formattato in italiano.
+(function () {
+  var form = document.getElementById('quick-split');
+  if (!form) return;
+  var total = document.getElementById('qs-total');
+  var people = document.getElementById('qs-people');
+  var out = document.getElementById('qs-result');
+
+  function parseAmount(raw) {
+    var clean = String(raw).replace(/[^0-9.,]/g, '');
+    if (!clean) return null;
+    if (clean.indexOf(',') !== -1) {
+      if (clean.split(',').length > 2) return null;
+      clean = clean.replace(/\./g, '').replace(',', '.');
+    } else if (clean.split('.').length > 2) {
+      clean = clean.replace(/\./g, '');
+    }
+    var value = parseFloat(clean);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  }
+
+  function update() {
+    var amount = parseAmount(total.value);
+    var n = parseInt(people.value, 10);
+    if (!amount || !Number.isFinite(n) || n < 2 || n > 50) {
+      out.textContent = 'Scrivi un totale e almeno 2 persone';
+      return;
+    }
+    out.textContent = (amount / n).toLocaleString('it-IT', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }) + ' € a testa';
+  }
+
+  form.addEventListener('submit', function (e) { e.preventDefault(); });
+  total.addEventListener('input', update);
+  people.addEventListener('input', update);
+  update();
+})();
+</script>
 {% endblock %}

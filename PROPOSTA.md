@@ -61,29 +61,44 @@ dichiarare risolti.
 - **Il numero è il protagonista.** Saldo, segno e colore sempre leggibili;
   dettagli su richiesta.
 
-## P0 — Rendere il prodotto una web-app (2–3 settimane)
+## Fatto (12/11)
 
-1. **Layout desktop.** Correggere il centraggio a ≥960 px: contenuto centrato
-   nella zona residua della sidebar, larghezza massima più ampia, footer
-   allineato. Pagine informative e demo con `margin-inline: auto`.
-2. **Dashboard app-like.** Saldo in evidenza, azioni rapide, ricerca e filtri
-   a segmenti (*Tutti / Devi / Ti devono / In pari*), griglia gruppi e rail
-   laterale con profilo e suggerimenti. Filtro client-side, nessun ricaricamento.
-3. **Pagina gruppo.** Barra sezioni sticky con stato attivo, filtri spese a
-   colpo d’occhio, form “Aggiungi spesa” comprimibile, riepilogo sempre visibile
-   su desktop. Le sezioni restano raggiungibili anche senza JavaScript.
-4. **Pagine informative.** Indice laterale sticky con sezione attiva, reveal
-   discreto allo scroll, “torna su”. Tutto disattivato con `prefers-reduced-motion`.
-5. **Onboarding non esperto.** Primo gruppo con nome suggerito, valuta spiegata,
-   invito con link e QR, prima spesa precompilata e spiegazione del saldo.
-   Possibilità di saltare e riprendere.
-6. **Prevenzione errori.** Anteprima della spesa, conferma con nome e importo,
-   undo su annullamento, validazione inline, messaggi in italiano semplice.
+- Layout desktop centrato nella zona residua della sidebar, con larghezza
+  maggiore e pagine informative/demo allineate.
+- Dashboard con saldo in evidenza, ricerca, filtri *Tutti / Devi / Ti devono /
+  In pari*, saldo per gruppo e rail laterale con azioni e profilo.
+- Gruppo con sezioni sticky, pannello “Aggiungi spesa” comprimibile, conferme
+  con l’importo e apertura automatica dopo un errore.
+- Pagine informative con indice attivo; landing con calcolatore rapido
+  “totale / persone” e reveal discreto rispettoso di `reduce motion`.
+- Primo gruppo guidato con nome suggerito, valuta spiegata e spesa di esempio
+  precompilata; undo immediato su spese e pagamenti annullati.
+- Verifica: 148 test backend, Lighthouse 100/100 su accessibilità, best
+  practice e SEO per home, dashboard, gruppo, demo, FAQ, Come funziona e Privacy.
 
-**Accettazione:** su 1440 px il contenuto è centrato e usa lo spazio; dashboard
-e gruppo si filtrano senza ricaricare; ogni nuova interazione funziona da
-tastiera, con focus visibile e reduced motion; Lighthouse resta 100/100 su
-accessibilità, best practice e SEO; test backend e Flutter verdi.
+## P0 — Web-app (completato)
+
+1. ~~**Layout desktop.**~~ Contenuto centrato a ≥960 px, larghezza maggiore,
+   footer allineato, informative e demo con colonna centrata.
+2. ~~**Dashboard app-like.**~~ Saldo, azioni rapide, ricerca, filtri a segmenti,
+   griglia gruppi con saldo e rail laterale.
+3. ~~**Pagina gruppo.**~~ Sezioni sticky, pannello spesa comprimibile, conferme
+   con importo; le sezioni restano raggiungibili senza JavaScript.
+4. ~~**Pagine informative.**~~ Indice sticky con sezione attiva e reveal
+   discreto; tutto disattivato con `prefers-reduced-motion`.
+5. ~~**Onboarding non esperto.**~~ Primo gruppo guidato: nome suggerito a
+   tocchi, valuta spiegata, invito con link e QR, spesa di esempio
+   precompilata (30,00 €, modificabile) e spiegazione dei saldi. La guida si
+   salta e non viene ripetuta.
+6. ~~**Prevenzione errori.**~~ Conferme con importo e validazione inline. Dopo
+   l’annullamento di una spesa o di un pagamento compare un avviso con
+   “Ripristina”: l’undo è immediato, funziona anche senza JavaScript e
+   riporta i saldi allo stato precedente.
+
+**Accettazione:** contenuto centrato e largo su desktop; dashboard e gruppo
+filtrabili senza ricaricare; interazioni da tastiera con focus visibile e
+reduced motion; Lighthouse 100/100; 148 test backend verdi. Wizard e undo sono
+coperti da test dedicati (`tests/test_webapp_ui.py`).
 
 ## P1 — Fiducia, continuità e import (4–6 settimane)
 

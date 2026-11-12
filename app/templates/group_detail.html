@@ -33,6 +33,7 @@
   <a href="#membri">Membri</a>
   <a href="#spese">Spese</a>
   <a href="#pagamenti">Pagamenti</a>
+  <a class="page-menu-add" href="#add-expense" data-open-add>Aggiungi spesa</a>
 </nav>
 
 {% if welcome %}
@@ -59,9 +60,18 @@
       <li class="{% if has_expenses %}done{% elif has_people %}current{% endif %}">
         <span class="onboard-num" aria-hidden="true">3</span>
         <div><b>Aggiungi la prima spesa</b><span>Dividi in parti uguali, per quote o importi esatti.</span></div>
-        {% if has_people and not has_expenses %}<a class="btn sm ghost" href="#spese">Aggiungi spesa</a>{% endif %}
+        {% if not has_expenses %}
+          <button class="btn sm ghost" type="button" data-fill-example>Aggiungi spesa di esempio</button>
+        {% endif %}
       </li>
     </ol>
+    {% if not has_expenses %}
+      <p class="muted small" style="margin:14px 0 0">
+        L'esempio apre il modulo con <b>30,00 €</b> già scritti: puoi cambiare
+        importo, descrizione e persone prima di salvare. Nessun dato inventato
+        resta nel gruppo se non lo confermi.
+      </p>
+    {% endif %}
   </section>
   <script>
     (function () {
@@ -260,9 +270,16 @@
   {% endif %}
 </div>
 
-<!-- Aggiungi spesa -->
-<div class="card">
-  <div class="section-title">Aggiungi spesa</div>
+<!-- Aggiungi spesa: pannello comprimibile, aperto se non ci sono ancora spese -->
+<details class="card collapse-card" id="add-expense" {% if not expenses %}open{% endif %}>
+  <summary>
+    <span>Aggiungi spesa</span>
+    <span style="display:flex;align-items:center;gap:10px">
+      <span class="collapse-hint">Importo, categoria, chi divide</span>
+      <svg class="chev" width="18" height="18" aria-hidden="true"><use href="#i-chevron"></use></svg>
+    </span>
+  </summary>
+  <div class="collapse-body">
   <form method="post" action="/groups/{{ group.id }}/expenses" id="expense-form">
     <label for="exp-description">Descrizione</label>
     <input type="text" id="exp-description" name="description" required placeholder="Es. Cena, benzina, biglietti">
@@ -346,7 +363,8 @@
       <button class="btn block" type="submit">Aggiungi spesa</button>
     </div>
   </form>
-</div>
+  </div>
+</details>
 
 <!-- Spese -->
 <div class="card" id="spese">
@@ -394,6 +412,15 @@
     <p class="muted small filter-note">Filtri attivi. Categoria: solo spese. Membro e periodo: spese e pagamenti.</p>
   {% endif %}
 
+  {% for e in expenses if e.id == undo_expense and e.voided_at %}
+    <div class="undo-banner" role="status">
+      <span>Spesa annullata: <b>{{ e.description }}</b> ({{ e.amount_minor | money(e.currency) }}). I saldi sono già aggiornati.</span>
+      <form method="post" action="/groups/{{ group.id }}/expenses/{{ e.id }}/restore" style="margin:0">
+        <button class="btn sm" type="submit">Ripristina</button>
+      </form>
+    </div>
+  {% endfor %}
+
   {% if expenses %}
     {% for e in expenses %}
       <div class="expense-item{% if e.voided_at %} is-voided{% endif %}">
@@ -405,7 +432,7 @@
           <span class="amount" style="font-weight:700">{{ e.amount_minor | money(e.currency) }}</span>
           {% if not e.voided_at and (e.created_by == user.id or 'expense_manage' in perms) %}
             <form method="post" action="/groups/{{ group.id }}/expenses/{{ e.id }}/void" style="margin:0"
-                  onsubmit="return confirm('Annullare questa spesa?')">
+                  onsubmit="return confirm('Annullare questa spesa di {{ e.amount_minor | money(e.currency) }}?')">
               <button class="btn sm ghost" type="submit">Annulla</button>
             </form>
           {% endif %}
@@ -456,6 +483,15 @@
     </div>
   </form>
 
+  {% for p in payments if p.id == undo_payment and p.voided_at %}
+    <div class="undo-banner" role="status" style="margin-top:18px">
+      <span>Pagamento annullato: <b>{{ p.from_name }} → {{ p.to_name }}</b> ({{ p.amount_minor | money(group.base_currency) }}).</span>
+      <form method="post" action="/groups/{{ group.id }}/payments/{{ p.id }}/restore" style="margin:0">
+        <button class="btn sm" type="submit">Ripristina</button>
+      </form>
+    </div>
+  {% endfor %}
+
   {% if payments %}
     <div style="margin-top:20px">
       {% for p in payments %}
@@ -468,7 +504,7 @@
           <span class="amount" style="font-weight:700">{{ p.amount_minor | money(group.base_currency) }}</span>
           {% if not p.voided_at and (p.from_user == user.id or p.to_user == user.id or 'payment_manage' in perms) %}
             <form method="post" action="/groups/{{ group.id }}/payments/{{ p.id }}/delete" style="margin:0"
-                  onsubmit="return confirm('Annullare questo pagamento?')">
+                  onsubmit="return confirm('Annullare questo pagamento di {{ p.amount_minor | money(group.base_currency) }}?')">
               <button class="btn sm ghost" type="submit">Annulla</button>
             </form>
           {% endif %}
@@ -661,7 +697,7 @@ function copyShare(btn) {
 
 // --- Menu di sezione: evidenzia dove sei, senza cambiare la pagina ---
 (function () {
-  var links = Array.prototype.slice.call(document.querySelectorAll('.page-menu a'));
+  var links = Array.prototype.slice.call(document.querySelectorAll('.page-menu a:not(.page-menu-add)'));
   if (!links.length) return;
   var sections = links.map(function (a) {
     return document.querySelector(a.getAttribute('href'));
@@ -682,6 +718,40 @@ function copyShare(btn) {
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);
   update();
+})();
+
+// --- Pannello "Aggiungi spesa": si apre dal menu o dopo un errore ---
+(function () {
+  var box = document.getElementById('add-expense');
+  if (!box) return;
+  function openBox() { box.open = true; }
+
+  // Wizard: precompila un esempio, senza salvare nulla.
+  document.querySelectorAll('[data-fill-example]').forEach(function (button) {
+    button.addEventListener('click', function () {
+      openBox();
+      var desc = document.getElementById('exp-description');
+      var amount = document.getElementById('exp-amount');
+      var category = document.getElementById('exp-category');
+      if (desc && !desc.value) desc.value = 'Cena di esempio';
+      if (amount && !amount.value) amount.value = '30,00';
+      if (category) category.value = 'food';
+      if (location.hash !== '#add-expense' && history.replaceState) {
+        history.replaceState(null, '', '#add-expense');
+      }
+      if (desc) desc.focus();
+    });
+  });
+
+  document.querySelectorAll('[data-open-add]').forEach(function (link) {
+    link.addEventListener('click', openBox);
+  });
+  if (location.hash === '#add-expense') openBox();
+  try {
+    if (new URLSearchParams(location.search).get('err')) openBox();
+  } catch (e) {}
+  var form = document.getElementById('expense-form');
+  if (form) form.addEventListener('submit', openBox);
 })();
 </script>
 {% endblock %}

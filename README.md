@@ -41,6 +41,13 @@ e saldi nello stesso posto. Il nome viene da *balance*: il conto deve tornare.
 - Demo pubblica su `/demo`: un conto di esempio con tre persone, spese
   modificabili e saldi calcolati nel browser. Nessun dato viene inviato o
   salvato; la CTA finale porta alla registrazione.
+- Interfaccia web-app: dashboard con ricerca e filtri per saldo, rail laterale
+  su desktop, gruppo con sezioni sticky e pannello spesa comprimibile, indice
+  nelle pagine informative e calcolatore rapido nella landing. Layout centrato
+  anche a schermo intero.
+- Primo gruppo guidato con nome suggerito e spesa di esempio precompilata;
+  annullamento di spese e pagamenti con “Ripristina” immediato, anche senza
+  JavaScript.
 - PWA installabile senza store: manifest, service worker e icone (180×180 per
   iOS). Le istruzioni per Android e iPhone sono nelle FAQ.
 
@@ -113,10 +120,10 @@ release.
 
 Al riferimento v23 risultavano verdi 124 test backend, 36 test Flutter e
 `flutter analyze`. Con pagine informative, demo e scadenza dei link la suite
-backend è a **140 test**. Per eseguirli:
+backend è a **148 test**. Per eseguirli:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q     # 140 test
+.venv/bin/python -m pytest tests/ -q     # 148 test
 cd app-android && flutter test           # 36 test
 ```
 

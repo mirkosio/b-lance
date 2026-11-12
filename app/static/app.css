@@ -1734,6 +1734,275 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
   .faq-head { position: sticky; top: 88px; }
 }
 
+/* ------------------------------------------------ shell web-app (P0) */
+[hidden] { display: none !important; }
+
+/* Desktop: il contenuto usa la zona residua della sidebar e resta centrato.
+   Prima `margin-left: 0` annullava il centraggio automatico. */
+@media (min-width: 960px) {
+  main.wrap {
+    align-items: center;
+    margin-inline: auto;
+    padding: 36px clamp(24px, 3vw, 48px) 48px;
+  }
+  main.wrap > * { width: 100%; max-width: 1180px; }
+  body.authed main.wrap { margin-left: 252px; margin-right: 0; }
+  html.sb-collapsed body.authed main.wrap { margin-left: 0; }
+  body.authed footer { margin-left: 252px; }
+  html.sb-collapsed body.authed footer { margin-left: 0; }
+}
+@media (min-width: 1320px) {
+  main.wrap > * { max-width: 1260px; }
+}
+
+/* Pagine informative e demo: la colonna è il contenuto, non il main. */
+.info-page main.wrap, .demo-page main.wrap {
+  max-width: none;
+  margin-inline: auto;
+}
+.info-shell, .demo-shell { width: 100%; max-width: 1080px; margin-inline: auto; }
+
+/* ------------------------------------------------------------- dashboard */
+.dash-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.dash-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.dash-layout { display: grid; gap: 16px; align-items: start; }
+.dash-main { display: grid; gap: 16px; min-width: 0; }
+.dash-rail { display: grid; gap: 16px; }
+@media (min-width: 1180px) {
+  .dash-layout { grid-template-columns: minmax(0, 1fr) 300px; }
+  .dash-rail { position: sticky; top: 16px; }
+}
+.hero-balance {
+  display: grid;
+  gap: 14px;
+  background:
+    radial-gradient(420px 180px at 100% 0, rgba(95, 141, 110, .12), transparent 72%),
+    var(--card);
+}
+.hero-balance .netchip { padding: 12px 16px; font-size: 1rem; }
+.rail-card { padding: 18px; }
+.rail-card .section-title { margin-bottom: 6px; }
+.rail-action {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 8px 0;
+  color: var(--text);
+  font-weight: 650;
+  border-bottom: 1px solid var(--line);
+}
+.rail-action:last-child { border-bottom: 0; }
+.rail-action:hover { color: var(--primary-deep); text-decoration: none; }
+.rail-action .go { margin-left: auto; color: var(--muted); }
+.rail-user { display: flex; align-items: center; gap: 10px; min-height: 44px; }
+.rail-user b { display: block; font-size: .9rem; }
+.rail-user span { display: block; color: var(--muted); font-size: .76rem; }
+
+.list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 4px 0 14px;
+}
+.seg-filters {
+  display: inline-flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 4px;
+  background: var(--bg-soft);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.seg-filters button {
+  min-height: 44px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: .84rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.seg-filters button[aria-pressed="true"] {
+  background: var(--card);
+  color: var(--primary-deep);
+  box-shadow: var(--shadow);
+}
+:root[data-theme="dark"] .seg-filters button[aria-pressed="true"] { color: var(--primary); }
+.seg-filters button:focus-visible, .group-search:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+.group-search { flex: 1 1 220px; min-height: 44px; }
+.filter-empty {
+  margin: 10px 0 0;
+  padding: 16px;
+  color: var(--muted);
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+.groupcard .gnet {
+  margin-left: auto;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--bg-soft);
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.groupcard .gnet.pos { color: var(--pos); background: rgba(59, 122, 82, .10); }
+.groupcard .gnet.neg { color: var(--neg); background: rgba(160, 67, 47, .10); }
+.groupcard .go { margin-left: 0; }
+
+.page-menu { flex-wrap: wrap; }
+.page-menu .page-menu-add {
+  color: #fff;
+  background: var(--grad-btn);
+}
+.page-menu .page-menu-add:hover { color: #fff; background: var(--grad-btn); filter: brightness(1.07); }
+
+/* ---------------------------------------------------------------- gruppo */
+.collapse-card { padding: 0; overflow: hidden; }
+.collapse-card > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 60px;
+  padding: 16px 22px;
+  cursor: pointer;
+  font-weight: 800;
+  list-style: none;
+}
+.collapse-card > summary::-webkit-details-marker { display: none; }
+.collapse-card > summary .chev { transition: transform 180ms ease; }
+.collapse-card[open] > summary .chev { transform: rotate(90deg); }
+.collapse-card .collapse-body { padding: 0 22px 22px; }
+.collapse-card .collapse-hint { color: var(--muted); font-size: .8rem; font-weight: 600; }
+
+/* ------------------------------------------------------- pagine informative */
+.info-toc { display: none; }
+@media (min-width: 760px) {
+  .info-toc {
+    display: block;
+    width: 100%;
+    max-height: 46vh;
+    overflow: auto;
+    padding: 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+}
+.info-toc-title {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.info-toc ol { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
+.info-toc a {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 4px 8px;
+  color: var(--muted);
+  font-size: .84rem;
+  font-weight: 600;
+  border-left: 2px solid transparent;
+  border-radius: 0 8px 8px 0;
+}
+.info-toc a:hover { color: var(--text); background: var(--bg-soft); text-decoration: none; }
+.info-toc a.active {
+  color: var(--primary-deep);
+  background: var(--primary-soft);
+  border-left-color: var(--primary);
+}
+:root[data-theme="dark"] .info-toc a.active { color: var(--primary); }
+
+/* Reveal discreto: senza JS il contenuto resta visibile. */
+html.js-reveal .reveal { opacity: 0; transform: translateY(10px); }
+html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280ms ease, transform 280ms ease; }
+
+/* Calcolatore rapido nella landing: una prova vera, senza backend. */
+.quick-split {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding: 10px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.quick-split label { color: var(--muted); font-size: .76rem; font-weight: 700; }
+.quick-split input { width: 92px; min-height: 44px; }
+.quick-split input[type="number"] { width: 68px; }
+.quick-split output { margin-left: auto; color: var(--primary-deep); font-weight: 800; }
+:root[data-theme="dark"] .quick-split output { color: var(--primary); }
+
+/* ------------------------------------------------- undo e primo gruppo */
+.undo-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  background: var(--primary-soft);
+  border: 1px solid rgba(95, 141, 110, 0.40);
+  border-radius: 12px;
+  font-size: 0.88rem;
+}
+.undo-banner span { flex: 1 1 240px; }
+
+.example-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+.pick-chip {
+  min-height: 44px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--card-2);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+.pick-chip:hover {
+  color: var(--primary-deep);
+  background: var(--primary-soft);
+  border-color: rgba(95, 141, 110, 0.5);
+}
+.pick-chip:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
+  html.js-reveal .reveal { opacity: 1; transform: none; }
 }

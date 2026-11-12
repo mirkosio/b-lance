@@ -49,7 +49,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=22">
+  <link rel="stylesheet" href="/static/app.css?v=24">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
 <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -588,6 +588,42 @@
       });
     });
   })();
+</script>
+<script>
+// Reveal discreto allo scroll: solo se l'utente non ha chiesto meno movimento.
+// Senza JS il contenuto resta visibile; niente IntersectionObserver perché
+// in alcuni contesti (tab in background, webview) non consegna gli eventi.
+(function () {
+  var items = Array.prototype.slice.call(document.querySelectorAll('[data-reveal]'));
+  if (!items.length) return;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) return;
+  document.documentElement.classList.add('js-reveal');
+
+  function update() {
+    var limit = window.innerHeight * 0.95;
+    var remaining = 0;
+    items.forEach(function (el) {
+      if (el.classList.contains('in')) return;
+      if (el.getBoundingClientRect().top < limit) el.classList.add('in');
+      else remaining++;
+    });
+    if (!remaining) {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    }
+  }
+
+  function onScroll() {
+    // Quattro elementi: aggiornare subito è più affidabile di rAF, che
+    // viene sospeso quando la tab non è visibile.
+    update();
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  update();
+})();
 </script>
 </body>
 </html>

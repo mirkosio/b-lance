@@ -21,7 +21,7 @@
   </header>
 
   {% if info.example %}
-  <section class="info-example" aria-labelledby="info-example-title">
+  <section class="info-example reveal" aria-labelledby="info-example-title" data-reveal>
     <div class="info-example-copy">
       <span class="eyebrow">{{ info.example.eyebrow }}</span>
       <h2 id="info-example-title">{{ info.example.title }}</h2>
@@ -58,7 +58,7 @@
       {% if info.layout == 'faq' %}
       <div class="faq-list info-faq">
         {% for item in info.sections %}
-        <details class="faq-item">
+        <details class="faq-item" id="sezione-{{ loop.index }}">
           <summary>{{ item.title }}</summary>
           <p>{{ item.body }}</p>
         </details>
@@ -67,7 +67,7 @@
       {% elif info.layout == 'prose' %}
       <div class="info-prose">
         {% for item in info.sections %}
-        <section class="info-prose-block">
+        <section class="info-prose-block reveal" id="sezione-{{ loop.index }}" data-reveal>
           <h2>{{ item.title }}</h2>
           <p>{{ item.body }}</p>
           {% if item.list %}
@@ -83,7 +83,7 @@
       {% else %}
       <ol class="info-steps">
         {% for item in info.sections %}
-        <li class="info-step">
+        <li class="info-step reveal" id="sezione-{{ loop.index }}" data-reveal>
           <span class="info-step-mark" aria-hidden="true">{{ item.mark }}</span>
           <div>
             <h2>{{ item.title }}</h2>
@@ -99,6 +99,16 @@
     </div>
 
     <aside class="info-aside">
+      {% if info.sections %}
+      <nav class="info-toc" aria-label="In questa pagina">
+        <span class="info-toc-title">In questa pagina</span>
+        <ol>
+          {% for item in info.sections %}
+          <li><a href="#sezione-{{ loop.index }}">{{ item.title }}</a></li>
+          {% endfor %}
+        </ol>
+      </nav>
+      {% endif %}
       <img src="/static/logo-mark.svg?v=5" width="42" height="42" alt="">
       <p>Conti chiari, tempo insieme.</p>
       {% if user and info.cta.auth_href %}
@@ -116,4 +126,27 @@
     </aside>
   </div>
 </article>
+<script>
+// Indice sticky: evidenzia la sezione che stai leggendo.
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.info-toc a'));
+  if (!links.length) return;
+  var targets = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function update() {
+    var current = 0;
+    targets.forEach(function (el, i) {
+      if (el && el.getBoundingClientRect().top <= 140) current = i;
+    });
+    links.forEach(function (a, i) {
+      var on = i === current;
+      a.classList.toggle('active', on);
+      if (on) a.setAttribute('aria-current', 'location');
+      else a.removeAttribute('aria-current');
+    });
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();
+</script>
 {% endblock %}

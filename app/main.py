@@ -453,6 +453,7 @@ def home(request: Request, user: User | None = Depends(current_user), db: Sessio
     # Saldo aggregato PER VALUTA: non sommo mai EUR con JPY.
     # Ritorna {currency: net_minor} così il template mostra ogni valuta.
     net_by_currency: dict[str, int] = {}
+    group_nets: dict[int, int] = {}
     for g in groups:
         materialize_due(db, g.id)
         view = compute_balances(db, g)
@@ -460,11 +461,18 @@ def home(request: Request, user: User | None = Depends(current_user), db: Sessio
             if m.user_id == user.id:
                 code = g.base_currency
                 net_by_currency[code] = net_by_currency.get(code, 0) + m.net_minor
+                group_nets[g.id] = m.net_minor
 
     return templates.TemplateResponse(
         request,
         "dashboard.html",
-        {"request": request, "user": user, "groups": groups, "net_by_currency": net_by_currency},
+        {
+            "request": request,
+            "user": user,
+            "groups": groups,
+            "net_by_currency": net_by_currency,
+            "group_nets": group_nets,
+        },
     )
 
 
@@ -1283,6 +1291,8 @@ def group_detail(
     member_raw: str = Query("", alias="membro"),
     date_from: str = Query("", alias="da"),
     date_to: str = Query("", alias="a"),
+    undo_expense: int | None = Query(None),
+    undo_payment: int | None = Query(None),
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
@@ -1391,6 +1401,8 @@ def group_detail(
             "date_from": day_from.isoformat() if day_from else "",
             "date_to": day_to.isoformat() if day_to else "",
             "filters_active": filters_active,
+            "undo_expense": undo_expense,
+            "undo_payment": undo_payment,
             "split_methods": list(SplitMethod),
             "currencies": sorted_currencies(),
             # Permessi di CHI STA GUARDANDO la pagina (per mostrare/nascondere).
@@ -1742,7 +1754,33 @@ def delete_payment(
         )
     payment.voided_at = utcnow()
     db.commit()
-    return RedirectResponse(f"/groups/{group.id}", status_code=303)
+    return RedirectResponse(
+        f"/groups/{group.id}?undo_payment={payment.id}#pagamenti", status_code=303
+    )
+
+
+@app.post("/groups/{group_id}/payments/{payment_id}/restore")
+def restore_payment(
+    group_id: int,
+    payment_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Ripristina un pagamento annullato per errore (undo immediato)."""
+    group = _get_group_for_user(db, group_id, user)
+    payment = db.get(Payment, payment_id)
+    if payment is None or payment.group_id != group.id:
+        raise HTTPException(status_code=404)
+    member = _member_row(db, group_id, user)
+    involved = payment.from_user == user.id or payment.to_user == user.id
+    if not involved and not can(member.role, member.perms, "payment_manage"):
+        raise HTTPException(
+            status_code=403,
+            detail="Puoi ripristinare solo i pagamenti in cui sei coinvolto",
+        )
+    payment.voided_at = None
+    db.commit()
+    return RedirectResponse(f"/groups/{group.id}#pagamenti", status_code=303)
 
 
 # ---------------------------------------------------------------- spese
@@ -1882,7 +1920,34 @@ def void_expense(
 
     expense.voided_at = utcnow()
     db.commit()
-    return RedirectResponse(f"/groups/{group.id}", status_code=303)
+    return RedirectResponse(
+        f"/groups/{group.id}?undo_expense={expense.id}#spese", status_code=303
+    )
+
+
+@app.post("/groups/{group_id}/expenses/{expense_id}/restore")
+def restore_expense(
+    group_id: int,
+    expense_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Ripristina una spesa annullata per errore (undo immediato)."""
+    group = _get_group_for_user(db, group_id, user)
+    expense = db.get(Expense, expense_id)
+    if expense is None or expense.group_id != group.id:
+        raise HTTPException(status_code=404)
+    member = _member_row(db, group_id, user)
+    if expense.created_by != user.id and not can(
+        member.role, member.perms, "expense_manage"
+    ):
+        raise HTTPException(
+            status_code=403,
+            detail="Puoi ripristinare solo le spese che hai inserito tu",
+        )
+    expense.voided_at = None
+    db.commit()
+    return RedirectResponse(f"/groups/{group.id}#spese", status_code=303)
 
 
 # ---------------------------------------------------------------- pagamenti
