@@ -42,10 +42,81 @@
     </div>
   </form>
   <p class="muted small" style="margin-top:10px">
-    Il recupero via email non è attivo: se hai perso la password, chiedi
-    assistenza. Il cambio qui richiede di essere già dentro.
+    Se hai perso la password, rientra con i codici di recupero qui sotto.
+    Il cambio da questa pagina richiede di essere già dentro.
   </p>
 </div>
+
+<div class="card" id="recupero">
+  <h2 class="section-title">Codici di recupero</h2>
+  <p class="muted small" style="margin-top:0">
+    Se dimentichi la password, puoi rientrare con uno di questi codici.
+    Valgono una volta sola e non scadono. Conservali offline, ad esempio
+    stampati: chi li ha può entrare nel tuo account.
+  </p>
+
+  {% if recovery_codes %}
+    <div class="alert ok" role="status">
+      Copiali ora: per sicurezza non li mostreremo di nuovo.
+    </div>
+    <pre class="recovery-codes" id="recovery-codes">{{ recovery_codes|join('\n') }}</pre>
+    <div class="row" style="margin:10px 0 4px">
+      <button class="btn ghost" type="button" data-copy-recovery>Copia codici</button>
+      <a class="btn ghost" href="/recover">Vai al recupero</a>
+    </div>
+  {% endif %}
+
+  <p class="muted small" style="margin:12px 0 6px">
+    Codici attivi: <b>{{ recovery_remaining }}</b>.
+    {% if recovery_remaining == 0 %}
+      Senza codici, se perdi la password non possiamo recuperare l'account.
+    {% endif %}
+  </p>
+  <form method="post" action="/account/recovery"
+        onsubmit="return confirm('Generare nuovi codici? Quelli vecchi smetteranno di funzionare.')">
+    <button class="btn ghost block" type="submit">Genera nuovi codici</button>
+  </form>
+</div>
+
+<script>
+(function () {
+  var button = document.querySelector('[data-copy-recovery]');
+  var box = document.getElementById('recovery-codes');
+  if (!button || !box) return;
+  button.addEventListener('click', function () {
+    var text = box.textContent;
+    function done(ok) {
+      if (!ok) {
+        // Se il browser blocca gli appunti, seleziona il testo: basta Ctrl+C.
+        try {
+          var range = document.createRange();
+          range.selectNodeContents(box);
+          var selection = window.getSelection();
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } catch (e) {}
+        button.textContent = 'Selezionato: premi Ctrl+C';
+        return;
+      }
+      button.textContent = 'Copiati';
+      window.setTimeout(function () { button.textContent = 'Copia codici'; }, 2000);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+      return;
+    }
+    try {
+      var area = document.createElement('textarea');
+      area.value = text;
+      document.body.appendChild(area);
+      area.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(area);
+      done(ok);
+    } catch (e) { done(false); }
+  });
+})();
+</script>
 
 <div class="card">
   <h2 class="section-title">Scarica i tuoi dati</h2>

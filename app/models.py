@@ -51,6 +51,24 @@ class User(Base):
     memberships: Mapped[list[GroupMember]] = relationship(back_populates="user")
 
 
+class RecoveryCode(Base):
+    """Codice monouso per rientrare se la password viene dimenticata.
+
+    Non salviamo il codice in chiaro: solo l'hash HMAC. Così un database
+    rubato non permette di usare i codici. Non serve un provider email.
+    """
+
+    __tablename__ = "recovery_codes"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    code_hash: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
 class Group(Base):
     __tablename__ = "groups"
 

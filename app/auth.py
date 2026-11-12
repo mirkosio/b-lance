@@ -8,6 +8,8 @@ Scelte "azienda":
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import os
 import secrets as _secrets
 
@@ -87,3 +89,38 @@ def get_current_user(db: Session, token: str | None) -> User | None:
 def get_user_by_email(db: Session, email: str) -> User | None:
     """Cerca un utente per email (case-insensitive)."""
     return db.scalar(select(User).where(User.email == email.strip().lower()))
+
+
+# ------------------------------------------------------- codici di recupero
+# Alfabeto senza caratteri ambigui (niente I, L, O, 0, 1): facili da copiare
+# a mano da un foglio stampato. 12 caratteri = circa 60 bit di entropia.
+_RECOVERY_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"
+
+
+def generate_recovery_codes(count: int = 8) -> list[str]:
+    """Genera codici nel formato XXXX-XXXX-XXXX, mostrati una sola volta."""
+    codes: list[str] = []
+    for _ in range(count):
+        raw = "".join(_secrets.choice(_RECOVERY_ALPHABET) for _ in range(12))
+        codes.append("-".join(raw[i : i + 4] for i in range(0, 12, 4)))
+    return codes
+
+
+def normalize_recovery_code(code: str) -> str:
+    """Accetta spazi, minuscole e trattini: resta solo A-Z e 2-9."""
+    return "".join(ch for ch in (code or "").upper() if ch.isalnum())
+
+
+def hash_recovery_code(code: str) -> str:
+    """HMAC-SHA256 con la SECRET_KEY: veloce e sicuro per token ad alta entropia."""
+    normalized = normalize_recovery_code(code)
+    return hmac.new(
+        SECRET_KEY.encode(), normalized.encode(), hashlib.sha256
+    ).hexdigest()
+
+
+def verify_recovery_code(code: str, hashed: str) -> bool:
+    """Confronto a tempo costante contro l'hash salvato."""
+    if not hashed:
+        return False
+    return hmac.compare_digest(hash_recovery_code(code), hashed)

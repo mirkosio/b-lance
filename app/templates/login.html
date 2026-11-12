@@ -6,6 +6,7 @@
     <img class="brand-badge" src="/static/logo-mark.svg?v=5" width="46" height="46" alt="b-lance">
   </div>
   <h1 class="section-title" style="justify-content:center">Accedi</h1>
+  {% if reset %}<div class="alert ok" role="status">Password aggiornata. Accedi con la nuova password.</div>{% endif %}
   {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
   <form method="post" action="/login" data-inline-validation novalidate>
     <input type="hidden" name="next" value="{{ next|default('') }}">
@@ -19,7 +20,10 @@
       </button>
     </div>
   </form>
-  <p class="muted small" style="margin-top:16px;text-align:center">
+  <p class="muted small" style="margin:12px 0 0;text-align:center">
+    <a href="/recover">Password dimenticata?</a>
+  </p>
+  <p class="muted small" style="margin-top:12px;text-align:center">
     Non hai un account? <a href="/register?next={{ next|default('')|urlencode }}">Registrati</a>
   </p>
 </div>

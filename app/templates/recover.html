@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Recupera l'accesso — b-lance{% endblock %}
+{% block meta_description %}Rientra in b-lance con uno dei codici di recupero generati dal tuo account.{% endblock %}
+{% block content %}
+<div class="card" style="max-width:470px;margin:26px auto">
+  <div class="auth-brand">
+    <img class="brand-badge" src="/static/logo-mark.svg?v=5" width="46" height="46" alt="b-lance">
+  </div>
+  <h1 class="section-title" style="justify-content:center">Recupera l'accesso</h1>
+  <p class="muted small" style="margin-top:0">
+    Serve uno dei codici monouso generati dal tuo account. Non usiamo email
+    di recupero: così non raccogliamo altri dati personali.
+  </p>
+
+  {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+
+  <form method="post" action="/recover" data-inline-validation novalidate>
+    <label for="recover-email">Email</label>
+    <input type="email" id="recover-email" name="email" value="{{ email }}" required
+           autocomplete="email" placeholder="tu@email.com">
+
+    <label for="recover-code">Codice di recupero</label>
+    <input type="text" id="recover-code" name="code" required
+           autocapitalize="characters" autocomplete="one-time-code"
+           spellcheck="false" placeholder="XXXX-XXXX-XXXX"
+           aria-describedby="recover-code-help">
+    <p class="muted small" id="recover-code-help">
+      Puoi scriverlo con o senza trattini, in maiuscolo o minuscolo.
+    </p>
+
+    <label for="recover-password">Nuova password</label>
+    <input type="password" id="recover-password" name="password" required
+           minlength="6" autocomplete="new-password" placeholder="Almeno 6 caratteri">
+
+    <div style="margin-top:18px">
+      <button class="btn block" type="submit">Imposta la nuova password</button>
+    </div>
+  </form>
+
+  <p class="muted small" style="margin-top:16px;text-align:center">
+    <a href="/login">Torna all'accesso</a>
+  </p>
+</div>
+
+<div class="card" style="max-width:470px;margin:0 auto 30px">
+  <div class="section-title">Non hai i codici?</div>
+  <p class="muted small" style="margin:0">
+    Puoi generarli dalle impostazioni dell'account, finché sei ancora dentro.
+    Se hai perso sia la password sia i codici, non possiamo verificare che
+    l'account sia tuo: è il prezzo di non chiedere documenti o altri dati.
+  </p>
+</div>
+{% endblock %}

@@ -23,7 +23,7 @@ from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request, Respo
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlalchemy import or_, select
+from sqlalchemy import delete, or_, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.exc import TimeoutError as PoolTimeoutError
 from sqlalchemy.orm import Session, selectinload
@@ -34,10 +34,13 @@ from .account import anonymize_user
 from .api import router as api_router
 from .auth import (
     create_session_token,
+    generate_recovery_codes,
     get_current_user,
     get_user_by_email,
     hash_password,
+    hash_recovery_code,
     verify_password,
+    verify_recovery_code,
 )
 from .core.currencies import is_valid_currency, sorted_currencies
 from .core.categories import CATEGORIES, category_label, clean_category
@@ -57,6 +60,7 @@ from .models import (
     Group,
     GroupMember,
     Payment,
+    RecoveryCode,
     RecurringExpense,
     Share,
     User,
@@ -418,6 +422,7 @@ def robots(request: Request) -> Response:
         "User-agent: *\n"
         "Allow: /\n"
         "Disallow: /account\n"
+        "Disallow: /recover\n"
         "Disallow: /groups/\n"
         f"Sitemap: {base}/sitemap.xml\n"
     )
@@ -549,11 +554,14 @@ def login_form(
     request: Request,
     user: User | None = Depends(current_user),
     next_url: str = Query("", alias="next"),
+    reset: str = Query(""),
 ):
     if user:
         return RedirectResponse(_safe_next(next_url), status_code=303)
     return templates.TemplateResponse(
-        request, "login.html", {"request": request, "next": next_url}
+        request,
+        "login.html",
+        {"request": request, "next": next_url, "reset": bool(reset.strip())},
     )
 
 
@@ -596,6 +604,69 @@ def logout():
     resp = RedirectResponse("/", status_code=303)
     resp.delete_cookie(SESSION_COOKIE)
     return resp
+
+
+# ------------------------------------------------- recupero password
+@app.get("/recover")
+def recover_form(
+    request: Request,
+    user: User | None = Depends(current_user),
+    email: str = Query(""),
+):
+    if user:
+        return RedirectResponse("/account", status_code=303)
+    return templates.TemplateResponse(
+        request, "recover.html", {"request": request, "email": email}
+    )
+
+
+@app.post("/recover")
+def recover_password(
+    request: Request,
+    email: str = Form(...),
+    code: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    """Rientro con un codice monouso: nessuna email da inviare.
+
+    Messaggio identico per email inesistente e codice errato, così non si
+    può capire quali email sono registrate.
+    """
+    def render_error(message: str, status_code: int = 400):
+        return templates.TemplateResponse(
+            request,
+            "recover.html",
+            {"request": request, "email": email.strip(), "error": message},
+            status_code=status_code,
+        )
+
+    if len(password) < 6:
+        return render_error("La nuova password deve avere almeno 6 caratteri.")
+
+    user = get_user_by_email(db, email)
+    matched: RecoveryCode | None = None
+    if user is not None:
+        unused = db.scalars(
+            select(RecoveryCode).where(
+                RecoveryCode.user_id == user.id, RecoveryCode.used_at.is_(None)
+            )
+        ).all()
+        for candidate in unused:
+            if verify_recovery_code(code, candidate.code_hash):
+                matched = candidate
+                break
+
+    if user is None or matched is None:
+        return render_error("Email o codice di recupero non validi.")
+
+    user.password_hash = hash_password(password)
+    # Butta fuori tutte le sessioni vecchie: se il codice era stato rubato,
+    # chi era dentro non resta dentro.
+    user.session_version += 1
+    matched.used_at = utcnow()
+    db.commit()
+    return RedirectResponse("/login?reset=1", status_code=303)
 
 
 # ---------------------------------------------------------------- informazioni
@@ -790,7 +861,19 @@ _INFO_PAGES = {
                 "title": "Cosa succede quando annullo una spesa?",
                 "body": (
                     "Resta nello storico in grigio e barrata, ma non conta più "
-                    "nei saldi. Nessuno cancella la storia del gruppo."
+                    "nei saldi. Subito dopo compare “Ripristina”: se hai "
+                    "sbagliato, la spesa torna attiva e i saldi si ricalcolano. "
+                    "Nessuno cancella la storia del gruppo."
+                ),
+            },
+            {
+                "title": "Ho dimenticato la password: come rientro?",
+                "body": (
+                    "Dall'account puoi generare 8 codici di recupero monouso. "
+                    "Conservali offline: dalla pagina di accesso, “Password "
+                    "dimenticata?” ti chiede email, un codice e la nuova "
+                    "password. Senza codici non possiamo verificare che "
+                    "l'account sia tuo, quindi non c'è un recupero via email."
                 ),
             },
             {
@@ -995,17 +1078,67 @@ def demo_page(request: Request, user: User | None = Depends(current_user)):
 
 
 # ---------------------------------------------------------------- account
+def _account_context(
+    request: Request,
+    user: User,
+    db: Session,
+    ok: bool = False,
+    err: str = "",
+    recovery_codes: list[str] | None = None,
+) -> dict:
+    """Dati comuni alla pagina account, incluso lo stato dei codici di recupero."""
+    remaining = len(
+        db.scalars(
+            select(RecoveryCode.id).where(
+                RecoveryCode.user_id == user.id, RecoveryCode.used_at.is_(None)
+            )
+        ).all()
+    )
+    return {
+        "request": request,
+        "user": user,
+        "ok": ok,
+        "err": err,
+        "recovery_codes": recovery_codes,
+        "recovery_remaining": remaining,
+    }
+
+
 @app.get("/account")
 def account_page(
     request: Request,
     ok: str = Query(""),
     err: str = Query(""),
     user: User = Depends(require_user),
+    db: Session = Depends(get_db),
 ):
     return templates.TemplateResponse(
         request,
         "account.html",
-        {"request": request, "user": user, "ok": bool(ok), "err": err},
+        _account_context(request, user, db, ok=bool(ok), err=err),
+    )
+
+
+@app.post("/account/recovery")
+def account_recovery_generate(
+    request: Request,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Genera 8 codici monouso e li mostra una sola volta.
+
+    I codici precedenti vengono invalidati: chi ne ha ancora uno vecchio non
+    può rientrare. È una scelta esplicita, confermata nel form.
+    """
+    db.execute(delete(RecoveryCode).where(RecoveryCode.user_id == user.id))
+    codes = generate_recovery_codes()
+    for code in codes:
+        db.add(RecoveryCode(user_id=user.id, code_hash=hash_recovery_code(code)))
+    db.commit()
+    return templates.TemplateResponse(
+        request,
+        "account.html",
+        _account_context(request, user, db, ok=True, recovery_codes=codes),
     )
 
 

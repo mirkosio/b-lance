@@ -38,7 +38,9 @@ L'UA `Dart/...` = app Android. `Python-urllib` = script di test.
 ### Variabili d'ambiente (dashboard Vercel → Settings → Environment Variables)
 
 - `DATABASE_URL` — stringa Neon (sslmode gestito dal codice)
-- `SECRET_KEY` — per i token di sessione
+- `SECRET_KEY` — per i token di sessione e per l’hash dei codici di recupero
+  password. Se cambia, sessioni e codici già generati diventano invalidi:
+  impostala una volta e conservala.
 
 ## Build e rilascio APK
 
@@ -100,7 +102,7 @@ mano: cambia la geometria e rigenera.
 ## Test
 
 ```bash
-.venv/bin/python -m pytest tests/ -q           # suite locale (148 test)
+.venv/bin/python -m pytest tests/ -q           # suite locale (150 test)
 .venv/bin/python /tmp/opencode/e2e_phase1.py   # E2E produzione (Fase 1 + movimenti)
 cd app-android && flutter test                 # 36 test Dart (modelli, formati, Fase 3)
 ```
@@ -142,4 +144,4 @@ cd app-android && flutter test                 # 36 test Dart (modelli, formati,
 - Sito: https://b-lance.vercel.app
 - Release APK: https://github.com/mirkosio/b-lance/releases
 - Dashboard: https://vercel.com/mirkosios-projects/b-lance
-148 backend + 36 flutter = 184 totali
+150 backend + 36 flutter = 186 totali

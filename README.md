@@ -48,6 +48,9 @@ e saldi nello stesso posto. Il nome viene da *balance*: il conto deve tornare.
 - Primo gruppo guidato con nome suggerito e spesa di esempio precompilata;
   annullamento di spese e pagamenti con “Ripristina” immediato, anche senza
   JavaScript.
+- Recupero password senza email: 8 codici monouso generati dall’account, con
+  hash HMAC nel database. Un codice usato non vale più e il rientro revoca
+  tutte le sessioni.
 - PWA installabile senza store: manifest, service worker e icone (180×180 per
   iOS). Le istruzioni per Android e iPhone sono nelle FAQ.
 
@@ -120,10 +123,10 @@ release.
 
 Al riferimento v23 risultavano verdi 124 test backend, 36 test Flutter e
 `flutter analyze`. Con pagine informative, demo e scadenza dei link la suite
-backend è a **148 test**. Per eseguirli:
+backend è a **150 test**. Per eseguirli:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q     # 148 test
+.venv/bin/python -m pytest tests/ -q     # 150 test
 cd app-android && flutter test           # 36 test
 ```
 

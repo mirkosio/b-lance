@@ -73,8 +73,11 @@ dichiarare risolti.
   “totale / persone” e reveal discreto rispettoso di `reduce motion`.
 - Primo gruppo guidato con nome suggerito, valuta spiegata e spesa di esempio
   precompilata; undo immediato su spese e pagamenti annullati.
-- Verifica: 148 test backend, Lighthouse 100/100 su accessibilità, best
-  practice e SEO per home, dashboard, gruppo, demo, FAQ, Come funziona e Privacy.
+- Recupero password senza provider email: codici monouso generati
+  dall’account, usabili una sola volta e con revoca di tutte le sessioni.
+- Verifica: 150 test backend, Lighthouse 100/100 su accessibilità, best
+  practice e SEO per home, dashboard, gruppo, demo, FAQ, Come funziona,
+  Privacy, recupero password e account.
 
 ## P0 — Web-app (completato)
 
@@ -107,8 +110,11 @@ coperti da test dedicati (`tests/test_webapp_ui.py`).
   senza consenso esplicito.
 - **Conflitti offline** tra dispositivi: stato comprensibile, modifiche
   rivedibili, scelta esplicita di quale versione tenere, nessuna perdita silenziosa.
-- **Recupero password e verifica email**: dipendono da un provider email
-  (Resend/SMTP) e da un dominio credibile; senza credenziali restano bloccati.
+- **Recupero password (fatto 12/11)**: 8 codici monouso generati
+  dall’account, mostrati una sola volta, con hash HMAC nel database. Il
+  rientro non richiede email; un codice usato non vale più e tutte le sessioni
+  vengono revocate. La **verifica email** resta invece bloccata da un provider
+  email e da un dominio credibile.
 - **PWA iOS reale**: provare installazione da Safari, icona, offline e
   comportamento al ritorno online su un iPhone fisico.
 - **Import CSV** Splitwise/Tricount con anteprima, mappatura colonne,

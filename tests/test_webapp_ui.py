@@ -147,6 +147,111 @@ def test_void_expense_offers_immediate_undo(client: TestClient) -> None:
     assert "Spesa annullata" not in page
 
 
+def _recovery_codes(page: str) -> list[str]:
+    block = re.search(
+        r'<pre class="recovery-codes"[^>]*>(.*?)</pre>', page, re.S
+    )
+    assert block, "blocco dei codici assente"
+    return re.findall(r"[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}", block.group(1))
+
+
+def test_recovery_code_resets_password_without_email(client: TestClient) -> None:
+    _register(client)
+    page = client.post("/account/recovery").text
+    codes = _recovery_codes(page)
+    assert len(codes) == 8
+    assert "Copiali ora" in page
+    assert "Codici attivi: <b>8</b>" in page
+
+    client.post("/logout", follow_redirects=False)
+    r = client.post(
+        "/recover",
+        data={
+            "email": "marco@example.com",
+            "code": codes[0].lower().replace("-", " "),
+            "password": "nuova123",
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    assert r.headers["location"] == "/login?reset=1"
+
+    old = client.post(
+        "/login",
+        data={"email": "marco@example.com", "password": "secret123"},
+        follow_redirects=False,
+    )
+    assert old.status_code == 400
+    new = client.post(
+        "/login",
+        data={"email": "marco@example.com", "password": "nuova123"},
+        follow_redirects=False,
+    )
+    assert new.status_code == 303
+
+    page = client.get("/account").text
+    assert "Codici attivi: <b>7</b>" in page
+
+
+def test_recovery_code_is_single_use_and_wrong_code_fails(client: TestClient) -> None:
+    _register(client)
+    codes = _recovery_codes(client.post("/account/recovery").text)
+    client.post("/logout", follow_redirects=False)
+
+    wrong = client.post(
+        "/recover",
+        data={
+            "email": "marco@example.com",
+            "code": "AAAA-AAAA-AAAA",
+            "password": "nuova123",
+        },
+    )
+    assert wrong.status_code == 400
+    assert "Email o codice di recupero non validi." in wrong.text
+
+    ok = client.post(
+        "/recover",
+        data={
+            "email": "marco@example.com",
+            "code": codes[0],
+            "password": "nuova123",
+        },
+        follow_redirects=False,
+    )
+    assert ok.status_code == 303
+
+    client.post("/logout", follow_redirects=False)
+    reused = client.post(
+        "/recover",
+        data={
+            "email": "marco@example.com",
+            "code": codes[0],
+            "password": "altra123",
+        },
+    )
+    assert reused.status_code == 400
+    assert "Email o codice di recupero non validi." in reused.text
+
+    # Il codice vecchio non deve valere nemmeno dopo aver generato un nuovo set.
+    assert client.post(
+        "/login",
+        data={"email": "marco@example.com", "password": "nuova123"},
+        follow_redirects=False,
+    ).status_code == 303
+    fresh = _recovery_codes(client.post("/account/recovery").text)
+    assert len(fresh) == 8
+    client.post("/logout", follow_redirects=False)
+    stale = client.post(
+        "/recover",
+        data={
+            "email": "marco@example.com",
+            "code": codes[1],
+            "password": "terza123",
+        },
+    )
+    assert stale.status_code == 400
+
+
 def test_void_payment_offers_immediate_undo(client: TestClient) -> None:
     _register(client, "Marco", "marco@example.com")
     group_id = _create_group(client)
