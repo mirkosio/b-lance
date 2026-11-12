@@ -295,6 +295,16 @@ async def assetlinks():
 
 
 # ---------------------------------------------------------------- filtri Jinja
+def _currency_exponent(code: str = "EUR") -> int:
+    """Cifre decimali della valuta: 2 per l'euro, 0 per lo yen, 3 per il kd."""
+    from .core.currencies import get_currency
+
+    try:
+        return get_currency(code).exponent
+    except ValueError:
+        return 2
+
+
 def _jinja_filters() -> None:
     # Formattazione generica (default EUR).
     templates.env.filters["money"] = lambda minor, code="EUR": format_amount(int(minor), code)
@@ -310,6 +320,9 @@ def _jinja_filters() -> None:
     )
     templates.env.globals["categories"] = CATEGORIES
     templates.env.globals["category_label"] = category_label
+    # Esponente della valuta (cifre decimali): serve al contatore animato
+    # per formattare come il backend. 2 per l'euro, 0 per lo yen.
+    templates.env.globals["currency_exponent"] = _currency_exponent
 
 
 _jinja_filters()
@@ -2266,7 +2279,8 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=20">
+  <link rel="stylesheet" href="/static/app.css?v=27">
+  <link rel="stylesheet" href="/static/motion.css?v=1">
 </head>
 <body class="guest">
 <a class="skip-link" href="#main">Salta al contenuto</a>

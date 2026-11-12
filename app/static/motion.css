@@ -4,11 +4,11 @@
  * - 150-220 ms sulle interazioni, 250-320 ms sulle transizioni.
  * - Stagger di 40-60 ms sulle liste, solo al primo caricamento.
  * - Niente overshoot sui dati: i numeri si muovono, ma non "rimbalzano".
- * - Niente hover-only: ogni effetto visibile al tocco funziona anche senza mouse.
+ * - Niente hover-only: tutto ciò che si vede al passaggio del mouse si vede
+ *   anche al tocco.
  * - Con prefers-reduced-motion TUTTO viene azzerato.
  *
- * Il sito è server-rendered: qui ci sono solo transizioni di stato e piccoli
- * gesti. Niente librerie, niente JS pesante: tutto CSS + un pizzico di script.
+ * Caricato DOPO app.css: qui il movimento è l'ultima parola.
  */
 
 /* ------------------------------------------------------------- token */
@@ -20,12 +20,11 @@
   --dur-2: 220ms;   /* interazione */
   --dur-3: 300ms;   /* transizione */
   --dur-4: 420ms;   /* comparsa di un blocco */
-  --stagger: 55ms;  /* ritardo fra elementi di una lista */
+  --stagger: 55ms;  /* ritardo fra gli elementi di una lista */
 }
 
 /* --------------------------------------------------------- transizioni */
-/* Ogni elemento interattivo risponde con colore/ombra, mai con spostamenti
-   che spostino il layout: l'utente deve sentire la qualità, non vederla. */
+/* Colore e ombra si muovono, il layout no: la qualità si sente, non si vede. */
 .btn,
 .icon-btn,
 .chip-radio,
@@ -38,12 +37,13 @@
 .transfer-quick,
 .transfer-copy,
 .info-toc a,
-.summary-card,
 .filter-chip,
 .expense-item,
 .balance-row,
-.person,
-.collapse-card > summary {
+.collapse-card > summary,
+.invite-box,
+.toast,
+.undo-banner {
   transition:
     background-color var(--dur-1) var(--ease-out),
     border-color var(--dur-1) var(--ease-out),
@@ -53,34 +53,61 @@
 }
 
 /* Il bottone preme: un pizzico di scala, subito, e torna. */
+.btn,
+.icon-btn,
+.pick-chip {
+  transition:
+    background-color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out),
+    color var(--dur-1) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out),
+    opacity var(--dur-2) var(--ease-out),
+    transform 100ms var(--ease-out);
+}
 .btn:active,
 .icon-btn:active,
 .pick-chip:active {
   transform: scale(0.975);
 }
 
-/* Focus: l'anello di focus entra con una transizione, non a scatto. */
+/* La casella di un gruppo si solleva di due pixel: niente di più. */
+.groupcard {
+  transition:
+    background-color var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out),
+    transform var(--dur-2) var(--ease-out);
+}
+.groupcard:hover { transform: translateY(-2px); }
+.groupcard:active { transform: translateY(0) scale(0.995); }
+
+/* Focus: l'anello entra con una transizione, non a scatto. */
 :focus-visible {
   transition: outline-offset var(--dur-1) var(--ease-out),
     box-shadow var(--dur-1) var(--ease-out);
 }
 
 /* ------------------------------------------------- comparsa al caricamento */
-/* "Stagger 40-60 ms, solo al primo caricamento": lo applichiamo alle liste
-   (gruppi, spese, righe di saldo) con un ritardo crescente. Il contenuto
-   resta leggibile anche senza animazione: se il CSS non parte, si vede tutto. */
-.stagger > * {
-  animation: bl-rise var(--dur-4) var(--ease-out) backwards;
+/* Stagger 40-60 ms, solo al primo caricamento. Senza animazione il
+   contenuto è comunque tutto visibile: si vede subito. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js-anim .stagger > * {
+    animation: bl-rise var(--dur-4) var(--ease-out) backwards;
+  }
+  html.js-anim .stagger > *:nth-child(1) { animation-delay: 0ms; }
+  html.js-anim .stagger > *:nth-child(2) { animation-delay: calc(var(--stagger) * 1); }
+  html.js-anim .stagger > *:nth-child(3) { animation-delay: calc(var(--stagger) * 2); }
+  html.js-anim .stagger > *:nth-child(4) { animation-delay: calc(var(--stagger) * 3); }
+  html.js-anim .stagger > *:nth-child(5) { animation-delay: calc(var(--stagger) * 4); }
+  html.js-anim .stagger > *:nth-child(6) { animation-delay: calc(var(--stagger) * 5); }
+  html.js-anim .stagger > *:nth-child(7) { animation-delay: calc(var(--stagger) * 6); }
+  html.js-anim .stagger > *:nth-child(8) { animation-delay: calc(var(--stagger) * 7); }
+  html.js-anim .stagger > *:nth-child(n + 9) { animation-delay: calc(var(--stagger) * 8); }
+
+  html.js-anim .fade-up {
+    animation: bl-rise var(--dur-4) var(--ease-out) backwards;
+  }
 }
-.stagger > *:nth-child(1) { animation-delay: 0ms; }
-.stagger > *:nth-child(2) { animation-delay: calc(var(--stagger) * 1); }
-.stagger > *:nth-child(3) { animation-delay: calc(var(--stagger) * 2); }
-.stagger > *:nth-child(4) { animation-delay: calc(var(--stagger) * 3); }
-.stagger > *:nth-child(5) { animation-delay: calc(var(--stagger) * 4); }
-.stagger > *:nth-child(6) { animation-delay: calc(var(--stagger) * 5); }
-.stagger > *:nth-child(7) { animation-delay: calc(var(--stagger) * 6); }
-.stagger > *:nth-child(8) { animation-delay: calc(var(--stagger) * 7); }
-.stagger > *:nth-child(n + 9) { animation-delay: calc(var(--stagger) * 8); }
 
 @keyframes bl-rise {
   from {
@@ -93,16 +120,9 @@
   }
 }
 
-/* Solo se il movimento è consentito: altrimenti niente comparsa. */
-@media (prefers-reduced-motion: no-preference) {
-  html.js-anim .stagger > * {
-    animation: bl-rise var(--dur-4) var(--ease-out) backwards;
-  }
-}
-
 /* ------------------------------------------------- numeri che contano */
 /* I soldi sono il protagonista: il totale si "compone" al caricamento.
-   Nessun rimbalzo (niente overshoot sui dati, vedi MASTER). */
+   Nessun rimbalzo: i dati non rimbalzano mai (vedi MASTER). */
 .count-up {
   display: inline-block;
   font-variant-numeric: tabular-nums;
@@ -115,7 +135,7 @@
 }
 
 @keyframes bl-count {
-  from { opacity: 0.35; }
+  from { opacity: 0.4; }
   to { opacity: 1; }
 }
 
@@ -123,7 +143,7 @@
 /* Il bottone che aspetta: una rotella discreta dentro il bottone. */
 .btn.is-busy {
   pointer-events: none;
-  opacity: 0.75;
+  opacity: 0.8;
 }
 .btn.is-busy::after {
   content: "";
@@ -143,7 +163,7 @@
   to { transform: rotate(360deg); }
 }
 
-/* Il pannello che si apre: l'altezza cresce, il contenuto appare. */
+/* Il pannello che si apre: il contenuto entra piano. */
 .collapse-card .collapse-body {
   animation: bl-open var(--dur-3) var(--ease-out);
 }
@@ -158,12 +178,7 @@
   }
 }
 
-/* La chevron del pannello ruota con la stessa curva del pannello. */
-.collapse-card > summary .chev {
-  transition: transform var(--dur-3) var(--ease-out);
-}
-
-/* I filtri della dashboard: il segmento attivo si sposta. */
+/* I filtri della dashboard: il segmento attivo cambia con calma. */
 .seg-filters button {
   transition:
     background-color var(--dur-2) var(--ease-out),
@@ -171,13 +186,7 @@
     box-shadow var(--dur-2) var(--ease-out);
 }
 
-/* La riga di un gruppo solleva il bordo, non il layout. */
-.groupcard:hover {
-  transform: translateY(-2px);
-}
-.groupcard:active { transform: translateY(0) scale(0.995); }
-
-/* Il bonifico in evidenza: un accenno quando compare. */
+/* Il bonifico in evidenza si accende al passaggio. */
 .transfer {
   transition: background-color var(--dur-2) var(--ease-out);
   border-radius: 10px;
@@ -199,55 +208,21 @@
   }
 }
 
-/* Il toast: entra, resta, esce. */
+/* Il toast entra, resta, esce. */
 .toast {
   animation: toast-in var(--dur-2) var(--ease-out);
-}
-
-/* La barra del riepilogo Cassiere che si riempie. */
-@media (prefers-reduced-motion: no-preference) {
-  html.js-anim .bar-fill {
-    animation: bl-grow 640ms var(--ease-out) backwards;
-  }
-}
-@keyframes bl-grow {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-
-/* Il riquadro dell'invito: respira piano, una volta sola. */
-.invite-box {
-  transition: border-color var(--dur-2) var(--ease-out),
-    box-shadow var(--dur-2) var(--ease-out);
 }
 
 /* --------------------------------------------------- transizione pagina */
 /* Cambio schermata: slide+fade breve (250-320 ms), come da MASTER.
    Il View Transition API fa il lavoro sporco dove esiste; altrove
    l'entrata è un semplice fade del contenuto. */
-@media (prefers-reduced-motion: no-preference) {
-  html.js-anim main.wrap > * {
-    animation: bl-page var(--dur-3) var(--ease-out) backwards;
-  }
-}
-
-@keyframes bl-page {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 @view-transition {
   navigation: auto;
 }
 
 ::view-transition-old(root) {
-  animation: bl-vt-out 160ms var(--ease-out) both;
+  animation: bl-vt-out 150ms var(--ease-out) both;
 }
 ::view-transition-new(root) {
   animation: bl-vt-in 260ms var(--ease-out) both;
@@ -260,7 +235,43 @@
   to { opacity: 1; transform: none; }
 }
 
-/* ------------------------------------------- rispetto del reduce motion */
+/* ------------------------------------------------- luce di fondo leggera */
+/* Il riquadro del saldo respira appena: un fascio di luce che si muove.
+   Ampiezza minima, ciclo lento, spenta per chi preferisce il movimento
+   ridotto. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js-anim .hero-balance {
+    animation: bl-glow 14s var(--ease-in-out) infinite alternate;
+  }
+  html.js-anim .landing-hero .art {
+    animation: bl-float 9s var(--ease-in-out) infinite alternate;
+  }
+  /* La sezione attiva della pagina prende un filo di colore: si capisce
+     dove sei senza dover leggere. */
+  html.js-anim .info-toc a.active {
+    animation: bl-tick 1.8s var(--ease-in-out) infinite alternate;
+  }
+}
+
+@keyframes bl-glow {
+  from { background-position: 0% 0%; }
+  to { background-position: 100% 0%; }
+}
+
+@keyframes bl-float {
+  from { transform: translateY(0); }
+  to { transform: translateY(-6px); }
+}
+
+@keyframes bl-tick {
+  from { border-left-color: var(--primary); }
+  to { border-left-color: var(--primary-deep); }
+}
+
+/* Le sezioni lunghe della pagina hanno già il reveal allo scroll: non
+   aggiungiamo un secondo movimento che lo contrasti. */
+
+/* --------------------------------------------------- rispetto del reduce motion */
 /* Con "riduci il movimento" tutto sparisce: niente animazioni, niente
    transizioni, niente rotelle. Il sito resta identico, solo più fermo. */
 @media (prefers-reduced-motion: reduce) {
@@ -272,6 +283,7 @@
     scroll-behavior: auto !important;
   }
   .stagger > *,
+  .fade-up,
   .count-up,
   .collapse-card .collapse-body,
   .undo-banner {
@@ -279,7 +291,6 @@
     transform: none !important;
   }
   .btn.is-busy::after {
-    animation: none !important;
     border-top-color: rgba(255, 255, 255, 0.9);
   }
 }

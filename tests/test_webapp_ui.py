@@ -122,6 +122,35 @@ def test_cashier_link_is_a_shell_and_stays_out_of_the_sitemap(
     assert "/cashier-link" not in sitemap
 
 
+def test_motion_assets_are_served_and_respect_reduced_motion(
+    client: TestClient,
+) -> None:
+    page = client.get("/").text
+    assert 'href="/static/motion.css?v=1"' in page
+    assert 'src="/static/motion.js?v=1"' in page
+    # Il movimento parte solo se l'utente non l'ha disattivato.
+    assert "prefers-reduced-motion: reduce" in page
+
+    css = client.get("/static/motion.css").text
+    assert "--dur-2: 220ms" in css
+    assert "prefers-reduced-motion: reduce" in css
+    assert "animation: none !important" in css
+
+    js = client.get("/static/motion.js").text
+    assert "prefers-reduced-motion" in js
+    assert "data-count-final" in js
+
+
+def test_balance_numbers_carry_the_count_hook(client: TestClient) -> None:
+    _register(client)
+    group_id = _create_group(client)
+    page = client.get(f"/groups/{group_id}").text
+    assert 'data-count=' in page
+    assert 'data-count-final=' in page
+    # Il totale del gruppo è sempre un numero animato.
+    assert 'class="num count-up"' in page
+
+
 def test_void_expense_offers_immediate_undo(client: TestClient) -> None:
     _register(client)
     group_id = _create_group(client)

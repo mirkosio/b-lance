@@ -21,6 +21,12 @@
         document.documentElement.classList.add('sb-collapsed');
       }
     } catch (e) {}
+    // Il movimento è consentito solo se l'utente non l'ha chiesto diversamente.
+    try {
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('js-anim');
+      }
+    } catch (e) {}
   </script>
 
   <!-- PWA -->
@@ -49,7 +55,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=26">
+  <link rel="stylesheet" href="/static/app.css?v=27">
+  <link rel="stylesheet" href="/static/motion.css?v=1">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
 <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -625,5 +632,6 @@
   update();
 })();
 </script>
+<script src="/static/motion.js?v=1" defer></script>
 </body>
 </html>

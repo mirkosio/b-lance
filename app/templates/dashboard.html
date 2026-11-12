@@ -68,9 +68,9 @@
         <div class="netchips">
           {% for code, net in net_by_currency.items() %}
             {% if net > 0 %}
-              <span class="netchip pos"><span class="dot"></span>ti devono <strong class="pos">{{ net | money(code) }}</strong></span>
+              <span class="netchip pos"><span class="dot"></span>ti devono <strong class="pos count-up" data-count="{{ net }}" data-count-exp="{{ currency_exponent(code) }}" data-count-final="{{ net | money(code) }}">{{ net | money(code) }}</strong></span>
             {% elif net < 0 %}
-              <span class="netchip neg"><span class="dot"></span>devi <strong class="neg">{{ (-net) | money(code) }}</strong></span>
+              <span class="netchip neg"><span class="dot"></span>devi <strong class="neg count-up" data-count="{{ (-net) }}" data-count-exp="{{ currency_exponent(code) }}" data-count-final="{{ (-net) | money(code) }}">{{ (-net) | money(code) }}</strong></span>
             {% else %}
               <span class="netchip"><span class="dot"></span>in pari con <strong>{{ net | money(code) }}</strong></span>
             {% endif %}
@@ -103,7 +103,7 @@
           <input class="group-search" type="search" id="group-search" placeholder="Cerca un gruppo" autocomplete="off">
         </div>
 
-        <div class="grid cols-2" id="group-list">
+        <div class="grid cols-2 stagger" id="group-list">
           {% for g in groups %}
             {% set net = group_nets.get(g.id, 0) %}
             <a href="/groups/{{ g.id }}" class="groupcard"
