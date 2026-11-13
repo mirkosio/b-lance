@@ -452,6 +452,7 @@ def sitemap(request: Request) -> Response:
         "/android",
         "/faq",
         "/privacy",
+        "/come-manteniamo",
         "/demo",
         "/login",
         "/register",
@@ -1112,6 +1113,77 @@ _INFO_PAGES = {
         },
         "secondary": {"href": "/faq", "label": "Leggi le domande frequenti"},
     },
+    "come-manteniamo": {
+        "eyebrow": "Fiducia",
+        "title": "Come si mantiene b-lance",
+        "intro": (
+            "b-lance è gratis e senza pubblicità. Questa pagina dice chi paga "
+            "i costi oggi, quanto costano e cosa succede se crescono."
+        ),
+        "facts": ["Gratis", "Open source", "Costi dichiarati"],
+        "layout": "prose",
+        "sections": [
+            {
+                "title": "Chi paga, oggi",
+                "body": (
+                    "b-lance lo mantiene una sola persona, che paga di tasca "
+                    "propria l'hosting del sito e l'app. Nessuna società, "
+                    "nessun investitore."
+                ),
+            },
+            {
+                "title": "Cosa costa",
+                "body": (
+                    "Due cose: un server per il sito e la banca dati, e la "
+                    "distribuzione dell'app, che è gratuita via GitHub. Il "
+                    "codice sorgente è pubblico su GitHub: chi vuole può "
+                    "verificare da solo cosa gira sui server."
+                ),
+                "list": [
+                    "Il codice di sito e app è aperto: github.com/mirkosio/b-lance.",
+                    "Le release dell'app sono firmate e con checksum pubblico.",
+                    "Le decisioni di prodotto sono documentate nel repository.",
+                ],
+            },
+            {
+                "title": "Quello che non c'è",
+                "body": (
+                    "Il servizio non si finanzia vendendo dati o attenzione. "
+                    "Niente inserzionisti, niente piani a pagamento, niente "
+                    "recensioni o numeri d'uso trascinati dalla campagna."
+                ),
+            },
+            {
+                "title": "Se i costi cresceranno",
+                "body": (
+                    "Oggi i costi sono piccoli e li copre il creatore. Se un "
+                    "giorno crescessero, la scelta sarà pubblicata prima su "
+                    "questa pagina e su GitHub, con numeri veri: le donazioni, "
+                    "se verranno, avranno un registro pubblico. In ogni caso "
+                    "esportare i dati del tuo account resterà gratis e "
+                    "possibile in qualsiasi momento."
+                ),
+            },
+            {
+                "title": "Cosa puoi controllare tu",
+                "body": (
+                    "Dall'account puoi esportare tutti i dati in JSON, "
+                    "correggere il profilo, cambiare password o eliminare "
+                    "l'account. I gruppi in cui sei membro restano ai membri, "
+                    "non a b-lance."
+                ),
+            },
+        ],
+        "closing": (
+            "Domande sui costi o sul modello? Apri una issue su GitHub: "
+            "rispondiamo in pubblico."
+        ),
+        "cta": {
+            "href": "https://github.com/mirkosio/b-lance",
+            "label": "Vedi il codice su GitHub",
+        },
+        "secondary": {"href": "/privacy", "label": "Come trattiamo i dati"},
+    },
 }
 
 
@@ -1141,6 +1213,11 @@ def faq_page(request: Request, user: User | None = Depends(current_user)):
 @app.get("/privacy")
 def privacy_page(request: Request, user: User | None = Depends(current_user)):
     return _info_topic(request, "privacy", user)
+
+
+@app.get("/come-manteniamo")
+def sustain_page(request: Request, user: User | None = Depends(current_user)):
+    return _info_topic(request, "come-manteniamo", user)
 
 
 @app.get("/cashier-link")

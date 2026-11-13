@@ -13,6 +13,7 @@ INFO_PAGES = [
     ("/android", "App Android"),
     ("/faq", "Domande frequenti"),
     ("/privacy", "Privacy"),
+    ("/come-manteniamo", "Come si mantiene b-lance"),
 ]
 
 
@@ -56,7 +57,7 @@ def test_about_is_a_hub_with_legacy_anchors(client: TestClient) -> None:
 def test_sitemap_lists_info_pages(client: TestClient) -> None:
     r = client.get("/sitemap.xml")
     assert r.status_code == 200
-    for path in ("/come-funziona", "/android", "/faq", "/privacy", "/demo"):
+    for path in ("/come-funziona", "/android", "/faq", "/privacy", "/come-manteniamo", "/demo"):
         assert f"{path}</loc>" in r.text
 
 
