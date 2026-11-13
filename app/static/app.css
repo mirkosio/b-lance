@@ -2052,3 +2052,38 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
   * { transition: none !important; animation: none !important; }
   html.js-reveal .reveal { opacity: 1; transform: none; }
 }
+
+/* ---------------------------------------------------- conflitto di versione
+   Due modifiche contemporanee allo stesso gruppo: le versioni si mostrano
+   fianco a fianco e la scelta è esplicita. Su schermo stretto si impilano. */
+.conflict-versions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 18px;
+}
+.conflict-version {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  min-width: 0;
+}
+.conflict-version .section-title { font-size: 0.85rem; }
+.conflict-fields { margin: 0; }
+.conflict-fields > div {
+  display: flex;
+  gap: 10px;
+  padding: 6px 0;
+  border-top: 1px solid var(--line);
+}
+.conflict-fields > div:first-child { border-top: 0; }
+.conflict-fields dt {
+  flex: 0 0 64px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.conflict-fields dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+@media (max-width: 560px) {
+  .conflict-versions { grid-template-columns: 1fr; }
+}

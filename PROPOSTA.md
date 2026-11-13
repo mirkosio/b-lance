@@ -111,9 +111,17 @@ coperti da test dedicati (`tests/test_webapp_ui.py`).
   sola lettura (`/cashier-link#c=…`). I dati viaggiano dopo il cancelletto,
   quindi il server non li riceve e non li conserva; saldi e bonifici si
   calcolano nel browser. Non c’è scadenza né revoca da remoto: chi ha il link
-  lo può rileggere, e il sito lo dice apertamente.
+  lo può rileggere, e il sito lo dice apertamente. **Consegnato nella release
+  v24 / app 1.7.0** (13/11), verificato in produzione con saldi, bonifici e
+  casi d’errore.
 - **Conflitti offline** tra dispositivi: stato comprensibile, modifiche
-  rivedibili, scelta esplicita di quale versione tenere, nessuna perdita silenziosa.
+  rivedibili, scelta esplicita di quale versione tenere, nessuna perdita
+  silenziosa. **Primo caso fatto (13/11):** la modifica del gruppo
+  (nome/tipo/valuta) confronta lo stato visto dall’utente con quello attuale:
+  se nel frattempo qualcun altro ha salvato, la pagina mostra le due versioni
+  fianco a fianco e chiede "Tieni la mia versione" o "Tieni l'altra"; se non
+  hai cambiato niente non c’è conflitto. Restano da estendere agli altri
+  oggetti e da provare con due dispositivi reali.
 - **Recupero password (fatto 12/11)**: 8 codici monouso generati
   dall’account, mostrati una sola volta, con hash HMAC nel database. Il
   rientro non richiede email; un codice usato non vale più e tutte le sessioni

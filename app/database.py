@@ -174,6 +174,12 @@ def _migrate() -> None:
             conn.execute(
                 text("ALTER TABLE groups ADD COLUMN share_created_at TIMESTAMP")
             )
+    if "updated_at" not in group_columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE groups ADD COLUMN updated_at TIMESTAMP"))
+    if "updated_by" not in group_columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE groups ADD COLUMN updated_by INTEGER"))
 
 
 def init_db(retries: int = 5, delay: float = 2.0) -> None:

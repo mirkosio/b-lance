@@ -49,10 +49,10 @@ non serve l'SDK Android sul computer locale:
 
 ```bash
 # opzione A: tag (il workflow parte da solo)
-git tag v23 && git push origin v23
+git tag v24 && git push origin v24
 
 # opzione B: manuale
-gh workflow run release-apk.yml -f tag=v23
+gh workflow run release-apk.yml -f tag=v24
 ```
 
 Il workflow esegue analyze + test, firma l'APK, crea la release GitHub con
@@ -102,8 +102,8 @@ mano: cambia la geometria e rigenera.
 ## Test
 
 ```bash
-.venv/bin/python -m pytest tests/ -q           # suite locale (151 test)
-node --test tests/js/*.test.mjs                # 9 test JavaScript (logica Cassiere)
+.venv/bin/python -m pytest tests/ -q           # suite locale (155 test)
+node --test tests/js/*.test.mjs                # 21 test JavaScript (logica Cassiere + movimento)
 .venv/bin/python /tmp/opencode/e2e_phase1.py   # E2E produzione (Fase 1 + movimenti)
 cd app-android && flutter test                 # 37 test Dart (modelli, formati, Fase 3)
 ```
@@ -145,4 +145,4 @@ cd app-android && flutter test                 # 37 test Dart (modelli, formati,
 - Sito: https://b-lance.vercel.app
 - Release APK: https://github.com/mirkosio/b-lance/releases
 - Dashboard: https://vercel.com/mirkosios-projects/b-lance
-151 backend + 9 javascript + 37 flutter = 197 totali
+155 backend + 21 javascript + 37 flutter = 211 totali

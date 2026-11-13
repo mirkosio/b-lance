@@ -109,10 +109,10 @@ flutter test
 
 L’APK si genera con `flutter build apk --release` e finisce in
 `app-android/build/app/outputs/flutter-apk/app-release.apk`. La release corrente
-è **1.6.0** (`versionCode 19`); le note e i file sono nella
+è **1.7.0** (`versionCode 20`); le note e i file sono nella
 [pagina GitHub Releases](https://github.com/mirkosio/b-lance/releases).
-APK 1.6.0: `APK_1.6.0.apk` (58,8 MB), SHA-256
-`72e13cf6896697d5397d7c28e9d53b65a31b606f248d92681176c84843a400c6`.
+APK 1.7.0: `APK_1.7.0.apk` (58 MB), SHA-256
+`5fcab6909d7e8fc95fd27c66382d2a8549cbb677504ca0dc3cc2fcc3b5be24ae`.
 Gli App Links usano `https://b-lance.vercel.app/join/CODICE` e la verifica in
 `/.well-known/assetlinks.json`.
 
@@ -120,19 +120,20 @@ Gli App Links usano `https://b-lance.vercel.app/join/CODICE` e la verifica in
 quindi per aggiornare dalla 1.5.0 occorre disinstallare la versione precedente;
 i gruppi Cassiere conservati solo sul telefono possono andare persi. I dati
 dell’account restano online. La nuova chiave va conservata per le prossime
-release.
+release: dalla 1.6.0 in poi gli aggiornamenti sono in-place.
 
 ## Verifiche e deploy
 
 Al riferimento v23 risultavano verdi 124 test backend, 36 test Flutter e
-`flutter analyze`. Con pagine informative, demo, scadenza dei link e
-l’interfaccia web-app la suite backend è a **151 test**, più 9 test
-JavaScript per la logica del riepilogo Cassiere e 37 test Flutter.
+`flutter analyze`. Con pagine informative, demo, scadenza dei link,
+l’interfaccia web-app, il movimento e i conflitti di modifica del gruppo la
+suite backend è a **155 test**, più 21 test JavaScript per la logica del
+riepilogo Cassiere e per il sistema di movimento, e 37 test Flutter.
 Per eseguirli:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q     # 151 test
-node --test tests/js/*.test.mjs          # 9 test JavaScript
+.venv/bin/python -m pytest tests/ -q     # 155 test
+node --test tests/js/*.test.mjs          # 21 test JavaScript
 cd app-android && flutter test           # 37 test
 ```
 
@@ -146,11 +147,15 @@ workflow `.github/workflows/release-apk.yml`.
 
 ## Stato e prossimi passi
 
-La release pubblicata è v23 / app 1.6.0. Sul sito
+La release pubblicata è v24 / app 1.7.0 (v23 era la 1.6.0, con il link web
+del Cassiere solo nel codice). Sul sito
 (`https://b-lance.vercel.app`) sono attivi split per articolo, PDF Cassiere,
 pagine informative separate, demo pubblica senza login, validazione inline,
 export account JSON, pagamento precompilato e offline account con coda
-idempotente. Dettagli e priorità sono in [PROPOSTA.md](PROPOSTA.md).
+idempotente, movimento discreto (stagger, numeri animati, transizioni di
+pagina, tutto azzerato con "riduci movimento") e conflitti di modifica del
+gruppo con scelta esplicita della versione. Dettagli e priorità sono in
+[PROPOSTA.md](PROPOSTA.md).
 
 Nota: la review del prodotto ha esaminato README e percorso pubblico senza login;
 non ha verificato account, gruppi autenticati, Android o offline. I relativi gap

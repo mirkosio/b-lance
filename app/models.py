@@ -90,6 +90,17 @@ class Group(Base):
     )
     created_by: Mapped[int] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    # Ultima modifica di nome/tipo/valuta. Serve a individuare i conflitti:
+    # se due dispositivi modificano lo stesso gruppo, chi arriva secondo
+    # deve scegliere in modo esplicito, non sovrascrivere in silenzio.
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    # Chi ha fatto l'ultima modifica: serve al messaggio di conflitto
+    # ("Marco ha modificato questo gruppo mentre lo modificavi").
+    updated_by: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id"), nullable=True
+    )
 
     members: Mapped[list[GroupMember]] = relationship(
         back_populates="group", cascade="all, delete-orphan"

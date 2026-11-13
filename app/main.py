@@ -891,6 +891,15 @@ _INFO_PAGES = {
                 ),
             },
             {
+                "title": "Due persone modificano il gruppo insieme: cosa succede?",
+                "body": (
+                    "Niente sovrascritture in silenzio. Se il gruppo è stato "
+                    "cambiato mentre avevi il form aperto, vedrai le due "
+                    "versioni fianco a fianco e scegli quale tenere: la tua "
+                    "o quella dell'altro dispositivo."
+                ),
+            },
+            {
                 "title": "Cosa succede quando annullo una spesa?",
                 "body": (
                     "Resta nello storico in grigio e barrata, ma non conta più "
@@ -1776,6 +1785,9 @@ def edit_group_form(
 ):
     """Form di modifica del gruppo (solo con permesso group_edit)."""
     group, member = _require_perm(db, group_id, user, "group_edit")
+    # Il form porta con sé lo stato che l'utente sta vedendo: al salvataggio
+    # si confronta con quello attuale, per non sovrascrivere in silenzio
+    # una modifica fatta da un altro dispositivo nel frattempo.
     return templates.TemplateResponse(
         request,
         "group_edit.html",
@@ -1786,20 +1798,34 @@ def edit_group_form(
             "currencies": sorted_currencies(),
             "locked": _has_history(db, group.id),
             "is_owner": member.role == "owner",
+            "base": group.updated_at.isoformat() if group.updated_at else "",
+            "last_editor": (
+                db.scalar(select(User.name).where(User.id == group.updated_by))
+                if group.updated_by
+                else None
+            ),
         },
     )
 
 
 @app.post("/groups/{group_id}/edit")
 def edit_group_save(
+    request: Request,
     group_id: int,
     name: str = Form(...),
     kind: str = Form("other"),
     base_currency: str = Form("EUR"),
+    base: str = Form(""),
+    force: str = Form(""),
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
 ):
-    """Salva le modifiche al gruppo (solo con permesso group_edit)."""
+    """Salva le modifiche al gruppo (solo con permesso group_edit).
+
+    Se il gruppo è cambiato dopo che l'utente ha aperto il form (altro
+    dispositivo o altra persona), nessun sovrascrivimento in silenzio: si
+    mostra un conflitto con le due versioni e la scelta esplicita.
+    """
     group, _ = _require_perm(db, group_id, user, "group_edit")
 
     clean = name.strip()
@@ -1811,6 +1837,46 @@ def edit_group_save(
     code = (base_currency or group.base_currency).strip().upper()
     if not is_valid_currency(code):
         raise HTTPException(status_code=400, detail=f"Valuta non valida: {code}")
+
+    # Conflitto: lo stato del form non è più quello del server.
+    stored = group.updated_at.isoformat() if group.updated_at else ""
+    if not force and base != stored:
+        changed = (
+            clean != group.name
+            or (kind.strip() or "other") != group.kind
+            or code != group.base_currency
+        )
+        # Se l'utente non ha cambiato niente, non c'è una "sua versione":
+        # non serve un conflitto, basta tornare al gruppo.
+        if changed:
+            editor_name = (
+                db.scalar(select(User.name).where(User.id == group.updated_by))
+                if group.updated_by
+                else None
+            )
+            return templates.TemplateResponse(
+                request,
+                "group_edit_conflict.html",
+                {
+                    "request": request,
+                    "user": user,
+                    "group": group,
+                    "editor_name": editor_name or "Qualcuno",
+                    "my_name": clean,
+                    "my_kind": (kind.strip() or "other"),
+                    "my_currency": code,
+                    "locked": _has_history(db, group.id),
+                    "base": base,
+                    "kind_labels": [
+                        ("other", "Altro"),
+                        ("trip", "Viaggio"),
+                        ("home", "Casa / roommate"),
+                        ("event", "Evento"),
+                    ],
+                },
+                status_code=409,
+            )
+
     if code != group.base_currency:
         # Cambiare valuta con lo storico dentro corromperebbe i saldi:
         # le spese e i pagamenti sono già nella vecchia valuta base.
@@ -1826,6 +1892,10 @@ def edit_group_save(
 
     group.name = clean
     group.kind = (kind.strip() or "other")[:32]
+    # Marca la modifica: la prossima persona che salva con un form aperto
+    # da prima vedrà il conflitto, invece di sovrascrivere senza saperlo.
+    group.updated_at = utcnow()
+    group.updated_by = user.id
     db.commit()
     return RedirectResponse(f"/groups/{group.id}", status_code=303)
 
@@ -2279,7 +2349,7 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=27">
+  <link rel="stylesheet" href="/static/app.css?v=28">
   <link rel="stylesheet" href="/static/motion.css?v=1">
 </head>
 <body class="guest">

@@ -339,3 +339,89 @@ def test_void_payment_offers_immediate_undo(client: TestClient) -> None:
     page = client.get(f"/groups/{group_id}").text
     assert "· annullato" not in page
     assert "Pagamento annullato" not in page
+
+
+def test_group_edit_conflict_shows_both_versions_and_asks(client: TestClient) -> None:
+    """Due modifiche contemporanee: niente sovrascritture in silenzio."""
+    _register(client)
+    group_id = _create_group(client)
+
+    # Il form porta lo stato che l'utente sta vedendo.
+    page = client.get(f"/groups/{group_id}/edit").text
+    assert 'name="base"' in page
+    base = re.search(r'name="base" value="([^"]*)"', page).group(1)
+
+    # Un altro dispositivo salva nel frattempo.
+    other = client.post(
+        f"/groups/{group_id}/edit",
+        data={"name": "Weekend montagna", "kind": "trip", "base_currency": "EUR", "base": base},
+        follow_redirects=False,
+    )
+    assert other.status_code == 303
+
+    # Il form aperto prima salva adesso: conflitto con 409, due versioni,
+    # scelta esplicita, niente salvataggio automatico.
+    r = client.post(
+        f"/groups/{group_id}/edit",
+        data={"name": "Weekend al mare", "kind": "event", "base_currency": "EUR", "base": base},
+        follow_redirects=False,
+    )
+    assert r.status_code == 409
+    conflict = r.text
+    assert "Weekend montagna" in conflict
+    assert "Weekend al mare" in conflict
+    assert "Tieni la mia versione" in conflict
+    assert "Tieni l'altra" in conflict
+    assert 'name="force" value="1"' in conflict
+
+    # Il gruppo sul server è ancora quello dell'altro dispositivo.
+    assert "Weekend montagna" in client.get(f"/groups/{group_id}").text
+
+    # Scelta esplicita: la mia versione vince.
+    r = client.post(
+        f"/groups/{group_id}/edit",
+        data={
+            "name": "Weekend al mare",
+            "kind": "event",
+            "base_currency": "EUR",
+            "base": base,
+            "force": "1",
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+    detail = client.get(f"/groups/{group_id}").text
+    assert "Weekend al mare" in detail
+
+    # E il form aggiornato porta il nuovo base: salvarlo senza cambiare
+    # niente non genera un altro conflitto.
+    page = client.get(f"/groups/{group_id}/edit").text
+    new_base = re.search(r'name="base" value="([^"]*)"', page).group(1)
+    assert new_base != base
+    r = client.post(
+        f"/groups/{group_id}/edit",
+        data={"name": "Weekend al mare", "kind": "event", "base_currency": "EUR", "base": new_base},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303
+
+
+def test_group_edit_without_changes_never_conflicts(client: TestClient) -> None:
+    """Salvare il form di un altro dispositivo senza toccare nulla è ok."""
+    _register(client)
+    group_id = _create_group(client, name="Casa")
+    page = client.get(f"/groups/{group_id}/edit").text
+    base = re.search(r'name="base" value="([^"]*)"', page).group(1)
+    client.post(
+        f"/groups/{group_id}/edit",
+        data={"name": "Casa ristrutturata", "kind": "home", "base_currency": "EUR", "base": base},
+        follow_redirects=False,
+    )
+    # Stesso nome/tipo/valuta del server: il nome non è cambiato, non c'è
+    # una "sua versione" da difendere, si torna al gruppo senza conflitto.
+    r = client.post(
+        f"/groups/{group_id}/edit",
+        data={"name": "Casa ristrutturata", "kind": "home", "base_currency": "EUR", "base": base},
+        follow_redirects=False,
+    )
+    assert r.status_code == 303

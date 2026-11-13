@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Conflitto su {{ group.name }} — b-lance{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <h1>Due versioni dello stesso gruppo</h1>
+  <p>{{ group.name }}</p>
+</div>
+
+<div class="card" style="max-width:640px">
+  <p>
+    <strong>{{ editor_name }}</strong> ha modificato questo gruppo mentre lo
+    modificavi anche tu. Nessuna delle due versioni è stata salvata: scegli
+    quale tenere, così non si perde nulla senza che tu lo sappia.
+  </p>
+
+  <div class="conflict-versions">
+    <div class="conflict-version">
+      <div class="section-title">La tua versione</div>
+      <dl class="conflict-fields">
+        <div><dt>Nome</dt><dd>{{ my_name }}</dd></div>
+        <div><dt>Tipo</dt><dd>{% for k, label in kind_labels %}{% if k == my_kind %}{{ label }}{% endif %}{% endfor %}</dd></div>
+        <div><dt>Valuta</dt><dd>{{ my_currency }}</dd></div>
+      </dl>
+    </div>
+    <div class="conflict-version">
+      <div class="section-title">Versione salvata ({{ editor_name }})</div>
+      <dl class="conflict-fields">
+        <div><dt>Nome</dt><dd>{{ group.name }}</dd></div>
+        <div><dt>Tipo</dt><dd>{% for k, label in kind_labels %}{% if k == group.kind %}{{ label }}{% endif %}{% endfor %}</dd></div>
+        <div><dt>Valuta</dt><dd>{{ group.base_currency }}</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <div class="row" style="margin-top:22px">
+    <form method="post" action="/groups/{{ group.id }}/edit" style="flex:1;margin:0">
+      <input type="hidden" name="name" value="{{ my_name }}">
+      <input type="hidden" name="kind" value="{{ my_kind }}">
+      <input type="hidden" name="base_currency" value="{{ my_currency }}">
+      <input type="hidden" name="base" value="{{ base }}">
+      <input type="hidden" name="force" value="1">
+      <button class="btn block" type="submit">Tieni la mia versione</button>
+    </form>
+    <form method="get" action="/groups/{{ group.id }}" style="flex:1;margin:0">
+      <button class="btn ghost block" type="submit">Tieni l'altra</button>
+    </form>
+  </div>
+  <p class="muted small" style="margin-top:10px">
+    Se scegli l'altra, le tue modifiche vengono scartate. Puoi comunque
+    <a href="/groups/{{ group.id }}/edit">ripartire dal form aggiornato</a>.
+  </p>
+</div>
+{% endblock %}
