@@ -55,8 +55,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=30">
-  <link rel="stylesheet" href="/static/motion.css?v=2">
+  <link rel="stylesheet" href="/static/app.css?v=31">
+  <link rel="stylesheet" href="/static/motion.css?v=3">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
 <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -237,7 +237,9 @@
   {% block content %}{% endblock %}
 </main>
 
+{% block footer %}
 <footer>b-lance — dividiamo, regoliamo, bilanci in equilibrio. · <a href="/come-funziona">Come funziona</a> · <a href="/demo">Demo</a> · <a href="/faq">FAQ</a> · <a href="/privacy">Privacy</a> · <a href="/come-manteniamo">Come si mantiene</a> · <a href="/android">App Android</a> · <a href="/about">Informazioni</a></footer>
+{% endblock %}
 
 {% if not user %}
 <!-- Navigazione pubblica mobile: solo testo, niente icone decorative. -->

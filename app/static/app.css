@@ -1,35 +1,40 @@
-/* b-lance — design system v30 "carta calda, luce e salvia"
-   Palette umana: carta avorio calda, inchiostro verde, salvia offuscato (#5f8d6e)
-   come marca. Tema chiaro + scuro (toggle, rispetta prefers-color-scheme).
-   Texture carta leggera via CSS (niente immagini: motion.css è url-free).
+/* b-lance — design system v31 "carta, inchiostro, luce"
+   Direzione editoriale: carta avorio calda, inchiostro verde, salvia
+   offuscato (#5f8d6e) come marca, oro polvere per i dettagli "soldi".
+   Tema chiaro + scuro (toggle, rispetta prefers-color-scheme).
+   Texture carta leggerissima via CSS (motion.css resta url-free).
    Gradienti dosati: solo su marchio, CTA e hero.
-   Tipografia: Inter per l'UI, Calistoga per le headline (calore editoriale).
+   Tipografia: Inter per l'UI, Calistoga per le headline.
    Numeri tabellari ovunque. Mobile-first, safe-area incluse. */
 
 :root {
   color-scheme: light;
-  --bg: #f7f5ee;
-  --bg-soft: #efeae0;
-  --card: #ffffff;
-  --card-2: #f9f6ec;
-  --border: #e3dccb;
-  --line: #eadfd0;
-  --chrome: #fbf9f4;
-  --text: #242b27;
-  --muted: #6b7a6e;
+  --bg: #f8f5ec;
+  --bg-soft: #f1ebdf;
+  --card: #fffdf8;
+  --card-2: #faf6ea;
+  --border: #e2d9c6;
+  --line: #ebe2d1;
+  --chrome: #fcfaf4;
+  --text: #232a26;
+  --muted: #67766b;
   --primary: #5f8d6e;
   --primary-deep: #47684f;
-  --primary-soft: #eef2ed;
+  --primary-soft: #eef2ec;
   --link: #3f6a52;
   --accent: #a8823c;
   --pos: #3b7a52;
   --neg: #a84a34;
   --danger: #a0432f;
   --gold: #a8823c;
-  --radius: 18px;
+  --rule: #ddd2bc;
+  --ink: #1e2a23;
+  --radius: 20px;
   --radius-sm: 12px;
-  --shadow: 0 1px 2px rgba(31, 41, 35, 0.04), 0 8px 24px rgba(31, 41, 35, 0.06);
-  --shadow-soft: 0 2px 8px rgba(31, 41, 35, 0.04);
+  --radius-lg: 30px;
+  --shadow: 0 2px 4px rgba(31, 41, 35, 0.04), 0 16px 40px rgba(31, 41, 35, 0.08);
+  --shadow-soft: 0 1px 2px rgba(31, 41, 35, 0.03), 0 6px 18px rgba(31, 41, 35, 0.05);
+  --shadow-lift: 0 4px 8px rgba(31, 41, 35, 0.05), 0 24px 56px rgba(31, 41, 35, 0.12);
   --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Calistoga", Georgia, "Times New Roman", serif;
   --grad-brand: linear-gradient(135deg, #6b9b7c 0%, #47684f 100%);
@@ -57,8 +62,11 @@
   --neg: #dd8b70;
   --danger: #dd8b70;
   --gold: #cfa75e;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
-  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --rule: #333b34;
+  --ink: #eef1eb;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.35), 0 16px 40px rgba(0, 0, 0, 0.4);
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.35);
+  --shadow-lift: 0 4px 8px rgba(0, 0, 0, 0.35), 0 24px 56px rgba(0, 0, 0, 0.5);
 }
 :root[data-theme="dark"] .invite-box { color: var(--primary); }
 :root[data-theme="dark"] select option { background: #1b211d; color: #e9ece7; }
@@ -743,7 +751,7 @@ select option { background: #fff; color: var(--text); }
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   /* Accento una-tantum: verde salvia che sfuma nell'oro dei soldi */
   .hero h1 em {
-    background: linear-gradient(115deg, #3f6a52 0%, #5f8d6e 55%, #a8823c 115%);
+    background: linear-gradient(115deg, #2f5a41 0%, #4f7f60 55%, #9a7530 115%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -2192,3 +2200,431 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
 @media (max-width: 560px) {
   .conflict-versions { grid-template-columns: 1fr; }
 }
+
+/* ==========================================================================
+   v31 — direzione editoriale
+   Carta, inchiostro e luce: regole sottili, numeri di sezione, fregio,
+   footer a colonne. Il movimento vive in motion.css.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- topbar */
+/* Vetro caldo: la pagina che scorre resta percepibile sotto la barra. */
+.topbar {
+  background: color-mix(in srgb, var(--chrome) 88%, transparent);
+  -webkit-backdrop-filter: saturate(1.3) blur(14px);
+  backdrop-filter: saturate(1.3) blur(14px);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .topbar { background: var(--chrome); }
+}
+
+/* Voce pubblica: la sottolineatura si disegna da sinistra. */
+@media (min-width: 960px) {
+  .public-links a {
+    position: relative;
+    border-bottom: 0;
+    padding-bottom: 10px;
+  }
+  .public-links a::after {
+    content: "";
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    bottom: 4px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--primary);
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    transition: transform var(--dur-2, 220ms) var(--ease-out, ease);
+  }
+  .public-links a:hover::after,
+  .public-links a:focus-visible::after,
+  .public-links a.active::after { transform: scaleX(1); }
+  .public-links a.active { border-bottom-color: transparent; }
+}
+
+/* ---------------------------------------------------------------- hero */
+.landing-hero { isolation: isolate; }
+
+/* Due aloni caldi: carta illuminata di lato, mai un fondo piatto. */
+.hero-glow {
+  position: absolute;
+  z-index: -1;
+  width: 44vw;
+  max-width: 620px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(70px);
+  opacity: 0.55;
+}
+.hero-glow-a {
+  top: -16%;
+  right: -8%;
+  background: radial-gradient(circle, rgba(95, 141, 110, 0.42), transparent 68%);
+}
+.hero-glow-b {
+  bottom: -22%;
+  left: -10%;
+  background: radial-gradient(circle, rgba(168, 130, 60, 0.30), transparent 68%);
+}
+:root[data-theme="dark"] .hero-glow { opacity: 0.32; }
+
+/* Titolo a righe: ogni riga sale da sotto la propria maschera. */
+.hero-line {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.09em;
+}
+.hero-line > span { display: block; }
+.landing-hero h1 { letter-spacing: -0.015em; }
+
+.eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 4px rgba(95, 141, 110, 0.14);
+}
+
+/* Fregio: una riga di parole vere che scorre piano, come un nastro di carta. */
+.ticker {
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(180deg, rgba(95, 141, 110, 0.05), transparent 70%),
+    var(--bg-soft);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.ticker-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.ticker-group { display: flex; flex: 0 0 auto; }
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 13px 22px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ticker-item::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0.7;
+}
+
+/* ------------------------------------------------------- sezioni e testate */
+/* Numero di sezione in filigrana: coordina la lettura senza urlare. */
+.landing-section {
+  counter-increment: landing-sec;
+  --num-opacity: 0.055;
+}
+.landing-section::after {
+  content: attr(data-num);
+  position: absolute;
+  top: clamp(16px, 2.6vw, 34px);
+  right: clamp(20px, 5vw, 64px);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 7vw, 5.6rem);
+  line-height: 1;
+  opacity: var(--num-opacity);
+  pointer-events: none;
+  user-select: none;
+}
+:root[data-theme="dark"] .landing-section { --num-opacity: 0.09; }
+
+.section-head .eyebrow::before {
+  content: "";
+  width: 26px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.5;
+}
+.section-head h2 { max-width: 24ch; }
+
+/* ---------------------------------------------------------------- passi */
+@media (min-width: 800px) {
+  .steps-grid { position: relative; }
+  .steps-grid::before {
+    content: "";
+    position: absolute;
+    left: 10%;
+    right: 10%;
+    top: 66px;
+    height: 1px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--rule) 0 5px,
+      transparent 5px 11px
+    );
+    pointer-events: none;
+  }
+}
+.step-num {
+  width: 46px;
+  height: 46px;
+  border: 1px solid var(--rule);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--primary-deep);
+  font-size: 1.02rem;
+  transition:
+    background-color var(--dur-2, 220ms) var(--ease-out, ease),
+    color var(--dur-2, 220ms) var(--ease-out, ease),
+    border-color var(--dur-2, 220ms) var(--ease-out, ease),
+    transform var(--dur-2, 220ms) var(--ease-out, ease);
+}
+:root[data-theme="dark"] .step-num { background: transparent; color: var(--primary); }
+.step:hover .step-num {
+  background: var(--primary-deep);
+  border-color: var(--primary-deep);
+  color: #fff;
+  transform: rotate(-7deg) scale(1.05);
+}
+
+/* ---------------------------------------------------------------- funzioni */
+.card.feature {
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
+}
+.card.feature::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), var(--gold));
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform var(--dur-3, 300ms) var(--ease-out, ease);
+}
+.card.feature:hover::before { transform: scaleX(1); }
+.card.feature .ficon {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  transition:
+    transform var(--dur-2, 220ms) var(--ease-out, ease),
+    background-color var(--dur-2, 220ms) var(--ease-out, ease);
+}
+.card.feature:hover .ficon { transform: rotate(-4deg) scale(1.04); }
+.feature h3 { font-size: 1.04rem; }
+.feature p { line-height: 1.6; }
+
+/* ---------------------------------------------------------------- app */
+.landing-inner.app-panel {
+  position: relative;
+  isolation: isolate;
+}
+.landing-inner.app-panel::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -30%;
+  right: -12%;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(168, 130, 60, 0.35), transparent 66%);
+  filter: blur(30px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+.phone {
+  transition:
+    transform var(--dur-3, 300ms) var(--ease-out, ease),
+    box-shadow var(--dur-3, 300ms) var(--ease-out, ease);
+}
+.landing-inner.app-panel:hover .phone {
+  transform: translateY(-4px) rotate(-0.6deg);
+  box-shadow: 0 26px 54px rgba(0, 0, 0, 0.34);
+}
+
+/* ---------------------------------------------------------------- CTA */
+.landing-inner.final-cta {
+  position: relative;
+  overflow: hidden;
+}
+.cta-stamp {
+  display: none;
+  position: absolute;
+  right: clamp(22px, 4vw, 46px);
+  top: 50%;
+  width: 104px;
+  height: 104px;
+  margin-top: -52px;
+  place-items: center;
+  border: 1px solid rgba(95, 141, 110, 0.45);
+  border-radius: 50%;
+  color: var(--primary-deep);
+  font-family: var(--font-display);
+  font-size: 0.86rem;
+  line-height: 1.25;
+  text-align: center;
+  transform: rotate(8deg);
+}
+.cta-stamp::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px dashed rgba(95, 141, 110, 0.35);
+  border-radius: 50%;
+}
+:root[data-theme="dark"] .cta-stamp { color: var(--primary); }
+@media (min-width: 900px) {
+  .cta-stamp { display: grid; }
+  .landing-inner.final-cta { padding-right: clamp(150px, 16vw, 210px); }
+}
+
+/* ---------------------------------------------------------------- footer */
+.site-footer {
+  padding: 0 0 calc(78px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--border);
+  text-align: left;
+  background:
+    radial-gradient(700px 280px at 10% 0, rgba(95, 141, 110, 0.07), transparent 70%),
+    var(--bg-soft);
+}
+@media (min-width: 960px) {
+  .site-footer { padding-bottom: 0; }
+}
+.footer-inner {
+  display: grid;
+  gap: clamp(26px, 4vw, 44px);
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: clamp(38px, 5vw, 64px) clamp(20px, 5vw, 64px) 30px;
+}
+.footer-brand { display: flex; align-items: flex-start; gap: 14px; }
+.footer-brand .brand-badge { width: 44px; height: 44px; flex: 0 0 auto; }
+.footer-brand b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.28rem;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.footer-tag {
+  max-width: 32ch;
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+.footer-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px 26px;
+}
+.footer-col h3 {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.footer-col a {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.footer-col a:hover { color: var(--text); }
+.footer-note {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 20px;
+  margin: 0;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+  grid-column: 1 / -1;
+}
+@media (min-width: 760px) {
+  .footer-inner { grid-template-columns: 1.1fr 1.9fr; }
+  .footer-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1060px) {
+  .footer-inner { grid-template-columns: 1.2fr 2fr; align-items: start; }
+}
+
+/* ------------------------------------------------------- pagine informative */
+.info-hero { isolation: isolate; }
+.info-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  right: -70px;
+  bottom: -110px;
+  width: 280px;
+  height: 280px;
+  border: 1px solid rgba(95, 141, 110, 0.18);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 34px rgba(95, 141, 110, 0.045),
+    0 0 0 68px rgba(168, 130, 60, 0.03);
+  pointer-events: none;
+}
+.info-toc {
+  padding: 14px;
+  background: color-mix(in srgb, var(--card) 82%, transparent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+.info-topic h2 { scroll-margin-top: 92px; }
+.info-step {
+  position: relative;
+  overflow: hidden;
+}
+.info-step::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--primary), var(--gold));
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+  transition: transform var(--dur-3, 300ms) var(--ease-out, ease);
+}
+.info-step:hover::before { transform: scaleY(1); }
+
+/* ------------------------------------------------------ schede e dashboard */
+.stat {
+  transition: transform var(--dur-2, 220ms) var(--ease-out, ease);
+}
+.stat:hover { transform: translateY(-1px); }
+.groupcard { position: relative; overflow: hidden; }
+.groupcard::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), transparent);
+  opacity: 0;
+  transition: opacity var(--dur-2, 220ms) var(--ease-out, ease);
+}
+.groupcard:hover::after { opacity: 1; }
+
+/* --------------------------------------------------------- reduced motion */
+/* Le regole di movimento stanno in motion.css: qui solo geometria e colore. */

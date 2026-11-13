@@ -3,10 +3,15 @@
 {% block body_class %}landing guest{% endblock %}
 {% block content %}
 <section class="hero landing-hero">
+  <span class="hero-glow hero-glow-a" aria-hidden="true"></span>
+  <span class="hero-glow hero-glow-b" aria-hidden="true"></span>
   <div class="landing-inner hero-grid">
     <div class="hero-copy stagger">
-      <span class="eyebrow">Spese condivise, fatte bene</span>
-      <h1>Dividi le spese.<br><em>Tutto torna.</em></h1>
+      <span class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Spese condivise, fatte bene</span>
+      <h1>
+        <span class="hero-line"><span>Dividi le spese.</span></span>
+        <span class="hero-line"><span><em>Tutto torna.</em></span></span>
+      </h1>
       <p>Weekend, gite, cene e case condivise. Aggiungi chi ha pagato, dividi
          come vuoi e vedi subito chi deve cosa. Senza fogli Excel e senza
          discussioni.</p>
@@ -37,32 +42,39 @@
     <!-- Illustrazione piatta: un conto che si divide in due, giusto al centesimo -->
     <div class="art" aria-hidden="true">
       <svg viewBox="0 0 420 300" width="100%" role="img">
-        <g transform="rotate(-3 150 130)">
-          <rect x="60" y="30" width="180" height="216" rx="14" fill="#f6f5ef" stroke="#e5e2d8" stroke-width="2"/>
-          <rect x="84" y="56" width="96" height="10" rx="5" fill="#6c776f"/>
-          <rect x="84" y="84" width="132" height="8" rx="4" fill="#d9d5c9"/>
-          <rect x="84" y="104" width="110" height="8" rx="4" fill="#d9d5c9"/>
-          <rect x="84" y="124" width="124" height="8" rx="4" fill="#d9d5c9"/>
-          <line x1="84" y1="152" x2="216" y2="152" stroke="#e5e2d8" stroke-width="2" stroke-dasharray="6 6"/>
-          <rect x="84" y="170" width="70" height="14" rx="7" fill="#242b27"/>
-          <rect x="164" y="172" width="52" height="10" rx="5" fill="#3b7a52"/>
-          <path d="M110 206 h60 l-10 -8 m10 8 l-10 8" stroke="#5f8d6e" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle class="art-ring" cx="205" cy="150" r="148" fill="none" stroke="#5f8d6e" stroke-opacity=".16" stroke-dasharray="4 11"/>
+        <g class="art-sheet">
+          <g transform="rotate(-3 150 130)">
+            <rect x="60" y="30" width="180" height="216" rx="14" fill="#f6f5ef" stroke="#e5e2d8" stroke-width="2"/>
+            <rect x="84" y="56" width="96" height="10" rx="5" fill="#6c776f"/>
+            <rect x="84" y="84" width="132" height="8" rx="4" fill="#d9d5c9"/>
+            <rect x="84" y="104" width="110" height="8" rx="4" fill="#d9d5c9"/>
+            <rect x="84" y="124" width="124" height="8" rx="4" fill="#d9d5c9"/>
+            <line x1="84" y1="152" x2="216" y2="152" stroke="#e5e2d8" stroke-width="2" stroke-dasharray="6 6"/>
+            <rect x="84" y="170" width="70" height="14" rx="7" fill="#242b27"/>
+            <rect x="164" y="172" width="52" height="10" rx="5" fill="#3b7a52"/>
+            <path d="M110 206 h60 l-10 -8 m10 8 l-10 8" stroke="#5f8d6e" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </g>
         </g>
-        <g transform="translate(250 70)">
-          <rect width="150" height="64" rx="16" fill="#ffffff" stroke="#e5e2d8" stroke-width="2"/>
-          <circle cx="30" cy="32" r="15" fill="#47684f"/>
-          <text x="30" y="37" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="800" fill="#ffffff">M</text>
-          <text x="56" y="28" font-family="Inter, sans-serif" font-size="12" fill="#6c776f">Marco</text>
-          <text x="56" y="46" font-family="Inter, sans-serif" font-size="15" font-weight="800" fill="#3b7a52">+23,50 €</text>
+        <g class="art-chip art-chip-1">
+          <g transform="translate(250 70)">
+            <rect width="150" height="64" rx="16" fill="#ffffff" stroke="#e5e2d8" stroke-width="2"/>
+            <circle cx="30" cy="32" r="15" fill="#47684f"/>
+            <text x="30" y="37" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="800" fill="#ffffff">M</text>
+            <text x="56" y="28" font-family="Inter, sans-serif" font-size="12" fill="#6c776f">Marco</text>
+            <text x="56" y="46" font-family="Inter, sans-serif" font-size="15" font-weight="800" fill="#3b7a52">+23,50 €</text>
+          </g>
         </g>
-        <g transform="translate(230 156)">
-          <rect width="150" height="64" rx="16" fill="#ffffff" stroke="#e5e2d8" stroke-width="2"/>
-          <circle cx="30" cy="32" r="15" fill="#5f8d6e"/>
-          <text x="30" y="37" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="800" fill="#ffffff">L</text>
-          <text x="56" y="28" font-family="Inter, sans-serif" font-size="12" fill="#6c776f">Luca</text>
-          <text x="56" y="46" font-family="Inter, sans-serif" font-size="15" font-weight="800" fill="#b4553f">−23,50 €</text>
+        <g class="art-chip art-chip-2">
+          <g transform="translate(230 156)">
+            <rect width="150" height="64" rx="16" fill="#ffffff" stroke="#e5e2d8" stroke-width="2"/>
+            <circle cx="30" cy="32" r="15" fill="#5f8d6e"/>
+            <text x="30" y="37" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="800" fill="#ffffff">L</text>
+            <text x="56" y="28" font-family="Inter, sans-serif" font-size="12" fill="#6c776f">Luca</text>
+            <text x="56" y="46" font-family="Inter, sans-serif" font-size="15" font-weight="800" fill="#b4553f">−23,50 €</text>
+          </g>
         </g>
-        <g>
+        <g class="art-coins">
           <circle cx="352" cy="246" r="18" fill="#a8823c"/>
           <circle cx="352" cy="246" r="12" fill="none" stroke="#8a6a30" stroke-width="2"/>
           <text x="352" y="251" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="800" fill="#fdf6e7">€</text>
@@ -74,15 +86,41 @@
   </div>
 </section>
 
-<section id="come-funziona" class="landing-section reveal" data-reveal>
+<!-- Fregio: solo parole vere, nessun numero inventato. Decorativo per i lettori. -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker-track">
+    <div class="ticker-group">
+      <span class="ticker-item">Preciso al centesimo</span>
+      <span class="ticker-item">125 valute</span>
+      <span class="ticker-item">Nessuna rubrica caricata</span>
+      <span class="ticker-item">Pagamenti parziali</span>
+      <span class="ticker-item">Pochi bonifici</span>
+      <span class="ticker-item">Nessuna pubblicità</span>
+      <span class="ticker-item">Codice aperto</span>
+      <span class="ticker-item">Android e web</span>
+    </div>
+    <div class="ticker-group">
+      <span class="ticker-item">Preciso al centesimo</span>
+      <span class="ticker-item">125 valute</span>
+      <span class="ticker-item">Nessuna rubrica caricata</span>
+      <span class="ticker-item">Pagamenti parziali</span>
+      <span class="ticker-item">Pochi bonifici</span>
+      <span class="ticker-item">Nessuna pubblicità</span>
+      <span class="ticker-item">Codice aperto</span>
+      <span class="ticker-item">Android e web</span>
+    </div>
+  </div>
+</div>
+
+<section id="come-funziona" class="landing-section" data-num="01">
   <div class="landing-inner">
-    <header class="section-head">
+    <header class="section-head reveal" data-reveal>
       <span class="eyebrow">Come funziona</span>
       <h2>Tre passaggi, poi il conto torna.</h2>
       <p>Pensato per gruppi veri: chi paga, chi partecipa, chi salda a rate.
          Ogni passaggio resta tracciato.</p>
     </header>
-    <div class="steps-grid stagger">
+    <div class="steps-grid stagger reveal" data-reveal>
       <article class="step">
         <span class="step-num">01</span>
         <h3>Crea il gruppo</h3>
@@ -108,15 +146,15 @@
   </div>
 </section>
 
-<section id="funzioni" class="landing-section alt reveal" data-reveal>
+<section id="funzioni" class="landing-section alt" data-num="02">
   <div class="landing-inner">
-    <header class="section-head">
+    <header class="section-head reveal" data-reveal>
       <span class="eyebrow">Funzioni</span>
       <h2>Quello che serve davvero.</h2>
       <p>Niente dashboard complicate. Solo gli strumenti che usi mentre dividi
          una cena, un viaggio o l'affitto.</p>
     </header>
-    <div class="feature-grid stagger">
+    <div class="feature-grid stagger reveal" data-reveal>
       <article class="card feature">
         <span class="ficon"><svg width="22" height="22"><use href="#i-globe"></use></svg></span>
         <div>
@@ -169,8 +207,8 @@
   </div>
 </section>
 
-<section id="app" class="landing-section reveal" data-reveal>
-  <div class="landing-inner app-panel">
+<section id="app" class="landing-section" data-num="03">
+  <div class="landing-inner app-panel reveal" data-reveal>
     <div class="app-copy">
       <span class="eyebrow">App Android</span>
       <h2>Sul telefono, senza browser.</h2>
@@ -199,14 +237,14 @@
   </div>
 </section>
 
-<section id="faq" class="landing-section reveal" data-reveal>
+<section id="faq" class="landing-section" data-num="04">
   <div class="landing-inner faq-layout">
-    <header class="section-head faq-head">
+    <header class="section-head faq-head reveal" data-reveal>
       <span class="eyebrow">Domande frequenti</span>
       <h2>Le cose che chiedono tutti.</h2>
       <p>Quattro risposte rapide. <a href="/faq">Leggi tutte le FAQ</a>.</p>
     </header>
-    <div class="faq-list stagger">
+    <div class="faq-list stagger reveal" data-reveal>
       <details class="faq-item">
         <summary>b-lance è gratis?</summary>
         <p>Sì. Non ci sono piani a pagamento, pubblicità o vendita di dati.
@@ -232,7 +270,7 @@
 </section>
 
 <section class="landing-section">
-  <div class="landing-inner final-cta">
+  <div class="landing-inner final-cta reveal" data-reveal>
     <div>
       <span class="eyebrow">Pronto quando vuoi</span>
       <h2>Il prossimo conto dividilo bene.</h2>
@@ -242,6 +280,7 @@
       <a href="/register" class="btn">Crea il primo gruppo</a>
       <a href="/demo" class="btn ghost">Prova la demo</a>
     </div>
+    <span class="cta-stamp" aria-hidden="true">Gratis<br>senza carta</span>
   </div>
 </section>
 
@@ -286,4 +325,45 @@
   update();
 })();
 </script>
+{% endblock %}
+
+{% block footer %}
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <img class="brand-badge" src="/static/logo-mark.svg?v=5" alt="">
+      <div>
+        <b>b-lance</b>
+        <p class="footer-tag">Dividiamo, regoliamo, bilanci in equilibrio.
+           Un conto alla volta, senza fogli di calcolo.</p>
+      </div>
+    </div>
+    <nav class="footer-cols" aria-label="Collegamenti del sito">
+      <div class="footer-col">
+        <h3>Il progetto</h3>
+        <a href="/come-funziona">Come funziona</a>
+        <a href="/demo">Demo</a>
+        <a href="/come-manteniamo">Come si mantiene</a>
+        <a href="/about">Informazioni</a>
+      </div>
+      <div class="footer-col">
+        <h3>Prodotto</h3>
+        <a href="/android">App Android</a>
+        <a href="/#funzioni">Funzioni</a>
+        <a href="/register">Crea un account</a>
+        <a href="https://github.com/mirkosio/b-lance" rel="noopener">Codice su GitHub</a>
+      </div>
+      <div class="footer-col">
+        <h3>Trasparenza</h3>
+        <a href="/privacy">Privacy</a>
+        <a href="/faq">Domande frequenti</a>
+        <a href="/login">Accedi</a>
+      </div>
+    </nav>
+    <p class="footer-note">
+      <span>Nessuna pubblicità, nessuna vendita di dati. Codice aperto.</span>
+      <span>Fatto per gruppi veri.</span>
+    </p>
+  </div>
+</footer>
 {% endblock %}
