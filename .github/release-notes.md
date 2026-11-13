@@ -1,34 +1,41 @@
-## b-lance 1.6.0 (versionCode 19)
+## b-lance 1.7.0 (versionCode 20)
 
-**Attenzione alla firma.** Questa è la prima build firmata con la nuova chiave
-di release, conservata come secret del repository. La 1.5.0 aveva una firma
-diversa e non è aggiornabile in-place: per installare la 1.6.0 bisogna
-disinstallare la versione precedente. Disinstallando si perdono i gruppi salvati
-solo in locale nella modalità cassiere; i dati dell'account restano sul server.
+Aggiornamento in-place dalla 1.6.0: stessa chiave di firma, nessuna
+disinstallazione necessaria.
 
-### Cassiere locale
+### Link web del riepilogo (Cassiere)
 
-- Spese modificabili ed eliminabili con un tocco.
-- Pagamenti parziali registrabili e annullabili.
-- Valuta per gruppo, con importi sempre in unità minori intere.
-- Divisione **parti uguali, importi esatti o percentuale**, con resto
-  distribuito al centesimo.
-- Riepilogo condivisibile come **immagine** (creata sul telefono, senza upload)
-  oppure come testo.
+- Nel foglio di condivisione arriva l'opzione **Link web**: oltre a immagine e
+  testo, il riepilogo si invia come link che si apre nel browser di chiunque.
+- La pagina mostra saldo totale, saldo di ogni persona e i bonifici che
+  chiudono il conto, in italiano e con la valuta del gruppo.
+- **I dati viaggiano nel link, non sul server.** Il riepilogo è codificato nel
+  frammento dopo il cancelletto (`#`), che il browser non invia mai: b-lance
+  non riceve, non conserva e non può revocare nulla. Nessuna scadenza: chi ha
+  il link lo può riaprire finché lo conserva. Trattarlo come un messaggio
+  condiviso, non come una pagina privata.
 
-### Link pubblico del riepilogo
+### Offline, con stato chiaro
 
-- Scadenza automatica dopo **30 giorni**.
-- Revoca manuale sempre disponibile.
-- Dopo la scadenza link e PDF rispondono 404; un nuovo invio rigenera il link.
+- In home compare un avviso quando stai vedendo l'ultima copia salvata sul
+  telefono, quando ci sono modifiche in attesa di sincronizzazione e quando la
+  sincronizzazione è in pausa.
+- Le modifiche fatte offline partono in ordine al riconnettersi: ogni operazione
+  mantiene il suo identificatore, quindi un retry non duplica spese o pagamenti.
+- Se il DNS del telefono non risolve il server, si riprova con il DNS cifrato
+  di riserva.
 
-### Web e accessibilità
+### Pagamenti
 
-- Navigazione laterale contestuale: “Saldi” e “I tuoi gruppi” solo in dashboard.
-- Etichette a 12 px e colori dai token del marchio.
-- Testo di sistema rispettato fino al 150% nell'app Android.
+- Il foglio "Registra pagamento" accetta importi parziali, come sul sito: si
+  salda anche a rate.
+
+### Web
+
+- Link web e pagina `/cashier-link` aggiornati insieme: un riepilogo condiviso
+  dall'app si apre identico sul sito di produzione.
 
 ### Verifiche
 
-- 123 test backend, 36 test Flutter, `flutter analyze` pulito.
+- 151 test backend, 21 test JavaScript, 37 test Flutter, `flutter analyze` pulito.
 - APK release firmato, con checksum SHA-256 accanto al file.
