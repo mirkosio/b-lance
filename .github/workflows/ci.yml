@@ -15,8 +15,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - run: python -m pytest tests/ -q
-      - name: Test JavaScript (logica del riepilogo Cassiere)
+      - name: Test JavaScript (logica del riepilogo Cassiere e movimento)
         run: node --test tests/js/*.test.mjs
       - name: Flutter analyze
         uses: subosito/flutter-action@v2

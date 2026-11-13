@@ -98,8 +98,15 @@ async function run(payload) {
 }
 
 // Dà tempo alle promise di risolversi (decodifica + costruzione DOM).
+// Solo microtask non bastano: in CI lo scheduling è più lento e il
+// pipeline (fetch → decompressione → render) non arriva in fondo. Un'attesa
+// con timer reali è affidabile in ogni ambiente.
 async function settle() {
-  for (let i = 0; i < 20; i++) {
+  for (let i = 0; i < 5; i++) {
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+  await new Promise((resolve) => setTimeout(resolve, 120));
+  for (let i = 0; i < 5; i++) {
     await new Promise((resolve) => setImmediate(resolve));
   }
 }
