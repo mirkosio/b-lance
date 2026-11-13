@@ -133,9 +133,12 @@ coperti da test dedicati (`tests/test_webapp_ui.py`).
   validazione e rifiuto sicuro; servono file campione reali.
 - **Parità Android**: ruoli e rimozione membro, promemoria locali opt-out,
   widget “Il mio saldo”. Push FCM richiede progetto e credenziali.
-- **Fiducia visibile**: pagina “Come si mantiene b-lance” (gratis, open source,
-  donazioni trasparenti), privacy in italiano semplice, stato dei propri dati
-  ed export. Nessuna recensione o metrica inventata.
+- **Fiducia visibile (fatto 13/11, prima pagina):** "Come si mantiene b-lance"
+  (`/come-manteniamo`): chi paga oggi, cosa costa, cosa non c'è, cosa
+  succederebbe se i costi crescessero, cosa puoi controllare tu. Niente
+  recensioni o metriche inventate. Restano: stato dei propri dati come
+  pagina dedicata (l'export esiste già dall'account) e donazioni, che non
+  esistono ancora e restano dichiarate come "se verranno, registro pubblico".
 
 **Accettazione:** link Cassiere revocabile e testato; conflitto offline
 riprodotto e risolto in due dispositivi; import dei file campione con anteprima;
