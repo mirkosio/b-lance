@@ -2426,8 +2426,8 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=28">
-  <link rel="stylesheet" href="/static/motion.css?v=1">
+  <link rel="stylesheet" href="/static/app.css?v=30">
+  <link rel="stylesheet" href="/static/motion.css?v=2">
 </head>
 <body class="guest">
 <a class="skip-link" href="#main">Salta al contenuto</a>

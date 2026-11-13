@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}{{ group.name }} — b-lance{% endblock %}
 {% block content %}
-<div class="card">
+<div class="card reveal" data-reveal>
   <div class="section-title">
     <h1 class="group-heading">{{ group.name }} <span class="chip">{{ group.base_currency }}</span></h1>
     <span style="display:flex;gap:8px">
@@ -93,7 +93,7 @@
 
 <div class="grid cols-2" id="saldi">
   <!-- Saldi -->
-  <div class="card">
+  <div class="card reveal" data-reveal>
     <div class="section-title">Saldi</div>
     <div class="stagger">
     {% for m in view.members %}
@@ -121,7 +121,7 @@
   </div>
 
   <!-- Chi paga chi -->
-  <div class="card">
+  <div class="card reveal" data-reveal>
     <div class="section-title">Chi paga chi</div>
     {% if view.transfers %}
       <div class="stagger">
@@ -155,7 +155,7 @@
 </div>
 
 <!-- Membri e permessi -->
-<div class="card" id="membri">
+<div class="card reveal" id="membri" data-reveal>
   <div class="section-title">
     <span>Membri ({{ view.active_count() }})</span>
     {% if 'members_manage' in perms %}
@@ -216,7 +216,7 @@
 </div>
 
 <!-- Invito -->
-<div class="card">
+<div class="card reveal" data-reveal>
   <div class="section-title">Invita nel gruppo</div>
   <p class="muted small">Condividi questo codice o link. Chi lo apre si unisce al gruppo.</p>
   <div class="invite-box">
@@ -245,7 +245,7 @@
 </div>
 
 <!-- Riepilogo condivisibile: solo saldi e bonifici, niente dettagli privati -->
-<div class="card" id="riepilogo">
+<div class="card reveal" id="riepilogo" data-reveal>
   <div class="section-title">Riepilogo condivisibile</div>
   {% if share_token %}
     <p class="muted small">Link read-only per chi non ha l'app: vede solo saldi e bonifici, non spese, note o email. Puoi revocarlo quando vuoi.</p>
@@ -375,7 +375,7 @@
 </details>
 
 <!-- Spese -->
-<div class="card" id="spese">
+<div class="card reveal" id="spese" data-reveal>
   <div class="section-title">
     <span>Spese recenti <span class="chip">{{ expenses|length }}</span></span>
   </div>
@@ -460,7 +460,7 @@
 </div>
 
 <!-- Pagamenti -->
-<div class="card" id="pagamenti">
+<div class="card reveal" id="pagamenti" data-reveal>
   <div class="section-title">Registra pagamento</div>
   <p class="muted small">Un membro paga un altro (anche solo parte del debito).</p>
   <form method="post" action="/groups/{{ group.id }}/payments" id="payment-form">

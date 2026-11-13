@@ -12,6 +12,11 @@
  */
 
 /* ------------------------------------------------------------- token */
+/* Le ancore scorrono invece di saltare: la pagina non "teleporta". */
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
+}
+
 :root {
   /* Curva del design system: easeOutCubic. */
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -52,6 +57,47 @@
     opacity var(--dur-2) var(--ease-out);
 }
 
+/* --------------------------------------------------------- "sei qui" */
+/* La barra della voce attiva si disegna dall'alto: il movimento dice
+   "questa è la sezione in cui sei", non decora e basta. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js-anim .side-link.active::before {
+    animation: bl-bar-in 300ms var(--ease-out);
+    transform-origin: center top;
+  }
+  html.js-anim .side-link.active {
+    animation: bl-settle 320ms var(--ease-out);
+  }
+  /* Navigazione mobile: un punto che compare sotto la voce attiva. */
+  html.js-anim .bn-item.active::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 5px;
+    width: 4px;
+    height: 4px;
+    margin-left: -2px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: bl-dot-in 260ms var(--ease-out);
+  }
+}
+
+@keyframes bl-bar-in {
+  from { transform: translateY(-50%) scaleY(0); opacity: 0; }
+  to { transform: translateY(-50%) scaleY(1); opacity: 1; }
+}
+
+@keyframes bl-settle {
+  from { transform: translateX(-3px); }
+  to { transform: none; }
+}
+
+@keyframes bl-dot-in {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
 /* Il bottone preme: un pizzico di scala, subito, e torna. */
 .btn,
 .icon-btn,
@@ -88,6 +134,41 @@
 }
 
 /* ------------------------------------------------- comparsa al caricamento */
+/* Un filo di luce attraversa il bottone primario: dura poco, non distrae. */
+.btn:not(.ghost) {
+  position: relative;
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html.js-anim .btn:not(.ghost)::before {
+    content: "";
+    position: absolute;
+    top: -40%;
+    bottom: -40%;
+    left: -60%;
+    width: 40%;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      rgba(255, 255, 255, 0.35),
+      transparent
+    );
+    transform: translateX(0) rotate(8deg);
+    pointer-events: none;
+    opacity: 0;
+  }
+  html.js-anim .btn:not(.ghost):hover::before,
+  html.js-anim .btn:not(.ghost):focus-visible::before {
+    animation: bl-shine 620ms var(--ease-out);
+  }
+}
+
+@keyframes bl-shine {
+  from { transform: translateX(0) rotate(8deg); opacity: 0; }
+  30% { opacity: 1; }
+  to { transform: translateX(520%) rotate(8deg); opacity: 0; }
+}
+
 /* Stagger 40-60 ms, solo al primo caricamento. Senza animazione il
    contenuto è comunque tutto visibile: si vede subito. */
 @media (prefers-reduced-motion: no-preference) {
@@ -186,6 +267,16 @@
     box-shadow var(--dur-2) var(--ease-out);
 }
 
+/* Le frecce si muovono di poco: è un suggerimento, non un gesto. */
+.rail-action .go,
+.feature .ficon,
+.transfer-actions .btn svg {
+  transition: transform var(--dur-2) var(--ease-out);
+}
+.rail-action:hover .go { transform: translateX(3px); }
+.card.feature:hover .ficon { transform: translateY(-2px); }
+.btnrow .btn:hover svg { transform: translateX(2px); }
+
 /* Il bonifico in evidenza si accende al passaggio. */
 .transfer {
   transition: background-color var(--dur-2) var(--ease-out);
@@ -211,6 +302,30 @@
 /* Il toast entra, resta, esce. */
 .toast {
   animation: toast-in var(--dur-2) var(--ease-out);
+}
+
+/* --------------------------------------------------- avanzamento lettura */
+/* Una riga sottile in cima dice a che punto sei in una pagina lunga.
+   Non occupa spazio: è fissa, sopra tutto, e si muove solo in scala. */
+.read-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+.read-progress.on { opacity: 1; }
+.read-progress span {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--primary), var(--gold, #d8b56a));
 }
 
 /* --------------------------------------------------- transizione pagina */
@@ -271,6 +386,71 @@
 /* Le sezioni lunghe della pagina hanno già il reveal allo scroll: non
    aggiungiamo un secondo movimento che lo contrasti. */
 
+/* --------------------------------------------------- schede che entrano */
+@media (prefers-reduced-motion: no-preference) {
+  html.js-anim .card.reveal.in,
+  html.js-anim .groupcard.reveal.in {
+    animation: bl-card-in var(--dur-4) var(--ease-out) backwards;
+  }
+  html.js-anim .card.reveal.in:nth-child(2) { animation-delay: calc(var(--stagger) * 1); }
+  html.js-anim .card.reveal.in:nth-child(3) { animation-delay: calc(var(--stagger) * 2); }
+  html.js-anim .card.reveal.in:nth-child(4) { animation-delay: calc(var(--stagger) * 3); }
+  html.js-anim .card.reveal.in:nth-child(5) { animation-delay: calc(var(--stagger) * 4); }
+  html.js-anim .card.reveal.in:nth-child(n + 6) { animation-delay: calc(var(--stagger) * 5); }
+}
+
+@keyframes bl-card-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Lista: voci che salgono una dopo l'altra. */
+@media (prefers-reduced-motion: no-preference) {
+  html.js-anim .reveal-list > li,
+  html.js-anim .info-step.reveal.in,
+  html.js-anim .step.reveal.in {
+    animation: bl-list-item var(--dur-4) var(--ease-out) backwards;
+  }
+  html.js-anim .reveal-list > li:nth-child(2) { animation-delay: calc(var(--stagger) * 1); }
+  html.js-anim .reveal-list > li:nth-child(3) { animation-delay: calc(var(--stagger) * 2); }
+  html.js-anim .reveal-list > li:nth-child(4) { animation-delay: calc(var(--stagger) * 3); }
+  html.js-anim .reveal-list > li:nth-child(5) { animation-delay: calc(var(--stagger) * 4); }
+  html.js-anim .reveal-list > li:nth-child(n + 6) { animation-delay: calc(var(--stagger) * 5); }
+}
+
+@keyframes bl-list-item {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* FAQ: il dettaglio che si apre si distende dolcemente. */
+details.faq-item[open] summary {
+  animation: bl-faq-open var(--dur-2) var(--ease-out);
+}
+@keyframes bl-faq-open {
+  from { transform: scale(0.98); opacity: 0.9; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* Icona che saluta: micro-bounce al passaggio del mouse. */
+.icon-btn:hover svg,
+.btn:hover svg,
+.side-link:hover svg,
+.bn-item:hover svg {
+  animation: bl-bounce 550ms var(--ease-out);
+}
+@keyframes bl-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+/* Pulsante: leggero rilievo al premere. */
+.btn:active,
+.icon-btn:active,
+.pick-chip:active {
+  transform: scale(0.975);
+}
+
 /* --------------------------------------------------- rispetto del reduce motion */
 /* Con "riduci il movimento" tutto sparisce: niente animazioni, niente
    transizioni, niente rotelle. Il sito resta identico, solo più fermo. */
@@ -286,7 +466,13 @@
   .fade-up,
   .count-up,
   .collapse-card .collapse-body,
-  .undo-banner {
+  .undo-banner,
+  .card.reveal.in,
+  .groupcard.reveal.in,
+  .info-step.reveal.in,
+  .step.reveal.in,
+  .reveal-list > li,
+  details.faq-item[open] summary {
     opacity: 1 !important;
     transform: none !important;
   }

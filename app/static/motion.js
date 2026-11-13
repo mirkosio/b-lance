@@ -1,9 +1,10 @@
 // b-lance — il poco JavaScript del movimento.
 //
-// Tre cose, e niente di più:
+// Quattro cose, e niente di più:
 //  1. i numeri importanti si compongono quando compaiono;
 //  2. un bottone premuto mostra che sta lavorando;
-//  3. il cambio pagina lascia un segno morbido (dove il browser lo supporta).
+//  3. il cambio pagina lascia un segno morbido (dove il browser lo supporta);
+//  4. la lettura segue una riga di avanzamento che si riempie.
 //
 // Con prefers-reduced-motion non gira niente: i numeri sono già al valore
 // giusto, i bottoni non mostrano rotelle, le pagine appaiono subito.
@@ -110,10 +111,46 @@
     // Il browser fa la transizione da solo: qui basta non impedirlo.
   }
 
+  // 4. barra di avanzamento lettura: una riga che si riempie mentre leggi.
+  // Mostrata solo se la pagina è più alta di una paio di viewport.
+  function startReadProgress() {
+    if (reduced) return;
+    var bar = document.getElementById
+      ? document.getElementById('read-progress-bar')
+      : null;
+    var wrap = document.querySelector
+      ? document.querySelector('.read-progress')
+      : null;
+    if (!bar || !wrap) return;
+    var ticking = false;
+
+    function update() {
+      var winH = window.innerHeight || document.documentElement.clientHeight;
+      var max = Math.max(document.documentElement.scrollHeight - winH, 0);
+      var percent = max > 0 ? Math.min(window.scrollY / max, 1) : 0;
+      var pageTall = max > winH * 1.5;
+      wrap.classList.toggle('on', pageTall);
+      if (pageTall) bar.style.transform = 'scaleX(' + percent + ')';
+      else bar.style.transform = 'scaleX(0)';
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        requestAnimationFrame(update);
+        ticking = true;
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+  }
+
   function start() {
     startCounters();
     watchForms();
     softNavigation();
+    startReadProgress();
   }
 
   if (document.readyState === 'loading') {

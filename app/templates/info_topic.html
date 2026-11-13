@@ -128,14 +128,27 @@
 </article>
 <script>
 // Indice sticky: evidenzia la sezione che stai leggendo.
+// Usa l'area visibile di ogni sezione nel viewport: la sezione con più
+// superficie visibile è quella attiva. Non prende mai "la prima voce"
+// solo perché le altre stanno più in basso.
 (function () {
   var links = Array.prototype.slice.call(document.querySelectorAll('.info-toc a'));
   if (!links.length) return;
   var targets = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
   function update() {
+    var viewHeight = window.innerHeight || document.documentElement.clientHeight;
     var current = 0;
+    var bestVisible = 0;
     targets.forEach(function (el, i) {
-      if (el && el.getBoundingClientRect().top <= 140) current = i;
+      if (!el) return;
+      var rect = el.getBoundingClientRect();
+      var visibleTop = Math.max(rect.top, 0);
+      var visibleBottom = Math.min(rect.bottom, viewHeight);
+      var visibleHeight = Math.max(0, visibleBottom - visibleTop);
+      if (visibleHeight > bestVisible) {
+        bestVisible = visibleHeight;
+        current = i;
+      }
     });
     links.forEach(function (a, i) {
       var on = i === current;

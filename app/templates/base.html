@@ -55,11 +55,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=28">
-  <link rel="stylesheet" href="/static/motion.css?v=1">
+  <link rel="stylesheet" href="/static/app.css?v=30">
+  <link rel="stylesheet" href="/static/motion.css?v=2">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
 <a class="skip-link" href="#main">Salta al contenuto</a>
+<div class="read-progress" aria-hidden="true"><span id="read-progress-bar"></span></div>
 
 <!-- Sprite di icone: disegnate a mano, stile outline, nessuna emoji -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -151,23 +152,25 @@
     </button>
   </div>
 
+  {% set p = request.url.path %}
+  {% set home_active = p == '/' or (p.startswith('/groups/') and p != '/groups/new') %}
   <nav class="side-nav" aria-label="Sezioni">
     <div class="side-label">Panoramica</div>
-    <a class="side-link {% if request.url.path == '/' %}active{% endif %}" href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Home</a>
-    {% if request.url.path == '/' %}
+    <a class="side-link {% if home_active %}active{% endif %}" href="/" {% if home_active %}aria-current="page"{% endif %}>Home</a>
+    {% if p == '/' %}
     <a class="side-link" href="#saldi">Saldi</a>
     <a class="side-link" href="#gruppi">I tuoi gruppi</a>
     {% endif %}
 
     <div class="side-label">Strumenti</div>
     <a class="side-link cta" href="/groups/new">Nuovo gruppo</a>
-    <a class="side-link" href="/come-funziona">Come funziona</a>
-    <a class="side-link" href="/android">App Android</a>
-    <a class="side-link" href="/faq">FAQ</a>
+    <a class="side-link {% if p == '/come-funziona' %}active{% endif %}" href="/come-funziona" {% if p == '/come-funziona' %}aria-current="page"{% endif %}>Come funziona</a>
+    <a class="side-link {% if p == '/android' %}active{% endif %}" href="/android" {% if p == '/android' %}aria-current="page"{% endif %}>App Android</a>
+    <a class="side-link {% if p == '/faq' %}active{% endif %}" href="/faq" {% if p == '/faq' %}aria-current="page"{% endif %}>FAQ</a>
 
     <div class="side-label">Account</div>
-    <a class="side-link" href="/privacy">Privacy</a>
-    <a class="side-link" href="/come-manteniamo">Come si mantiene</a>
+    <a class="side-link {% if p == '/privacy' %}active{% endif %}" href="/privacy" {% if p == '/privacy' %}aria-current="page"{% endif %}>Privacy</a>
+    <a class="side-link {% if p == '/come-manteniamo' %}active{% endif %}" href="/come-manteniamo" {% if p == '/come-manteniamo' %}aria-current="page"{% endif %}>Come si mantiene</a>
     <button class="side-link" type="button" data-theme-toggle>Tema chiaro / scuro</button>
     <form method="post" action="/logout" class="side-form">
       <button class="side-link" type="submit">Esci</button>
@@ -211,13 +214,14 @@
   <a href="/" class="brand" aria-label="b-lance">
     <img class="brand-badge" src="/static/logo-mark.svg?v=5" alt="">
   </a>
+  {% set p = request.url.path %}
   <nav class="public-links" aria-label="Sezioni del sito">
-    <a href="/come-funziona">Come funziona</a>
-    <a href="/demo">Demo</a>
+    <a href="/come-funziona" {% if p == '/come-funziona' %}class="active" aria-current="page"{% endif %}>Come funziona</a>
+    <a href="/demo" {% if p == '/demo' %}class="active" aria-current="page"{% endif %}>Demo</a>
     <a href="/#funzioni">Funzioni</a>
-    <a href="/android">App Android</a>
-    <a href="/faq">FAQ</a>
-    <a href="/privacy">Privacy</a>
+    <a href="/android" {% if p == '/android' %}class="active" aria-current="page"{% endif %}>App Android</a>
+    <a href="/faq" {% if p == '/faq' %}class="active" aria-current="page"{% endif %}>FAQ</a>
+    <a href="/privacy" {% if p == '/privacy' %}class="active" aria-current="page"{% endif %}>Privacy</a>
   </nav>
   <span class="right">
     <button class="icon-btn" type="button" data-theme-toggle aria-label="Cambia tema">
@@ -633,6 +637,6 @@
   update();
 })();
 </script>
-<script src="/static/motion.js?v=1" defer></script>
+<script src="/static/motion.js?v=2" defer></script>
 </body>
 </html>
