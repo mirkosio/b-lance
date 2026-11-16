@@ -127,16 +127,22 @@
   </div>
 </article>
 <script>
-// Indice sticky: evidenzia la sezione che stai leggendo.
-// Regola: è attiva l'ultima sezione che ha superato una riga di lettura
-// al 60% dello schermo. Così anche le voci in fondo si accendono quando
-// la pagina finisce; un clic sull'indice resta acceso finché non scorri tu.
+// Indice "In questa pagina": segue la lettura su ogni tipo di pagina.
+//
+// Due casi da coprire: le pagine corte (l'ultima sezione non arriva mai in
+// cima) e quelle lunghe. La riga di lettura parte al 60% dello schermo, ma
+// se la pagina è corta si allunga con lo scorrimento fino a incontrare
+// l'ultima sezione: così ogni voce ha il suo momento, anche l'ultima.
+// Un clic resta acceso finché non scorri davvero.
 (function () {
   var links = Array.prototype.slice.call(document.querySelectorAll('.info-toc a'));
   if (!links.length) return;
+  var toc = document.querySelector('.info-toc');
   var targets = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
   var current = -1;
-  var pinned = null;
+  var pinned = null;   // voce scelta con un clic
+  var pinY = 0;        // dove il clic ha portato la pagina
+  var pinAt = 0;       // quando: per non bloccare l'indice per sempre
 
   function paint(index) {
     if (index === current) return;
@@ -147,43 +153,95 @@
       if (on) a.setAttribute('aria-current', 'location');
       else a.removeAttribute('aria-current');
     });
+    // Con molte voci l'indice ha una sua barra di scorrimento: la voce
+    // accesa va tenuta in vista, altrimenti sembra che nulla si muova.
+    if (toc && links[index]) {
+      var box = toc.getBoundingClientRect();
+      var row = links[index].getBoundingClientRect();
+      if (row.top < box.top + 4) toc.scrollTop -= box.top + 4 - row.top;
+      else if (row.bottom > box.bottom - 4) toc.scrollTop += row.bottom - box.bottom + 4;
+    }
+  }
+
+  function topOf(el, scrollY) {
+    return el.getBoundingClientRect().top + scrollY;
   }
 
   function update() {
-    if (pinned !== null) return;
     var doc = document.documentElement;
     var scrollY = window.scrollY || doc.scrollTop;
     var viewHeight = window.innerHeight || doc.clientHeight;
-    // Riga di lettura al 60%: non serve che una sezione arrivi in cima,
-    // basta che sia quella che stai guardando.
-    var line = scrollY + viewHeight * 0.6;
+    var max = Math.max(0, doc.scrollHeight - viewHeight);
+
+    if (pinned !== null) {
+      // Il clic resta acceso mentre lo scorrimento lo raggiunge, e finché
+      // la pagina è ferma dove l'hai portata. Poi riprende da sola: mai
+      // bloccata (era il difetto della versione precedente).
+      var justClicked = Date.now() - pinAt < 800;
+      if (justClicked || Math.abs(scrollY - pinY) <= 140) {
+        paint(pinned);
+        return;
+      }
+      pinned = null;
+    }
+
+    var first = targets[0] ? topOf(targets[0], scrollY) : 0;
+    var lastEl = targets[targets.length - 1];
+    var last = lastEl ? topOf(lastEl, scrollY) : first;
+
+    // Riga di lettura: 60% dello schermo. Nelle pagine corte si allunga
+    // quanto serve perché anche l'ultima sezione la incontri, senza mai
+    // finire sotto il bordo dello schermo.
+    var start = Math.min(viewHeight * 0.6, Math.max(80, first - 1));
+    var end = Math.max(start, Math.min(last - max, viewHeight * 0.92));
+    var progress = max > 0 ? scrollY / max : 0;
+    var line = scrollY + start + (end - start) * progress;
+
     var next = 0;
     for (var i = 0; i < targets.length; i++) {
-      var el = targets[i];
-      if (!el) continue;
-      var top = el.getBoundingClientRect().top + scrollY;
-      if (top <= line) next = i;
+      if (!targets[i]) continue;
+      if (topOf(targets[i], scrollY) <= line) next = i;
       else break;
     }
     // In fondo alla pagina vince l'ultima voce, anche se è più corta.
-    if (scrollY + viewHeight >= doc.scrollHeight - 4) {
-      next = targets.length - 1;
-    }
+    if (scrollY + viewHeight >= doc.scrollHeight - 4) next = targets.length - 1;
     paint(next);
   }
 
   links.forEach(function (a, i) {
     a.addEventListener('click', function () {
+      var doc = document.documentElement;
+      var scrollY = window.scrollY || doc.scrollTop;
+      var max = Math.max(0, doc.scrollHeight - (window.innerHeight || doc.clientHeight));
+      var el = targets[i];
+      // Una domanda della FAQ si apre: l'indice non deve portarti su una
+      // riga chiusa che non spiega nulla.
+      if (el && el.tagName === 'DETAILS') el.open = true;
+      var target = el ? topOf(el, scrollY) - 92 : scrollY;
+      pinY = Math.max(0, Math.min(Math.round(target), max));
       pinned = i;
+      pinAt = Date.now();
       paint(i);
+      // Anche senza altri eventi di scorrimento, dopo un attimo l'indice
+      // torna a seguire la pagina.
+      setTimeout(update, 900);
     });
   });
-  // Il primo gesto di scorrimento vero riprende l'indice automatico.
+
+  // Un gesto vero di scorrimento riprende subito l'indice automatico.
   ['wheel', 'touchstart', 'keydown'].forEach(function (event) {
-    window.addEventListener(event, function () { pinned = null; }, { passive: true });
+    window.addEventListener(event, function () {
+      if (pinned === null) return;
+      pinned = null;
+      update();
+    }, { passive: true });
   });
+
+  // Aprire o chiudere una FAQ cambia l'altezza della pagina.
+  document.addEventListener('toggle', update, true);
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);
+  window.addEventListener('load', update);
   update();
 })();
 </script>
