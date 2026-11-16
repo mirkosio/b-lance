@@ -219,7 +219,7 @@ class _NewGroupSheetState extends State<_NewGroupSheet> {
             const Text(
               'Nuovo gruppo',
               style: TextStyle(
-                fontFamily: 'Calistoga',
+                fontFamily: 'Fraunces',
                 fontSize: 26,
                 height: 1.1,
               ),

@@ -1,10 +1,11 @@
 // b-lance — il poco JavaScript del movimento.
 //
-// Quattro cose, e niente di più:
+// Cinque cose, e niente di più:
 //  1. i numeri importanti si compongono quando compaiono;
 //  2. un bottone premuto mostra che sta lavorando;
 //  3. il cambio pagina lascia un segno morbido (dove il browser lo supporta);
-//  4. la lettura segue una riga di avanzamento che si riempie.
+//  4. la lettura segue una riga di avanzamento che si riempie;
+//  5. la topbar prende peso dopo lo scroll, senza disturbare la lettura.
 //
 // Con prefers-reduced-motion non gira niente: i numeri sono già al valore
 // giusto, i bottoni non mostrano rotelle, le pagine appaiono subito.
@@ -146,11 +147,36 @@
     update();
   }
 
+  /* ------------------------------------------- 5. topbar dopo lo scroll */
+  // La barra resta leggera in cima e prende un'ombra quando la pagina
+  // scorre: si capisce che il contenuto è passato sotto, senza staccarla.
+  function startTopbar() {
+    var bar = document.querySelector ? document.querySelector('.topbar') : null;
+    if (!bar) return;
+    var ticking = false;
+
+    function update() {
+      bar.classList.toggle('is-scrolled', window.scrollY > 8);
+      ticking = false;
+    }
+
+    function onScroll() {
+      if (!ticking) {
+        requestAnimationFrame(update);
+        ticking = true;
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    update();
+  }
+
   function start() {
     startCounters();
     watchForms();
     softNavigation();
     startReadProgress();
+    startTopbar();
   }
 
   if (document.readyState === 'loading') {

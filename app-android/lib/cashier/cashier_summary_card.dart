@@ -71,7 +71,7 @@ class CashierSummaryCard extends StatelessWidget {
                 const Text(
                   'b-lance',
                   style: TextStyle(
-                    fontFamily: 'Calistoga',
+                    fontFamily: 'Fraunces',
                     fontSize: 24,
                     color: ink,
                   ),
@@ -91,7 +91,7 @@ class CashierSummaryCard extends StatelessWidget {
             Text(
               group.name,
               style: const TextStyle(
-                fontFamily: 'Calistoga',
+                fontFamily: 'Fraunces',
                 fontSize: 42,
                 height: 1.05,
                 color: ink,
@@ -131,7 +131,7 @@ class CashierSummaryCard extends StatelessWidget {
                   Text(
                     '${formatCashier(total, exponent)} ${group.currency}',
                     style: const TextStyle(
-                      fontFamily: 'Calistoga',
+                      fontFamily: 'Fraunces',
                       fontSize: 34,
                       color: ink,
                     ),

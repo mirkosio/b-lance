@@ -3,14 +3,15 @@
 {% block body_class %}landing guest{% endblock %}
 {% block content %}
 <section class="hero landing-hero">
-  <span class="hero-glow hero-glow-a" aria-hidden="true"></span>
-  <span class="hero-glow hero-glow-b" aria-hidden="true"></span>
   <div class="landing-inner hero-grid">
     <div class="hero-copy stagger">
       <span class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Spese condivise, fatte bene</span>
-      <h1>
-        <span class="hero-line"><span>Dividi le spese.</span></span>
-        <span class="hero-line"><span><em>Tutto torna.</em></span></span>
+      <h1>Dividi le spese.<br>
+        <span class="hero-accent"><em>Tutto torna.</em>
+          <svg class="hand-underline" viewBox="0 0 240 14" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <path pathLength="1" d="M3 9.2C46 4.4 108 3.2 170 6c24 .9 47 2.1 67 4.2"/>
+          </svg>
+        </span>
       </h1>
       <p>Weekend, gite, cene e case condivise. Aggiungi chi ha pagato, dividi
          come vuoi e vedi subito chi deve cosa. Senza fogli Excel e senza
@@ -22,13 +23,17 @@
         <a href="/demo" class="btn ghost">Prova la demo</a>
       </div>
       <form class="quick-split" id="quick-split" aria-label="Calcola la quota a testa">
-        <label for="qs-total">Totale</label>
-        <input type="text" id="qs-total" inputmode="decimal" value="120,00" autocomplete="off">
-        <label for="qs-people">Persone</label>
-        <input type="number" id="qs-people" inputmode="numeric" min="2" max="50" value="4">
+        <div>
+          <label for="qs-total">Totale</label>
+          <input type="text" id="qs-total" inputmode="decimal" value="120,00" autocomplete="off">
+        </div>
+        <div>
+          <label for="qs-people">Persone</label>
+          <input type="number" id="qs-people" inputmode="numeric" min="2" max="50" value="4">
+        </div>
         <output id="qs-result" for="qs-total qs-people">30,00 € a testa</output>
       </form>
-      <ul class="hero-points reveal-list" aria-label="In breve">
+      <ul class="hero-points" aria-label="In breve">
         <li><svg width="17" height="17"><use href="#i-check"></use></svg> Preciso al centesimo</li>
         <li><svg width="17" height="17"><use href="#i-check"></use></svg> Nessuna rubrica caricata</li>
         <li><svg width="17" height="17"><use href="#i-check"></use></svg> App Android nativa</li>
@@ -39,88 +44,43 @@
       </p>
     </div>
 
-    <!-- Illustrazione piatta: un conto che si divide in due, giusto al centesimo -->
+    <!-- Scontrino d'esempio: il totale e la quota seguono il calcolatore. -->
     <div class="art" aria-hidden="true">
-      <svg viewBox="0 0 420 300" width="100%" role="img">
-        <circle class="art-ring" cx="205" cy="150" r="148" fill="none" stroke="#5f8d6e" stroke-opacity=".16" stroke-dasharray="4 11"/>
-        <g class="art-sheet">
-          <g transform="rotate(-3 150 130)">
-            <rect x="60" y="30" width="180" height="216" rx="14" fill="#f6f5ef" stroke="#e5e2d8" stroke-width="2"/>
-            <rect x="84" y="56" width="96" height="10" rx="5" fill="#6c776f"/>
-            <rect x="84" y="84" width="132" height="8" rx="4" fill="#d9d5c9"/>
-            <rect x="84" y="104" width="110" height="8" rx="4" fill="#d9d5c9"/>
-            <rect x="84" y="124" width="124" height="8" rx="4" fill="#d9d5c9"/>
-            <line x1="84" y1="152" x2="216" y2="152" stroke="#e5e2d8" stroke-width="2" stroke-dasharray="6 6"/>
-            <rect x="84" y="170" width="70" height="14" rx="7" fill="#242b27"/>
-            <rect x="164" y="172" width="52" height="10" rx="5" fill="#3b7a52"/>
-            <path d="M110 206 h60 l-10 -8 m10 8 l-10 8" stroke="#5f8d6e" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          </g>
-        </g>
-        <g class="art-chip art-chip-1">
-          <g transform="translate(250 70)">
-            <rect width="150" height="64" rx="16" fill="#ffffff" stroke="#e5e2d8" stroke-width="2"/>
-            <circle cx="30" cy="32" r="15" fill="#47684f"/>
-            <text x="30" y="37" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="800" fill="#ffffff">M</text>
-            <text x="56" y="28" font-family="Inter, sans-serif" font-size="12" fill="#6c776f">Marco</text>
-            <text x="56" y="46" font-family="Inter, sans-serif" font-size="15" font-weight="800" fill="#3b7a52">+23,50 €</text>
-          </g>
-        </g>
-        <g class="art-chip art-chip-2">
-          <g transform="translate(230 156)">
-            <rect width="150" height="64" rx="16" fill="#ffffff" stroke="#e5e2d8" stroke-width="2"/>
-            <circle cx="30" cy="32" r="15" fill="#5f8d6e"/>
-            <text x="30" y="37" text-anchor="middle" font-family="Inter, sans-serif" font-size="14" font-weight="800" fill="#ffffff">L</text>
-            <text x="56" y="28" font-family="Inter, sans-serif" font-size="12" fill="#6c776f">Luca</text>
-            <text x="56" y="46" font-family="Inter, sans-serif" font-size="15" font-weight="800" fill="#b4553f">−23,50 €</text>
-          </g>
-        </g>
-        <g class="art-coins">
-          <circle cx="352" cy="246" r="18" fill="#a8823c"/>
-          <circle cx="352" cy="246" r="12" fill="none" stroke="#8a6a30" stroke-width="2"/>
-          <text x="352" y="251" text-anchor="middle" font-family="Inter, sans-serif" font-size="13" font-weight="800" fill="#fdf6e7">€</text>
-          <circle cx="386" cy="222" r="12" fill="#c39a4e"/>
-          <circle cx="330" cy="216" r="9" fill="#d8b56a"/>
-        </g>
-      </svg>
+      <span class="receipt-eyebrow">esempio</span>
+      <div class="receipt">
+        <div class="receipt-head">
+          <span class="receipt-brand">b-lance</span>
+          <span class="receipt-meta">conto di gruppo</span>
+        </div>
+        <p class="receipt-title">Cena da Mario</p>
+        <p class="receipt-sub">sabato sera</p>
+        <dl class="receipt-rows">
+          <div><dt>Totale</dt><dd id="receipt-total">120,00 €</dd></div>
+          <div><dt>Persone</dt><dd id="receipt-people">4</dd></div>
+        </dl>
+        <div class="receipt-rule dashed"></div>
+        <div class="receipt-share" id="receipt-share-row">
+          <span>A testa</span>
+          <strong id="receipt-share">30,00 €</strong>
+        </div>
+        <div class="receipt-foot">
+          <span>Nessun centesimo perso</span>
+          <span class="receipt-barcode"></span>
+        </div>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- Fregio: solo parole vere, nessun numero inventato. Decorativo per i lettori. -->
-<div class="ticker" aria-hidden="true">
-  <div class="ticker-track">
-    <div class="ticker-group">
-      <span class="ticker-item">Preciso al centesimo</span>
-      <span class="ticker-item">125 valute</span>
-      <span class="ticker-item">Nessuna rubrica caricata</span>
-      <span class="ticker-item">Pagamenti parziali</span>
-      <span class="ticker-item">Pochi bonifici</span>
-      <span class="ticker-item">Nessuna pubblicità</span>
-      <span class="ticker-item">Codice aperto</span>
-      <span class="ticker-item">Android e web</span>
-    </div>
-    <div class="ticker-group">
-      <span class="ticker-item">Preciso al centesimo</span>
-      <span class="ticker-item">125 valute</span>
-      <span class="ticker-item">Nessuna rubrica caricata</span>
-      <span class="ticker-item">Pagamenti parziali</span>
-      <span class="ticker-item">Pochi bonifici</span>
-      <span class="ticker-item">Nessuna pubblicità</span>
-      <span class="ticker-item">Codice aperto</span>
-      <span class="ticker-item">Android e web</span>
-    </div>
-  </div>
-</div>
-
-<section id="come-funziona" class="landing-section" data-num="01">
+<section id="come-funziona" class="landing-section">
   <div class="landing-inner">
     <header class="section-head reveal" data-reveal>
-      <span class="eyebrow">Come funziona</span>
+      <span class="eyebrow"><span class="eyebrow-index">01</span>Come funziona</span>
       <h2>Tre passaggi, poi il conto torna.</h2>
       <p>Pensato per gruppi veri: chi paga, chi partecipa, chi salda a rate.
          Ogni passaggio resta tracciato.</p>
     </header>
-    <div class="steps-grid stagger reveal" data-reveal>
+    <div class="steps-grid reveal" data-reveal>
       <article class="step">
         <span class="step-num">01</span>
         <h3>Crea il gruppo</h3>
@@ -146,15 +106,15 @@
   </div>
 </section>
 
-<section id="funzioni" class="landing-section alt" data-num="02">
+<section id="funzioni" class="landing-section alt">
   <div class="landing-inner">
     <header class="section-head reveal" data-reveal>
-      <span class="eyebrow">Funzioni</span>
+      <span class="eyebrow"><span class="eyebrow-index">02</span>Funzioni</span>
       <h2>Quello che serve davvero.</h2>
       <p>Niente dashboard complicate. Solo gli strumenti che usi mentre dividi
          una cena, un viaggio o l'affitto.</p>
     </header>
-    <div class="feature-grid stagger reveal" data-reveal>
+    <div class="feature-grid reveal" data-reveal>
       <article class="card feature">
         <span class="ficon"><svg width="22" height="22"><use href="#i-globe"></use></svg></span>
         <div>
@@ -207,10 +167,10 @@
   </div>
 </section>
 
-<section id="app" class="landing-section" data-num="03">
+<section id="app" class="landing-section">
   <div class="landing-inner app-panel reveal" data-reveal>
     <div class="app-copy">
-      <span class="eyebrow">App Android</span>
+      <span class="eyebrow"><span class="eyebrow-index">03</span>App Android</span>
       <h2>Sul telefono, senza browser.</h2>
       <p>Un'app nativa, veloce e leggera. Stesse funzioni del sito, pensata per
          essere usata con una mano mentre sei in giro.</p>
@@ -222,29 +182,33 @@
       </div>
       <p class="app-note">Android. Aggiornamenti pubblicati su GitHub Releases.</p>
     </div>
-    <div class="phone" aria-hidden="true">
-      <div class="phone-bar"><span></span><span></span><span></span></div>
+    <div class="phone" id="phone-demo" role="group" aria-label="Esempio interattivo: saldi di un gruppo">
+      <div class="phone-bar" aria-hidden="true"><span></span><span></span><span></span></div>
       <div class="phone-screen">
         <span class="phone-kicker">Weekend a Bologna</span>
-        <strong class="phone-total">148,20 €</strong>
+        <strong class="phone-total" id="phone-total">148,20 €</strong>
         <span class="phone-label">Totale speso</span>
-        <div class="phone-row"><span class="dot sage">M</span><span>Marco</span><b class="pos">+23,50</b></div>
-        <div class="phone-row"><span class="dot gold">L</span><span>Luca</span><b class="neg">−12,40</b></div>
-        <div class="phone-row"><span class="dot sage">S</span><span>Sara</span><b class="neg">−11,10</b></div>
-        <div class="phone-cta">Saldato con 2 bonifici</div>
+        <div class="phone-row"><span class="dot sage" aria-hidden="true">M</span><span>Marco</span><b class="pos" data-net="23,50">+23,50</b></div>
+        <div class="phone-row"><span class="dot gold" aria-hidden="true">L</span><span>Luca</span><b class="neg" data-net="−12,40">−12,40</b></div>
+        <div class="phone-row"><span class="dot sage" aria-hidden="true">S</span><span>Sara</span><b class="neg" data-net="−11,10">−11,10</b></div>
+        <button class="phone-cta" id="phone-settle" type="button" aria-pressed="false">
+          Salda con 2 bonifici
+        </button>
+        <p class="phone-hint" id="phone-hint">Tocca per vedere i conti in pari.</p>
+        <p class="sr-only" id="phone-live" role="status" aria-live="polite"></p>
       </div>
     </div>
   </div>
 </section>
 
-<section id="faq" class="landing-section" data-num="04">
+<section id="faq" class="landing-section alt">
   <div class="landing-inner faq-layout">
     <header class="section-head faq-head reveal" data-reveal>
-      <span class="eyebrow">Domande frequenti</span>
+      <span class="eyebrow"><span class="eyebrow-index">04</span>Domande frequenti</span>
       <h2>Le cose che chiedono tutti.</h2>
       <p>Quattro risposte rapide. <a href="/faq">Leggi tutte le FAQ</a>.</p>
     </header>
-    <div class="faq-list stagger reveal" data-reveal>
+    <div class="faq-list reveal" data-reveal>
       <details class="faq-item">
         <summary>b-lance è gratis?</summary>
         <p>Sì. Non ci sono piani a pagamento, pubblicità o vendita di dati.
@@ -280,18 +244,24 @@
       <a href="/register" class="btn">Crea il primo gruppo</a>
       <a href="/demo" class="btn ghost">Prova la demo</a>
     </div>
-    <span class="cta-stamp" aria-hidden="true">Gratis<br>senza carta</span>
   </div>
 </section>
 
 <script>
-// Calcolatore rapido: importo totale / persone, formattato in italiano.
+// Calcolatore rapido: importo totale / persone. Aggiorna anche lo scontrino.
 (function () {
   var form = document.getElementById('quick-split');
   if (!form) return;
   var total = document.getElementById('qs-total');
   var people = document.getElementById('qs-people');
   var out = document.getElementById('qs-result');
+  var receiptTotal = document.getElementById('receipt-total');
+  var receiptPeople = document.getElementById('receipt-people');
+  var receiptShare = document.getElementById('receipt-share');
+  var shareRow = document.getElementById('receipt-share-row');
+  var reduce = window.matchMedia &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var first = true;
 
   function parseAmount(raw) {
     var clean = String(raw).replace(/[^0-9.,]/g, '');
@@ -306,23 +276,84 @@
     return Number.isFinite(value) && value > 0 ? value : null;
   }
 
+  function money(value) {
+    return value.toLocaleString('it-IT', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }) + ' €';
+  }
+
+  // Un lampo breve sul valore cambiato: si capisce cosa ha reagito.
+  function flash() {
+    if (reduce || !shareRow) return;
+    shareRow.classList.remove('is-updated');
+    void shareRow.offsetWidth;
+    shareRow.classList.add('is-updated');
+  }
+
   function update() {
     var amount = parseAmount(total.value);
     var n = parseInt(people.value, 10);
     if (!amount || !Number.isFinite(n) || n < 2 || n > 50) {
       out.textContent = 'Scrivi un totale e almeno 2 persone';
+      out.classList.add('is-invalid');
       return;
     }
-    out.textContent = (amount / n).toLocaleString('it-IT', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    }) + ' € a testa';
+    var share = amount / n;
+    out.textContent = money(share) + ' a testa';
+    out.classList.remove('is-invalid');
+    if (receiptTotal) receiptTotal.textContent = money(amount);
+    if (receiptPeople) receiptPeople.textContent = String(n);
+    if (receiptShare) {
+      var next = money(share);
+      if (receiptShare.textContent !== next) {
+        receiptShare.textContent = next;
+        if (!first) flash();
+      }
+    }
+    first = false;
   }
 
   form.addEventListener('submit', function (e) { e.preventDefault(); });
   total.addEventListener('input', update);
   people.addEventListener('input', update);
   update();
+})();
+
+// Telefono dimostrativo: si salda davvero. Un tocco chiude i conti,
+// un altro li riapre. Nessun dato, solo lo stato dell'esempio.
+(function () {
+  var phone = document.getElementById('phone-demo');
+  var button = document.getElementById('phone-settle');
+  var hint = document.getElementById('phone-hint');
+  var live = document.getElementById('phone-live');
+  if (!phone || !button) return;
+  var rows = phone.querySelectorAll('.phone-row b');
+  var settled = false;
+
+  function render() {
+    for (var i = 0; i < rows.length; i++) {
+      var row = rows[i];
+      row.textContent = settled ? 'in pari' : row.getAttribute('data-net');
+      row.className = settled ? '' : (row.getAttribute('data-net').charAt(0) === '+' ? 'pos' : 'neg');
+    }
+    phone.classList.toggle('is-settled', settled);
+    button.setAttribute('aria-pressed', settled ? 'true' : 'false');
+    button.textContent = settled ? 'Riapri l\'esempio' : 'Salda con 2 bonifici';
+    hint.textContent = settled
+      ? 'Conti in pari: nessun debito residuo.'
+      : 'Tocca per vedere i conti in pari.';
+    if (live) {
+      live.textContent = settled
+        ? 'Esempio saldato: Marco, Luca e Sara sono in pari.'
+        : 'Esempio ripristinato: ci sono ancora due bonifici da fare.';
+    }
+  }
+
+  button.addEventListener('click', function () {
+    settled = !settled;
+    render();
+  });
 })();
 </script>
 {% endblock %}

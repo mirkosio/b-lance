@@ -4,7 +4,7 @@
    Tema chiaro + scuro (toggle, rispetta prefers-color-scheme).
    Texture carta leggerissima via CSS (motion.css resta url-free).
    Gradienti dosati: solo su marchio, CTA e hero.
-   Tipografia: Inter per l'UI, Calistoga per le headline.
+   Tipografia: Inter per l'UI, Fraunces per le headline (SOFT/WONK).
    Numeri tabellari ovunque. Mobile-first, safe-area incluse. */
 
 :root {
@@ -17,7 +17,7 @@
   --line: #ebe2d1;
   --chrome: #fcfaf4;
   --text: #232a26;
-  --muted: #67766b;
+  --muted: #5c6b60;
   --primary: #5f8d6e;
   --primary-deep: #47684f;
   --primary-soft: #eef2ec;
@@ -27,6 +27,7 @@
   --neg: #a84a34;
   --danger: #a0432f;
   --gold: #a8823c;
+  --gold-ink: #80602a;
   --rule: #ddd2bc;
   --ink: #1e2a23;
   --radius: 20px;
@@ -36,7 +37,7 @@
   --shadow-soft: 0 1px 2px rgba(31, 41, 35, 0.03), 0 6px 18px rgba(31, 41, 35, 0.05);
   --shadow-lift: 0 4px 8px rgba(31, 41, 35, 0.05), 0 24px 56px rgba(31, 41, 35, 0.12);
   --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Calistoga", Georgia, "Times New Roman", serif;
+  --font-display: "Fraunces", Georgia, "Iowan Old Style", serif;
   --grad-brand: linear-gradient(135deg, #6b9b7c 0%, #47684f 100%);
   --grad-btn: linear-gradient(180deg, #547f61 0%, #47684f 100%);
 }
@@ -62,6 +63,7 @@
   --neg: #dd8b70;
   --danger: #dd8b70;
   --gold: #cfa75e;
+  --gold-ink: #cfa75e;
   --rule: #333b34;
   --ink: #eef1eb;
   --shadow: 0 2px 4px rgba(0, 0, 0, 0.35), 0 16px 40px rgba(0, 0, 0, 0.4);
@@ -2050,26 +2052,15 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
 
 /* Reveal discreto: senza JS il contenuto resta visibile. */
 html.js-reveal .reveal { opacity: 0; transform: translateY(10px); }
-html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280ms ease, transform 280ms ease; }
-
-/* Calcolatore rapido nella landing: una prova vera, senza backend. */
-.quick-split {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 18px;
-  padding: 10px 12px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  box-shadow: var(--shadow);
+html.js-reveal .reveal.in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 300ms var(--ease-out, ease),
+    transform 300ms var(--ease-out, ease);
 }
-.quick-split label { color: var(--muted); font-size: .76rem; font-weight: 700; }
-.quick-split input { width: 92px; min-height: 44px; }
-.quick-split input[type="number"] { width: 68px; }
-.quick-split output { margin-left: auto; color: var(--primary-deep); font-weight: 800; }
-:root[data-theme="dark"] .quick-split output { color: var(--primary); }
+
+/* Calcolatore rapido nella landing: vive nella sezione v31, in fondo. */
 
 /* ------------------------------------------------- undo e primo gruppo */
 .undo-banner {
@@ -2202,20 +2193,27 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
 }
 
 /* ==========================================================================
-   v31 — direzione editoriale
-   Carta, inchiostro e luce: regole sottili, numeri di sezione, fregio,
-   footer a colonne. Il movimento vive in motion.css.
+   v31 — carta, inchiostro, luce
+   Direzione editoriale: regole sottili, numeri cerchiati, scontrino vero,
+   footer a colonne. Il movimento vive in motion.css e resta discreto.
    ========================================================================== */
 
 /* ---------------------------------------------------------------- topbar */
 /* Vetro caldo: la pagina che scorre resta percepibile sotto la barra. */
 .topbar {
-  background: color-mix(in srgb, var(--chrome) 88%, transparent);
-  -webkit-backdrop-filter: saturate(1.3) blur(14px);
-  backdrop-filter: saturate(1.3) blur(14px);
+  background: color-mix(in srgb, var(--chrome) 90%, transparent);
+  -webkit-backdrop-filter: saturate(1.25) blur(12px);
+  backdrop-filter: saturate(1.25) blur(12px);
+  transition:
+    background-color var(--dur-2, 220ms) var(--ease-out, ease),
+    box-shadow var(--dur-2, 220ms) var(--ease-out, ease);
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .topbar { background: var(--chrome); }
+}
+/* Solo dopo lo scroll: la barra prende peso, la pagina resta leggera. */
+.topbar.is-scrolled {
+  box-shadow: 0 1px 0 var(--border), 0 14px 30px -24px rgba(31, 41, 35, 0.55);
 }
 
 /* Voce pubblica: la sottolineatura si disegna da sinistra. */
@@ -2245,41 +2243,50 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
 }
 
 /* ---------------------------------------------------------------- hero */
-.landing-hero { isolation: isolate; }
+.landing-hero {
+  isolation: isolate;
+  background:
+    radial-gradient(720px 340px at 88% -12%, rgba(95, 141, 110, 0.12), transparent 70%),
+    radial-gradient(480px 280px at -6% 108%, rgba(168, 130, 60, 0.08), transparent 70%),
+    var(--bg);
+}
 
-/* Due aloni caldi: carta illuminata di lato, mai un fondo piatto. */
-.hero-glow {
+/* L'accento resta inchiostro: la sottolineatura è l'unico gesto colorato. */
+.landing-hero h1 em,
+:root[data-theme="dark"] .landing-hero h1 em {
+  background: none;
+  -webkit-background-clip: border-box;
+  background-clip: border-box;
+  -webkit-text-fill-color: var(--primary-deep);
+  color: var(--primary-deep);
+}
+:root[data-theme="dark"] .landing-hero h1 em {
+  -webkit-text-fill-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Sottolineatura disegnata a mano: un dettaglio, non un effetto. */
+.hero-accent { position: relative; display: inline-block; }
+.hand-underline {
   position: absolute;
-  z-index: -1;
-  width: 44vw;
-  max-width: 620px;
-  aspect-ratio: 1;
-  border-radius: 50%;
+  left: 0;
+  right: 0;
+  bottom: -0.14em;
+  width: 100%;
+  height: 0.22em;
+  overflow: visible;
   pointer-events: none;
-  filter: blur(70px);
-  opacity: 0.55;
 }
-.hero-glow-a {
-  top: -16%;
-  right: -8%;
-  background: radial-gradient(circle, rgba(95, 141, 110, 0.42), transparent 68%);
+.hand-underline path {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  opacity: 0.8;
 }
-.hero-glow-b {
-  bottom: -22%;
-  left: -10%;
-  background: radial-gradient(circle, rgba(168, 130, 60, 0.30), transparent 68%);
-}
-:root[data-theme="dark"] .hero-glow { opacity: 0.32; }
+:root[data-theme="dark"] .hand-underline path { stroke: #cfa75e; opacity: 0.7; }
 
-/* Titolo a righe: ogni riga sale da sotto la propria maschera. */
-.hero-line {
-  display: block;
-  overflow: hidden;
-  padding-bottom: 0.09em;
-}
-.hero-line > span { display: block; }
-.landing-hero h1 { letter-spacing: -0.015em; }
-
+/* Occhiello: punto statico, nessun battito. */
 .eyebrow-dot {
   width: 7px;
   height: 7px;
@@ -2288,140 +2295,319 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
   box-shadow: 0 0 0 4px rgba(95, 141, 110, 0.14);
 }
 
-/* Fregio: una riga di parole vere che scorre piano, come un nastro di carta. */
-.ticker {
-  overflow: hidden;
-  border-bottom: 1px solid var(--line);
-  background:
-    linear-gradient(180deg, rgba(95, 141, 110, 0.05), transparent 70%),
-    var(--bg-soft);
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+/* ------------------------------------------------------- testate sezione */
+/* Indice piccolo e oro: struttura, non filigrana. */
+.eyebrow-index {
+  color: var(--gold-ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
 }
-.ticker-track {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-}
-.ticker-group { display: flex; flex: 0 0 auto; }
-.ticker-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 18px;
-  padding: 13px 22px;
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.ticker-item::after {
-  content: "";
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: var(--gold);
-  opacity: 0.7;
-}
-
-/* ------------------------------------------------------- sezioni e testate */
-/* Numero di sezione in filigrana: coordina la lettura senza urlare. */
-.landing-section {
-  counter-increment: landing-sec;
-  --num-opacity: 0.055;
-}
-.landing-section::after {
-  content: attr(data-num);
-  position: absolute;
-  top: clamp(16px, 2.6vw, 34px);
-  right: clamp(20px, 5vw, 64px);
-  color: var(--text);
-  font-family: var(--font-display);
-  font-size: clamp(3rem, 7vw, 5.6rem);
-  line-height: 1;
-  opacity: var(--num-opacity);
-  pointer-events: none;
-  user-select: none;
-}
-:root[data-theme="dark"] .landing-section { --num-opacity: 0.09; }
-
-.section-head .eyebrow::before {
-  content: "";
-  width: 26px;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.5;
+.eyebrow-index::after {
+  content: "/";
+  margin: 0 7px 0 3px;
+  color: var(--border);
+  font-weight: 400;
 }
 .section-head h2 { max-width: 24ch; }
 
+/* ---------------------------------------------------------------- scontrino */
+.landing-hero .art {
+  width: 100%;
+  max-width: 430px;
+  margin-left: auto;
+  padding: 12px 8px 30px;
+  position: relative;
+}
+.receipt-eyebrow {
+  display: block;
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-align: right;
+}
+.receipt {
+  position: relative;
+  padding: clamp(22px, 3vw, 30px) clamp(20px, 3vw, 28px) 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent 34%),
+    var(--card);
+  border: 1px solid var(--border);
+  border-radius: 3px 3px 0 0;
+  box-shadow:
+    0 1px 0 rgba(31, 41, 35, 0.03),
+    0 24px 48px -32px rgba(31, 41, 35, 0.5);
+  transform: rotate(-1.1deg);
+}
+:root[data-theme="dark"] .receipt { background: var(--card); }
+/* Strappo in fondo: la carta finisce a denti, non a taglio netto. */
+.receipt::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  right: -1px;
+  bottom: -11px;
+  height: 12px;
+  background: var(--card);
+  clip-path: polygon(
+    0 0, 100% 0,
+    95% 100%, 90% 0, 85% 100%, 80% 0, 75% 100%, 70% 0,
+    65% 100%, 60% 0, 55% 100%, 50% 0, 45% 100%, 40% 0,
+    35% 100%, 30% 0, 25% 100%, 20% 0, 15% 100%, 10% 0, 5% 100%, 0 0
+  );
+}
+.receipt-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.receipt-brand {
+  font-family: var(--font-display);
+  font-size: 1.12rem;
+  color: var(--text);
+}
+.receipt-meta {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.receipt-title {
+  margin: 16px 0 2px;
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+.receipt-sub {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.receipt-rows {
+  margin: 0;
+  padding: 0;
+}
+.receipt-rows > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 7px 0;
+}
+.receipt-rows dt {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.receipt-rows dd {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.receipt-rule {
+  height: 1px;
+  margin: 12px 0;
+  background: var(--line);
+}
+.receipt-rule.dashed {
+  background: none;
+  border-top: 1px dashed var(--rule);
+}
+.receipt-share {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 4px 0 16px;
+}
+.receipt-share span {
+  color: var(--primary-deep);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+:root[data-theme="dark"] .receipt-share span { color: var(--primary); }
+.receipt-share strong {
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 3vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--primary-deep);
+  font-variant-numeric: tabular-nums;
+}
+:root[data-theme="dark"] .receipt-share strong { color: var(--primary); }
+.receipt-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+}
+.receipt-barcode {
+  display: block;
+  width: 92px;
+  height: 20px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--text) 0 1px,
+    transparent 1px 3px,
+    var(--text) 3px 5px,
+    transparent 5px 8px
+  );
+  opacity: 0.5;
+}
+
+/* ------------------------------------------------------------- calcolatore */
+.quick-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.7fr);
+  gap: 10px 12px;
+  margin-top: 20px;
+  padding: 14px;
+  background: color-mix(in srgb, var(--card) 72%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-soft);
+}
+.quick-split label {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.quick-split input {
+  width: 100%;
+  min-height: 44px;
+  font-variant-numeric: tabular-nums;
+}
+.quick-split output {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 2px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--primary-deep);
+  font-size: 1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.quick-split output::before {
+  content: "=";
+  color: var(--gold);
+  font-weight: 400;
+}
+.quick-split output.is-invalid::before { content: ""; }
+:root[data-theme="dark"] .quick-split output { color: var(--primary); }
+
 /* ---------------------------------------------------------------- passi */
+.steps-grid { gap: clamp(24px, 4vw, 44px); }
+.step {
+  min-height: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transition: none;
+}
+.step:hover {
+  background: none;
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+}
 @media (min-width: 800px) {
   .steps-grid { position: relative; }
   .steps-grid::before {
     content: "";
     position: absolute;
-    left: 10%;
-    right: 10%;
-    top: 66px;
-    height: 1px;
-    background: repeating-linear-gradient(
-      90deg,
-      var(--rule) 0 5px,
-      transparent 5px 11px
-    );
+    left: 22px;
+    right: 22px;
+    top: 22px;
+    height: 0;
+    border-top: 1px dashed var(--rule);
     pointer-events: none;
   }
 }
 .step-num {
-  width: 46px;
-  height: 46px;
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 18px;
   border: 1px solid var(--rule);
   border-radius: 50%;
-  background: transparent;
+  background: var(--bg);
   color: var(--primary-deep);
-  font-size: 1.02rem;
+  font-family: var(--font);
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
   transition:
     background-color var(--dur-2, 220ms) var(--ease-out, ease),
-    color var(--dur-2, 220ms) var(--ease-out, ease),
     border-color var(--dur-2, 220ms) var(--ease-out, ease),
-    transform var(--dur-2, 220ms) var(--ease-out, ease);
+    color var(--dur-2, 220ms) var(--ease-out, ease);
 }
-:root[data-theme="dark"] .step-num { background: transparent; color: var(--primary); }
+:root[data-theme="dark"] .step-num { background: var(--bg); color: var(--primary); }
 .step:hover .step-num {
   background: var(--primary-deep);
   border-color: var(--primary-deep);
   color: #fff;
-  transform: rotate(-7deg) scale(1.05);
 }
+.step h3 { font-size: 1.08rem; }
+.step p { max-width: 34ch; }
 
 /* ---------------------------------------------------------------- funzioni */
 .card.feature {
-  position: relative;
-  overflow: hidden;
-  padding: 24px;
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: none;
+  transition:
+    border-color var(--dur-2, 220ms) var(--ease-out, ease),
+    box-shadow var(--dur-2, 220ms) var(--ease-out, ease),
+    transform var(--dur-2, 220ms) var(--ease-out, ease);
 }
-.card.feature::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary), var(--gold));
-  transform: scaleX(0);
-  transform-origin: 0 50%;
-  transition: transform var(--dur-3, 300ms) var(--ease-out, ease);
+.card.feature:hover {
+  border-color: color-mix(in srgb, var(--primary) 38%, var(--border));
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-2px);
 }
-.card.feature:hover::before { transform: scaleX(1); }
 .card.feature .ficon {
   width: 46px;
   height: 46px;
-  border-radius: 14px;
+  border-radius: 13px;
   transition:
-    transform var(--dur-2, 220ms) var(--ease-out, ease),
-    background-color var(--dur-2, 220ms) var(--ease-out, ease);
+    background-color var(--dur-2, 220ms) var(--ease-out, ease),
+    color var(--dur-2, 220ms) var(--ease-out, ease);
 }
-.card.feature:hover .ficon { transform: rotate(-4deg) scale(1.04); }
-.feature h3 { font-size: 1.04rem; }
+.feature h3 { margin: 2px 0 6px; font-size: 1.02rem; }
 .feature p { line-height: 1.6; }
 
 /* ---------------------------------------------------------------- app */
@@ -2429,28 +2615,11 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
   position: relative;
   isolation: isolate;
 }
-.landing-inner.app-panel::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: -30%;
-  right: -12%;
-  width: 340px;
-  height: 340px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(168, 130, 60, 0.35), transparent 66%);
-  filter: blur(30px);
-  opacity: 0.5;
-  pointer-events: none;
-}
 .phone {
-  transition:
-    transform var(--dur-3, 300ms) var(--ease-out, ease),
-    box-shadow var(--dur-3, 300ms) var(--ease-out, ease);
+  transition: box-shadow var(--dur-3, 300ms) var(--ease-out, ease);
 }
 .landing-inner.app-panel:hover .phone {
-  transform: translateY(-4px) rotate(-0.6deg);
-  box-shadow: 0 26px 54px rgba(0, 0, 0, 0.34);
+  box-shadow: 0 28px 56px rgba(0, 0, 0, 0.34);
 }
 
 /* ---------------------------------------------------------------- CTA */
@@ -2458,36 +2627,7 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
   position: relative;
   overflow: hidden;
 }
-.cta-stamp {
-  display: none;
-  position: absolute;
-  right: clamp(22px, 4vw, 46px);
-  top: 50%;
-  width: 104px;
-  height: 104px;
-  margin-top: -52px;
-  place-items: center;
-  border: 1px solid rgba(95, 141, 110, 0.45);
-  border-radius: 50%;
-  color: var(--primary-deep);
-  font-family: var(--font-display);
-  font-size: 0.86rem;
-  line-height: 1.25;
-  text-align: center;
-  transform: rotate(8deg);
-}
-.cta-stamp::before {
-  content: "";
-  position: absolute;
-  inset: 6px;
-  border: 1px dashed rgba(95, 141, 110, 0.35);
-  border-radius: 50%;
-}
-:root[data-theme="dark"] .cta-stamp { color: var(--primary); }
-@media (min-width: 900px) {
-  .cta-stamp { display: grid; }
-  .landing-inner.final-cta { padding-right: clamp(150px, 16vw, 210px); }
-}
+/* Nessuna barra gradiente: il bordo della card basta. */
 
 /* ---------------------------------------------------------------- footer */
 .site-footer {
@@ -2495,7 +2635,7 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
   border-top: 1px solid var(--border);
   text-align: left;
   background:
-    radial-gradient(700px 280px at 10% 0, rgba(95, 141, 110, 0.07), transparent 70%),
+    radial-gradient(700px 280px at 10% 0, rgba(95, 141, 110, 0.06), transparent 70%),
     var(--bg-soft);
 }
 @media (min-width: 960px) {
@@ -2541,7 +2681,7 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
 .footer-col a {
   display: flex;
   align-items: center;
-  min-height: 40px;
+  min-height: 44px;
   color: var(--muted);
   font-size: 0.88rem;
   font-weight: 600;
@@ -2570,19 +2710,17 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
 
 /* ------------------------------------------------------- pagine informative */
 .info-hero { isolation: isolate; }
+/* Un solo segno: la riga d'angolo, non un bersaglio. */
 .info-hero::after {
   content: "";
   position: absolute;
-  z-index: -1;
-  right: -70px;
-  bottom: -110px;
-  width: 280px;
-  height: 280px;
-  border: 1px solid rgba(95, 141, 110, 0.18);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 34px rgba(95, 141, 110, 0.045),
-    0 0 0 68px rgba(168, 130, 60, 0.03);
+  right: clamp(20px, 4vw, 44px);
+  bottom: clamp(20px, 4vw, 44px);
+  width: 54px;
+  height: 54px;
+  border-right: 1px solid rgba(95, 141, 110, 0.35);
+  border-bottom: 1px solid rgba(95, 141, 110, 0.35);
+  border-radius: 0 0 8px 0;
   pointer-events: none;
 }
 .info-toc {
@@ -2602,7 +2740,7 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
   position: absolute;
   inset: 0 auto 0 0;
   width: 3px;
-  background: linear-gradient(180deg, var(--primary), var(--gold));
+  background: var(--primary);
   transform: scaleY(0);
   transform-origin: 50% 0;
   transition: transform var(--dur-3, 300ms) var(--ease-out, ease);
@@ -2620,11 +2758,128 @@ html.js-reveal .reveal.in { opacity: 1; transform: none; transition: opacity 280
   position: absolute;
   inset: auto 0 0 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--primary), transparent);
+  background: var(--primary);
   opacity: 0;
   transition: opacity var(--dur-2, 220ms) var(--ease-out, ease);
 }
-.groupcard:hover::after { opacity: 1; }
+.groupcard:hover::after { opacity: 0.55; }
+
+/* ------------------------------------------------------------- FAQ landing */
+/* Domande come voci di un indice, non come quattro card uguali. */
+#faq .faq-list { gap: 0; }
+#faq .faq-item {
+  padding: 0 4px;
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+}
+#faq .faq-item:last-child { border-bottom: 1px solid var(--line); }
+#faq .faq-item summary { min-height: 56px; padding-right: 34px; }
+#faq .faq-item p { margin: 0 0 18px; padding-right: 34px; }
 
 /* --------------------------------------------------------- reduced motion */
 /* Le regole di movimento stanno in motion.css: qui solo geometria e colore. */
+
+/* ==========================================================================
+   v32 — carattere e telefono
+   Fraunces al posto di un serif qualunque: le assi SOFT e WONK gli danno
+   curve morbide e qualche spigolo storto, come un carattere stampato a mano.
+   ========================================================================== */
+
+/* Le due assi valgono solo per Fraunces: Inter non le conosce e le ignora. */
+:root { font-variation-settings: "SOFT" 30, "WONK" 1; }
+
+/* I titoli respirano a peso 500: né sottili né da manifesto. */
+.hero h1,
+.section-head h2,
+.app-copy h2,
+.final-cta h2,
+.pagehead h1,
+.onboard-head h2,
+.info-hero h1,
+.info-example-copy h2,
+.demo-hero h1,
+.demo-card-head h2,
+.cashier-link-shell .cl-head h2,
+.receipt-brand,
+.receipt-title,
+.receipt-share strong,
+.footer-brand b,
+.info-aside > p,
+.step-num {
+  font-weight: 500;
+}
+.hero h1,
+.section-head h2,
+.app-copy h2,
+.final-cta h2,
+.info-hero h1,
+.demo-hero h1 { letter-spacing: -0.014em; }
+
+/* Il totale dell'app è un numero hero: serif, ma sempre tabellare. */
+.phone-total {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------- telefono interattivo */
+/* Un tocco salda i conti dell'esempio; un altro li riapre. */
+.phone-row b {
+  font-variant-numeric: tabular-nums;
+  transition: color 220ms var(--ease-out, ease);
+}
+.phone.is-settled .phone-row b { color: #98a39b; font-weight: 500; }
+
+.phone-cta {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 11px 10px;
+  border: 1px solid rgba(133, 179, 149, 0.38);
+  border-radius: 10px;
+  color: #b6d6c1;
+  background: rgba(95, 141, 110, 0.14);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background-color 150ms var(--ease-out, ease),
+    border-color 150ms var(--ease-out, ease),
+    color 150ms var(--ease-out, ease);
+}
+.phone-cta:hover {
+  background: rgba(95, 141, 110, 0.24);
+  border-color: rgba(133, 179, 149, 0.6);
+}
+.phone-cta:active { transform: scale(0.995); }
+.phone-cta:focus-visible { outline: 2px solid #9ec6ac; outline-offset: 2px; }
+.phone.is-settled .phone-cta {
+  color: #9ec6ac;
+  background: transparent;
+  border-style: dashed;
+}
+.phone-hint {
+  margin: 8px 0 0;
+  color: #98a39b;
+  font-size: 0.66rem;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Il pannello App è verde: l'indice in oro scuro sparirebbe. */
+.app-copy .eyebrow-index { color: #e6d7b4; }
+.app-copy .eyebrow-index::after { color: rgba(230, 215, 180, 0.45); }
+
+/* Nel footer i link si leggono come un indice, non come una lista di URL. */
+.footer-col a { text-decoration: none; }
+.footer-col a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* Le sezioni informative si fermano sotto la topbar, non dietro. */
+.info-prose-block,
+.info-step,
+.info-faq .faq-item { scroll-margin-top: 92px; }

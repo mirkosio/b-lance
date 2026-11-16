@@ -76,10 +76,13 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
   }
 
-  Future<void> _openGroup(int id) async {
-    await Navigator.of(
-      context,
-    ).push(appRoute(context, (_) => GroupScreen(api: widget.api, groupId: id)));
+  Future<void> _openGroup(int id, String name) async {
+    await Navigator.of(context).push(
+      appRoute(
+        context,
+        (_) => GroupScreen(api: widget.api, groupId: id, initialName: name),
+      ),
+    );
     if (mounted) widget.onChanged();
   }
 
@@ -219,7 +222,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       final item = items[i];
                       return ActivityTile(
                         item: item,
-                        onTap: () => _openGroup(item.groupId),
+                        onTap: () => _openGroup(item.groupId, item.groupName),
                       );
                     },
                   );

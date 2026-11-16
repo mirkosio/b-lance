@@ -2425,9 +2425,9 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
   <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Calistoga&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=31">
-  <link rel="stylesheet" href="/static/motion.css?v=3">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..600,0..100,0..1&family=Inter:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="/static/app.css?v=34">
+  <link rel="stylesheet" href="/static/motion.css?v=4">
 </head>
 <body class="guest">
 <a class="skip-link" href="#main">Salta al contenuto</a>
@@ -2443,7 +2443,7 @@ def public_share_page(token: str, request: Request, db: Session = Depends(get_db
 <main id="main" class="wrap" style="max-width:680px;padding:32px 16px">
   <div class="card" style="margin-bottom:20px">
     <span class="eyebrow">Riepilogo condivisibile</span>
-    <h1 style="font-family:Calistoga;font-size:1.8rem;margin:6px 0 10px">{escape(group.name)}</h1>
+    <h1 style="font-family:Fraunces,Georgia,serif;font-size:1.8rem;margin:6px 0 10px">{escape(group.name)}</h1>
     <p class="muted">Valuta base: <b>{group.base_currency}</b> · Totale speso: <b>{view.total_expenses_display()}</b></p>
     {f'<p class="muted small">Aggiornato al {updated}</p>' if updated else ''}
     {f'<p class="muted small">Link valido fino al {expires.strftime("%d/%m/%Y")}</p>' if expires else ''}

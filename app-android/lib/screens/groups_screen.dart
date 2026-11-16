@@ -47,10 +47,18 @@ class _GroupsScreenState extends State<GroupsScreen> {
     }
   }
 
-  Future<void> _openGroup(int id) async {
-    await Navigator.of(
-      context,
-    ).push(appRoute(context, (_) => GroupScreen(api: widget.api, groupId: id)));
+  Future<void> _openGroup(int id, String name, {String? heroTag}) async {
+    await Navigator.of(context).push(
+      appRoute(
+        context,
+        (_) => GroupScreen(
+          api: widget.api,
+          groupId: id,
+          heroTag: heroTag,
+          initialName: name,
+        ),
+      ),
+    );
     if (mounted) widget.onChanged();
   }
 
@@ -58,14 +66,14 @@ class _GroupsScreenState extends State<GroupsScreen> {
     final created = await showNewGroupSheet(context, api: widget.api);
     if (created == null || !mounted) return;
     widget.onChanged();
-    await _openGroup(created.id);
+    await _openGroup(created.id, created.name);
   }
 
   Future<void> _joinGroup() async {
     final joined = await showJoinGroupSheet(context, api: widget.api);
     if (joined == null || !mounted) return;
     widget.onChanged();
-    await _openGroup(joined.id);
+    await _openGroup(joined.id, joined.name);
   }
 
   @override
@@ -177,7 +185,15 @@ class _GroupsScreenState extends State<GroupsScreen> {
                 ),
                 const SizedBox(height: 12),
                 for (final g in groups)
-                  GroupTile(group: g, onTap: () => _openGroup(g.id)),
+                  GroupTile(
+                    group: g,
+                    heroTag: 'group-groups-${g.id}',
+                    onTap: () => _openGroup(
+                      g.id,
+                      g.name,
+                      heroTag: 'group-groups-${g.id}',
+                    ),
+                  ),
               ],
             );
           },

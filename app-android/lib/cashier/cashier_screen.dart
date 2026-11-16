@@ -225,7 +225,7 @@ class _CashierHomeScreenState extends State<CashierHomeScreen> {
                       const Text(
                         'Nessun gruppo cassiere',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontFamily: 'Calistoga', fontSize: 26),
+                        style: TextStyle(fontFamily: 'Fraunces', fontSize: 26),
                       ),
                       const SizedBox(height: 8),
                       Text(

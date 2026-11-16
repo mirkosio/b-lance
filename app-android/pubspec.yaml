@@ -88,9 +88,10 @@ flutter:
           weight: 700
         - asset: assets/fonts/Inter-ExtraBold.ttf
           weight: 800
-    - family: Calistoga
+    - family: Fraunces
       fonts:
-        - asset: assets/fonts/Calistoga-Regular.ttf
+        - asset: assets/fonts/Fraunces-Medium.ttf
+          weight: 500
 
   # To add assets to your application, add an assets section, like this:
   # assets:

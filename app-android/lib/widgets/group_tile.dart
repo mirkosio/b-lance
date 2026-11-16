@@ -4,12 +4,54 @@ import '../api.dart';
 import '../models.dart';
 import '../ui.dart';
 
+/// Avatar del gruppo: quadrato arrotondato con l'iniziale.
+/// Lo usano la riga dell'elenco e la testata del dettaglio, così il
+/// passaggio da una all'altra è lo stesso oggetto che si sposta.
+class GroupAvatar extends StatelessWidget {
+  const GroupAvatar({super.key, required this.name, this.size = 46});
+
+  final String name;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: sage.withValues(alpha: 0.13),
+        borderRadius: BorderRadius.circular(size * 0.3),
+      ),
+      alignment: Alignment.center,
+      child: Text(
+        name.isEmpty ? '?' : name.characters.first.toUpperCase(),
+        style: TextStyle(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? sage
+              : sageInk,
+          fontWeight: FontWeight.w800,
+          fontSize: size * 0.41,
+        ),
+      ),
+    );
+  }
+}
+
 /// Riga gruppo: avatar, nome, membri, saldo e chevron.
 class GroupTile extends StatelessWidget {
-  const GroupTile({super.key, required this.group, required this.onTap});
+  const GroupTile({
+    super.key,
+    required this.group,
+    required this.onTap,
+    this.heroTag,
+  });
 
   final GroupSummary group;
   final VoidCallback onTap;
+
+  /// Tag unico per schermata: Home e Gruppi restano vivi insieme
+  /// nell'IndexedStack, quindi non possono condividere lo stesso Hero.
+  final String? heroTag;
 
   @override
   Widget build(BuildContext context) {
@@ -45,25 +87,13 @@ class GroupTile extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Container(
-                    width: 46,
-                    height: 46,
-                    decoration: BoxDecoration(
-                      color: sage.withValues(alpha: 0.13),
-                      borderRadius: BorderRadius.circular(14),
+                  if (heroTag == null)
+                    GroupAvatar(name: group.name)
+                  else
+                    Hero(
+                      tag: heroTag!,
+                      child: GroupAvatar(name: group.name),
                     ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      group.name.characters.first.toUpperCase(),
-                      style: TextStyle(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? sage
-                            : sageInk,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 19,
-                      ),
-                    ),
-                  ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: Column(

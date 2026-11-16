@@ -48,7 +48,9 @@ Regole: niente gradienti viola/rosa; i gradienti salvia sono ammessi solo su her
 
 ## Tipografia
 
-- **Display**: Calistoga — solo wordmark, numeri hero (saldo), titoli di stato vuoto.
+- **Display**: Fraunces (assi `SOFT` 30, `WONK` 1) — solo wordmark, numeri hero
+  (saldo), titoli di stato vuoto. Serif da carta stampata, non un Times: gli
+  spigoli irregolari sono voluti.
 - **UI**: Inter — tutto il resto. Da **includere in `assets/fonts`** (niente download a runtime).
 - Scala: 11 / 12.5 / 13.5 / 15 / 18 / 24 / 32 / 40. Pesi 400, 600, 700, 800.
 - Importi: `FontFeature.tabularFigures()` sempre; segno esplicito `+`/`−`.
@@ -127,12 +129,12 @@ sidebar scorre se l'altezza dello schermo è ridotta.
 - Hover-only (non c'è hover sul telefono).
 - Testo < 12 px per informazioni essenziali.
 
-## Stato implementazione (app 1.6.0, Fase 3)
+## Stato implementazione (app 1.7.0, Fase 3)
 
 - Token reali in `app-android/lib/ui.dart`: salvia `#5F8D6E`, testo salvia `#3D644B`,
   bottoni `#4A7357` (bianco ≥ 4.5:1), carta `#F5F4EF`, notte `#141816`.
-- Font bundled in `assets/fonts`: Inter 400/500/600/700/800, Calistoga regular.
-  Calistoga solo per wordmark e numeri hero; Inter per tutto il resto.
+- Font bundled in `assets/fonts`: Inter 400/500/600/700/800, Fraunces 500.
+  Fraunces solo per wordmark e numeri hero; Inter per tutto il resto.
 - Shell `screens/main_shell.dart`: Home / Movimenti / Gruppi / Profilo, `IndexedStack`.
 - `HomeScreen`: hero saldo per valuta, due azioni rapide (Nuovo gruppo, Unisciti),
   tre gruppi recenti, "Vedi tutti"; skeleton e stato vuoto con CTA.

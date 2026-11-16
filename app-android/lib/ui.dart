@@ -1,7 +1,7 @@
 /// Tema, formati e widget comuni dell'app.
 ///
 /// Palette del marchio: salvia per l'accento, carta calda di giorno e
-/// nero-verde di notte. Tipografia: Inter per l'interfaccia, Calistoga per
+/// nero-verde di notte. Tipografia: Inter per l'interfaccia, Fraunces per
 /// i numeri hero e il wordmark. Movimento discreto (4/10): 150-260 ms.
 library;
 
@@ -44,7 +44,7 @@ Color goldOn(BuildContext context) =>
     ? const Color(0xFFD8B56A)
     : const Color(0xFFA8823C);
 
-const kAppVersion = '1.6.0';
+const kAppVersion = '1.7.0';
 
 /// Durata coerente col motion 4/10, azzerata se il sistema chiede
 /// di ridurre le animazioni.
@@ -61,10 +61,24 @@ Route<T> appRoute<T>(BuildContext context, WidgetBuilder builder) {
     transitionDuration: duration,
     reverseTransitionDuration: duration,
     pageBuilder: (ctx, _, _) => builder(ctx),
-    transitionsBuilder: (ctx, animation, _, child) => FadeTransition(
-      opacity: animation.drive(CurveTween(curve: Curves.easeOutCubic)),
-      child: child,
-    ),
+    transitionsBuilder: (ctx, animation, _, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      // Fade + pochi pixel di salita: la schermata si posa, non scivola.
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.025),
+            end: Offset.zero,
+          ).animate(curved),
+          child: child,
+        ),
+      );
+    },
   );
 }
 
@@ -76,19 +90,19 @@ void hapticConfirm() => HapticFeedback.lightImpact();
 
 TextTheme _textTheme(Color ink) => TextTheme(
   displayLarge: TextStyle(
-    fontFamily: 'Calistoga',
+    fontFamily: 'Fraunces',
     fontSize: 40,
     height: 1.05,
     color: ink,
   ),
   displayMedium: TextStyle(
-    fontFamily: 'Calistoga',
+    fontFamily: 'Fraunces',
     fontSize: 32,
     height: 1.08,
     color: ink,
   ),
   headlineSmall: TextStyle(
-    fontFamily: 'Calistoga',
+    fontFamily: 'Fraunces',
     fontSize: 26,
     height: 1.12,
     color: ink,

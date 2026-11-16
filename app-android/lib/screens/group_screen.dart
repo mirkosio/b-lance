@@ -12,14 +12,28 @@ import '../sheets/expense_sheet.dart';
 import '../sheets/group_sheets.dart';
 import '../sheets/payment_sheet.dart';
 import '../ui.dart';
+import '../widgets/group_tile.dart';
 import '../widgets/hero_balance.dart';
 import '../widgets/skeleton.dart';
 
 class GroupScreen extends StatefulWidget {
-  const GroupScreen({super.key, required this.api, required this.groupId});
+  const GroupScreen({
+    super.key,
+    required this.api,
+    required this.groupId,
+    this.heroTag,
+    this.initialName,
+  });
 
   final Api api;
   final int groupId;
+
+  /// Tag dell'avatar nella riga di provenienza (Home o Gruppi).
+  final String? heroTag;
+
+  /// Nome già noto: serve a far volare l'avatar anche mentre il
+  /// dettaglio sta ancora caricando.
+  final String? initialName;
 
   @override
   State<GroupScreen> createState() => _GroupScreenState();
@@ -45,6 +59,26 @@ class _GroupScreenState extends State<GroupScreen> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Widget _title(String name) {
+    final label = Text(
+      name,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+    );
+    if (widget.heroTag == null) return label;
+    return Row(
+      children: [
+        Hero(
+          tag: widget.heroTag!,
+          child: GroupAvatar(name: name, size: 38),
+        ),
+        const SizedBox(width: 10),
+        Expanded(child: label),
+      ],
+    );
   }
 
   void _reload() {
@@ -534,11 +568,14 @@ class _GroupScreenState extends State<GroupScreen> {
       future: _future,
       builder: (ctx, snap) {
         if (snap.connectionState != ConnectionState.done) {
-          return Scaffold(appBar: AppBar(), body: const ListSkeleton(rows: 4));
+          return Scaffold(
+            appBar: AppBar(title: _title(widget.initialName ?? '')),
+            body: const ListSkeleton(rows: 4),
+          );
         }
         if (snap.hasError) {
           return Scaffold(
-            appBar: AppBar(),
+            appBar: AppBar(title: _title(widget.initialName ?? '')),
             body: ListView(
               children: [
                 const SizedBox(height: 40),
@@ -583,10 +620,7 @@ class _GroupScreenState extends State<GroupScreen> {
         );
         return Scaffold(
           appBar: AppBar(
-            title: Text(
-              d.name,
-              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-            ),
+            title: _title(d.name),
             actions: [
               PopupMenuButton<String>(
                 onSelected: (v) {

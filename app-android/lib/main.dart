@@ -186,7 +186,7 @@ class _GateState extends State<_Gate> {
                     'Non riesco a collegarmi',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontFamily: 'Calistoga',
+                      fontFamily: 'Fraunces',
                       fontSize: 26,
                       height: 1.1,
                     ),
