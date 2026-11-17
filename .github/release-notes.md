@@ -1,41 +1,35 @@
-## b-lance 1.7.0 (versionCode 20)
+## b-lance 1.7.1 (versionCode 21)
 
-Aggiornamento in-place dalla 1.6.0: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.7.0: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
-### Link web del riepilogo (Cassiere)
+### Carattere nuovo
 
-- Nel foglio di condivisione arriva l'opzione **Link web**: oltre a immagine e
-  testo, il riepilogo si invia come link che si apre nel browser di chiunque.
-- La pagina mostra saldo totale, saldo di ogni persona e i bonifici che
-  chiudono il conto, in italiano e con la valuta del gruppo.
-- **I dati viaggiano nel link, non sul server.** Il riepilogo è codificato nel
-  frammento dopo il cancelletto (`#`), che il browser non invia mai: b-lance
-  non riceve, non conserva e non può revocare nulla. Nessuna scadenza: chi ha
-  il link lo può riaprire finché lo conserva. Trattarlo come un messaggio
-  condiviso, non come una pagina privata.
+- Il wordmark, i saldi in evidenza e i titoli di stato vuoto passano a
+  **Fraunces**, un serif da carta stampata con curve morbide e qualche
+  spigolo irregolare. Sostituisce Calistoga, che sembrava un Times qualunque.
+- Inter resta per tutto il resto dell'interfaccia. Importi sempre tabellari,
+  segno esplicito `+`/`−`.
 
-### Offline, con stato chiaro
+### Movimento discreto
 
-- In home compare un avviso quando stai vedendo l'ultima copia salvata sul
-  telefono, quando ci sono modifiche in attesa di sincronizzazione e quando la
-  sincronizzazione è in pausa.
-- Le modifiche fatte offline partono in ordine al riconnettersi: ogni operazione
-  mantiene il suo identificatore, quindi un retry non duplica spese o pagamenti.
-- Se il DNS del telefono non risolve il server, si riprova con il DNS cifrato
-  di riserva.
-
-### Pagamenti
-
-- Il foglio "Registra pagamento" accetta importi parziali, come sul sito: si
-  salda anche a rate.
+- Le schermate entrano con un fade e pochi pixel di salita: si posano, non
+  scivolano. Con "riduci animazioni" di sistema non si muove nulla.
+- L'avatar del gruppo vola dall'elenco alla testata del dettaglio, così si
+  capisce da dove sei arrivato. Il nome resta visibile anche mentre il
+  dettaglio carica.
+- Il saldo in evidenza cambia con un fade breve quando registri un
+  pagamento: nessun rimbalzo, i numeri non rimbalzano.
 
 ### Web
 
-- Link web e pagina `/cashier-link` aggiornati insieme: un riepilogo condiviso
-  dall'app si apre identico sul sito di produzione.
+- Il telefono del pannello App è un esempio vero: un tocco salda i conti,
+  un altro li riapre. Stato annunciato anche ai lettori di schermo.
+- L'indice "In questa pagina" segue la lettura anche nelle pagine corte e
+  con molte voci: le ultime non restano più spente.
 
 ### Verifiche
 
-- 151 test backend, 21 test JavaScript, 37 test Flutter, `flutter analyze` pulito.
+- 22 test JavaScript, 32 test delle pagine informative, 37 test Flutter,
+  `flutter analyze` pulito.
 - APK release firmato, con checksum SHA-256 accanto al file.

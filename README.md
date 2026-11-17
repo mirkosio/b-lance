@@ -109,10 +109,10 @@ flutter test
 
 L’APK si genera con `flutter build apk --release` e finisce in
 `app-android/build/app/outputs/flutter-apk/app-release.apk`. La release corrente
-è **1.7.0** (`versionCode 20`); le note e i file sono nella
+è **1.7.1** (`versionCode 21`); le note e i file sono nella
 [pagina GitHub Releases](https://github.com/mirkosio/b-lance/releases).
-APK 1.7.0: `APK_1.7.0.apk` (58 MB), SHA-256
-`5fcab6909d7e8fc95fd27c66382d2a8549cbb677504ca0dc3cc2fcc3b5be24ae`.
+APK 1.7.1: `APK_1.7.1.apk`, con il checksum SHA-256 accanto
+(`APK_1.7.1.apk.sha256`).
 Gli App Links usano `https://b-lance.vercel.app/join/CODICE` e la verifica in
 `/.well-known/assetlinks.json`.
 
@@ -147,8 +147,8 @@ workflow `.github/workflows/release-apk.yml`.
 
 ## Stato e prossimi passi
 
-La release pubblicata è v24 / app 1.7.0 (v23 era la 1.6.0, con il link web
-del Cassiere solo nel codice). Sul sito
+La release pubblicata è v25 / app 1.7.1 (v24 era la 1.7.0, con il link web
+del Cassiere già in produzione). Sul sito
 (`https://b-lance.vercel.app`) sono attivi split per articolo, PDF Cassiere,
 pagine informative separate, demo pubblica senza login, validazione inline,
 export account JSON, pagamento precompilato e offline account con coda
