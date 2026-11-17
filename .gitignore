@@ -33,3 +33,8 @@ node_modules/
 .deploy-hook
 .vercel
 .env*
+
+# Appunti interni di sviluppo: restano in locale, non nel repo pubblico.
+AUDIT.md
+OPERAZIONE.md
+PROPOSTA.md
