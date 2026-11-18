@@ -132,6 +132,11 @@ La suite backend usa SQLite e disattiva la rete BCE, così i risultati sono
 ripetibili. Copre flussi, multi-valuta, split, annullamenti, permessi, account,
 username, categorie, ricorrenze, export, App Links, pagine informative e demo.
 
+## Licenza
+
+MIT. Il testo completo è in [`LICENSE`](LICENSE): puoi usare, modificare e
+ridistribuire il codice, anche in un prodotto tuo, tenendo la nota di copyright.
+
 ## Contribuire
 
 Il codice è pubblico per trasparenza: puoi leggere come funziona, segnalare un
