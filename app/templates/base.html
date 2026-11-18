@@ -55,7 +55,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..600,0..100,0..1&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=34">
+  <link rel="stylesheet" href="/static/app.css?v=35">
   <link rel="stylesheet" href="/static/motion.css?v=4">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
@@ -300,8 +300,11 @@
   var p = new URLSearchParams(location.search);
   var shown = 0;
   if (p.get('err')) { blToast(p.get('err'), 'err'); shown++; }
-  if (p.get('ok')) { blToast(p.get('ok'), 'ok'); shown++; }
-  if (shown) {
+  // "ok=1" è solo un flag per il messaggio già stampato dal server:
+  // non deve diventare un toast con scritto "1".
+  var okMsg = p.get('ok');
+  if (okMsg && okMsg !== '1') { blToast(okMsg, 'ok'); shown++; }
+  if (shown || okMsg) {
     p.delete('err'); p.delete('ok');
     history.replaceState(null, '', location.pathname + (p.toString() ? '?' + p.toString() : ''));
   }
@@ -639,6 +642,6 @@
   update();
 })();
 </script>
-<script src="/static/motion.js?v=3" defer></script>
+<script src="/static/motion.js?v=4" defer></script>
 </body>
 </html>

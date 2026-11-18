@@ -1214,7 +1214,10 @@ def _prepare_expense(db: Session, group: Group, data: ExpenseIn) -> dict:
             raw[uid] = parse_user_amount(
                 vals.get(str(uid), "0") or "0", exponent=exp_cur.exponent
             )
-        shares = compute_shares(base_amount_minor, method, member_ids, exact_shares=raw)
+        shares = compute_shares(
+            base_amount_minor, method, member_ids, exact_shares=raw,
+            exponent=exp_cur.exponent, currency=exp_code,
+        )
     else:  # PERCENT
         pcts: dict[int, Decimal] = {}
         for uid in member_ids:

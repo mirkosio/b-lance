@@ -127,7 +127,7 @@ def test_motion_assets_are_served_and_respect_reduced_motion(
 ) -> None:
     page = client.get("/").text
     assert 'href="/static/motion.css?v=4"' in page
-    assert 'src="/static/motion.js?v=3"' in page
+    assert 'src="/static/motion.js?v=4"' in page
     # Il movimento parte solo se l'utente non l'ha disattivato.
     assert "prefers-reduced-motion: reduce" in page
 
@@ -425,3 +425,55 @@ def test_group_edit_without_changes_never_conflicts(client: TestClient) -> None:
         follow_redirects=False,
     )
     assert r.status_code == 303
+
+
+def test_expense_error_keeps_the_form_and_formats_money(client: TestClient) -> None:
+    """Un errore sulle quote non deve cancellare ciò che l'utente ha scritto."""
+    _register(client)
+    group_id = _create_group(client)
+    r = client.post(
+        f"/groups/{group_id}/expenses",
+        data={
+            "description": "Cena importante",
+            "amount": "100,00",
+            "paid_by": "1",
+            "split_method": "exact",
+            "members": ["1"],
+            "exact_1": "90",
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 400
+    # Niente centesimi grezzi nel messaggio.
+    assert "Le quote inserite sommano a 90,00 EUR" in r.text
+    assert "100,00 EUR" in r.text
+    # Bozza preservata: descrizione, importo e quota scritta a mano.
+    assert 'value="Cena importante"' in r.text
+    assert 'value="100,00"' in r.text
+    assert "draftShares" in r.text
+    assert 'role="alert"' in r.text
+
+
+def test_pagine_private_non_vanno_in_cache(client: TestClient) -> None:
+    _register(client)
+    assert client.get("/account").headers["cache-control"] == "no-store"
+    assert client.get("/groups/1").headers["cache-control"] == "no-store"
+    client.post("/logout", follow_redirects=False)
+    # La landing pubblica resta cacheabile.
+    assert client.get("/").headers.get("cache-control") != "no-store"
+
+
+def test_cookie_di_sessione_e_secure_su_https() -> None:
+    from fastapi.testclient import TestClient
+
+    with TestClient(app, base_url="https://b-lance.test") as c:
+        r = c.post(
+            "/register",
+            data={"name": "Giulia", "email": "giulia@example.com", "password": "secret123"},
+            follow_redirects=False,
+        )
+        assert r.status_code == 303
+        cookie = r.headers["set-cookie"]
+        assert "Secure" in cookie
+        assert "HttpOnly" in cookie
+        assert "SameSite=lax" in cookie

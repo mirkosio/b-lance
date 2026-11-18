@@ -1,4 +1,4 @@
-"""Applicazione B-Lance — FastAPI.
+"""Applicazione b-lance — FastAPI.
 
 App per dividere le spese con amici: weekend, gite, cene.
 Punti di forza rispetto ai competitor:
@@ -92,11 +92,14 @@ async def lifespan(app: FastAPI):
 
 
 BASE_DIR = Path(__file__).resolve().parent
-app = FastAPI(title="B-Lance", lifespan=lifespan)
+app = FastAPI(title="b-lance", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 SESSION_COOKIE = "bl_session"
+# Una sola fonte per la versione mostrata nelle pagine informative del sito.
+# Il test test_versione_coerente la confronta con ui.dart e con il README.
+APP_VERSION = "1.7.1"
 logger = logging.getLogger("b-lance")
 
 
@@ -160,6 +163,21 @@ async def service_worker_no_cache(request: Request, call_next):
         response.headers["Cache-Control"] = "no-cache, must-revalidate"
         # Il worker vive sotto /static, ma deve controllare tutto il sito.
         response.headers["Service-Worker-Allowed"] = "/"
+    return response
+
+
+@app.middleware("http")
+async def private_no_store(request: Request, call_next):
+    """Le pagine con dati dell'account non finiscano nella cache del browser."""
+    response = await call_next(request)
+    path = request.url.path
+    private = (
+        path.startswith(("/account", "/groups", "/api/", "/join/", "/s/"))
+        or path in ("/login", "/register", "/recover")
+        or (path == "/" and request.cookies.get(SESSION_COOKIE))
+    )
+    if private:
+        response.headers["Cache-Control"] = "no-store"
     return response
 
 
@@ -569,6 +587,7 @@ def register(
         create_session_token(user.id, user.session_version),
         httponly=True,
         samesite="lax",
+        secure=request.url.scheme == "https",
     )
     return resp
 
@@ -619,6 +638,7 @@ def login(
         create_session_token(user.id, user.session_version),
         httponly=True,
         samesite="lax",
+        secure=request.url.scheme == "https",
     )
     return resp
 
@@ -700,7 +720,9 @@ def about_page(
     user: User | None = Depends(current_user),
 ):
     return templates.TemplateResponse(
-        request, "about.html", {"request": request, "user": user}
+        request,
+        "about.html",
+        {"request": request, "user": user, "app_version": APP_VERSION},
     )
 
 
@@ -797,7 +819,7 @@ _INFO_PAGES = {
                 "title": "Scarica l'APK",
                 "body": (
                     "Apri la pagina delle release e scarica l'ultima versione "
-                    "(1.6.0). Android potrebbe chiederti di consentire "
+                    f"(v{APP_VERSION}). Android potrebbe chiederti di consentire "
                     "l'installazione da questa fonte: è normale per un'app "
                     "distribuita fuori dal Play Store."
                 ),
@@ -992,9 +1014,9 @@ _INFO_PAGES = {
             {
                 "title": "Come aggiorno l'app Android?",
                 "body": (
-                    "Dalla pagina delle release. La 1.6.0 usa una nuova firma: "
-                    "se arrivi dalla 1.5.0, disinstalla prima la vecchia "
-                    "versione."
+                    "Dalla pagina delle release. Dalla 1.6.0 usiamo una nuova "
+                    "firma: se arrivi dalla 1.5.0, disinstalla prima la "
+                    "vecchia versione."
                 ),
             },
         ],
@@ -1191,7 +1213,12 @@ def _info_topic(request: Request, slug: str, user: User | None):
     return templates.TemplateResponse(
         request,
         "info_topic.html",
-        {"request": request, "user": user, "info": _INFO_PAGES[slug]},
+        {
+            "request": request,
+            "user": user,
+            "info": _INFO_PAGES[slug],
+            "app_version": APP_VERSION,
+        },
     )
 
 
@@ -1524,6 +1551,7 @@ def account_password(
         create_session_token(user.id, user.session_version),
         httponly=True,
         samesite="lax",
+        secure=request.url.scheme == "https",
     )
     return resp
 
@@ -1596,6 +1624,8 @@ def group_detail(
     undo_payment: int | None = Query(None),
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
+    draft: dict | None = None,
+    form_error: str = "",
 ):
     group = _get_group_for_user(db, group_id, user)
     member = _member_row(db, group_id, user)
@@ -1704,6 +1734,9 @@ def group_detail(
             "filters_active": filters_active,
             "undo_expense": undo_expense,
             "undo_payment": undo_payment,
+            # Bozza dell'ultimo invio fallito: i campi compilati non si perdono.
+            "draft": draft or {},
+            "form_error": form_error,
             "split_methods": list(SplitMethod),
             "currencies": sorted_currencies(),
             # Permessi di CHI STA GUARDANDO la pagina (per mostrare/nascondere).
@@ -2162,6 +2195,23 @@ async def add_expense(
     db: Session = Depends(get_db),
 ):
     group = _get_group_for_user(db, group_id, user)
+    form = await request.form()
+    # Se qualcosa non torna, rimostriamo la pagina con i campi compilati:
+    # un errore sulle quote non deve cancellare dieci importi scritti a mano.
+    draft = {
+        "description": description,
+        "amount": amount,
+        "category": category,
+        "currency": (currency or group.base_currency).strip().upper(),
+        "paid_by": paid_by,
+        "members": [str(v) for v in members],
+        "split_method": split_method,
+        "fx_rate": fx_rate,
+        "shares": {
+            key: value for key, value in form.items()
+            if key.startswith(("exact_", "pct_"))
+        },
+    }
     try:
         # Valuta della spesa: default = valuta base del gruppo.
         exp_code = (currency or group.base_currency).strip().upper()
@@ -2210,13 +2260,15 @@ async def add_expense(
             shares = compute_shares(base_amount_minor, method, member_ids)
         else:
             # Raccolgo i campi dinamici dal form (exact_<uid> / pct_<uid>).
-            form = await request.form()
             if method == SplitMethod.EXACT:
                 raw: dict[int, int] = {}
                 for uid in member_ids:
                     val = form.get(f"exact_{uid}", "0")
                     raw[uid] = parse_user_amount(val, exponent=exp_cur.exponent)
-                shares = compute_shares(base_amount_minor, method, member_ids, exact_shares=raw)
+                shares = compute_shares(
+                    base_amount_minor, method, member_ids, exact_shares=raw,
+                    exponent=exp_cur.exponent, currency=exp_code,
+                )
             else:  # PERCENT
                 from decimal import Decimal, InvalidOperation
 
@@ -2250,8 +2302,19 @@ async def add_expense(
             db.add(Share(expense_id=expense.id, user_id=uid, amount_minor=share_amount))
         db.commit()
     except (MoneyError, ValueError, ArithmeticError) as exc:
-        # ExchangeError eredita da ValueError: "67 yen senza tasso" -> toast.
-        raise HTTPException(status_code=400, detail=str(exc))
+        # ExchangeError eredita da ValueError. Rimapiamo la pagina con la
+        # bozza intatta e il messaggio accanto al form (non un toast che
+        # sparisce dopo 5 secondi e non dice dove correggere).
+        response = group_detail(
+            request, group_id,
+            q="", welcome="", category="", member_raw="",
+            date_from="", date_to="",
+            undo_expense=None, undo_payment=None,
+            user=user, db=db,
+            draft=draft, form_error=str(exc),
+        )
+        response.status_code = 400
+        return response
     return RedirectResponse(f"/groups/{group.id}", status_code=303)
 
 

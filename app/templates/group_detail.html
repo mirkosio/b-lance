@@ -4,7 +4,7 @@
 <div class="card reveal" data-reveal>
   <div class="section-title">
     <h1 class="group-heading">{{ group.name }} <span class="chip">{{ group.base_currency }}</span></h1>
-    <span style="display:flex;gap:8px">
+    <span class="group-actions">
       <a class="btn sm ghost" href="/groups/{{ group.id }}/export.csv">CSV</a>
       <a class="btn sm ghost" href="/groups/{{ group.id }}/export.pdf">PDF</a>
       {% if 'group_edit' in perms %}
@@ -146,7 +146,11 @@
       {% endfor %}
       </div>
       <p class="muted small" style="margin-top:10px">
+        {% if view.transfers|length == 1 %}
+        Con questo 1 bonifico il conto è saldato.
+        {% else %}
         Con questi {{ view.transfers|length }} bonifici il conto è saldato.
+        {% endif %}
       </p>
     {% else %}
       <div class="empty">Nessun debito in sospeso. Conto saldato.</div>
@@ -223,7 +227,7 @@
     {{ request.url_for('join_by_code', code=group.invite_code) }}
   </div>
   <div class="row" style="margin-top:12px">
-    <button class="btn ghost" onclick="copyInvite()">Copia link</button>
+    <button class="btn ghost" type="button" onclick="copyInvite(this)">Copia link</button>
     {% if 'members_manage' in perms %}
       <form method="post" action="/groups/{{ group.id }}/invite" style="margin:0;flex:1">
         <button class="btn ghost block" type="submit">Genera nuovo codice</button>
@@ -260,7 +264,7 @@
     {% endif %}
     <div class="invite-box" style="display:flex;gap:8px;align-items:center">
       <input id="share-url" type="text" readonly value="{{ share_url }}" style="flex:1;border:0;background:transparent;font:inherit;color:inherit">
-      <button class="btn sm ghost" type="button" onclick="copyShare(this)">Copia</button>
+      <button class="btn sm ghost" type="button" onclick="copyText(document.getElementById('share-url').value, this, 'Link del riepilogo copiato')">Copia</button>
     </div>
     <div class="row" style="margin-top:12px">
       <a class="btn sm" href="{{ share_url }}" target="_blank" rel="noopener">Apri riepilogo</a>
@@ -279,7 +283,7 @@
 </div>
 
 <!-- Aggiungi spesa: pannello comprimibile, aperto se non ci sono ancora spese -->
-<details class="card collapse-card" id="add-expense" {% if not expenses %}open{% endif %}>
+<details class="card collapse-card" id="add-expense" {% if not expenses or form_error %}open{% endif %}>
   <summary>
     <span>Aggiungi spesa</span>
     <span style="display:flex;align-items:center;gap:10px">
@@ -289,26 +293,29 @@
   </summary>
   <div class="collapse-body">
   <form method="post" action="/groups/{{ group.id }}/expenses" id="expense-form">
+    {% if form_error %}<p class="error" role="alert">{{ form_error }}</p>{% endif %}
     <label for="exp-description">Descrizione</label>
-    <input type="text" id="exp-description" name="description" required placeholder="Es. Cena, benzina, biglietti">
+    <input type="text" id="exp-description" name="description" required
+           value="{{ draft.get('description', '') }}" placeholder="Es. Cena, benzina, biglietti">
 
     <label for="exp-category">Categoria</label>
     <select id="exp-category" name="category">
       {% for code, label in categories.items() %}
-        <option value="{{ code }}" {% if code == 'other' %}selected{% endif %}>{{ label }}</option>
+        <option value="{{ code }}" {% if draft.get('category', 'other') == code %}selected{% endif %}>{{ label }}</option>
       {% endfor %}
     </select>
 
     <div class="row">
       <div>
         <label for="exp-amount">Importo</label>
-        <input type="text" name="amount" id="exp-amount" required inputmode="decimal" placeholder="0,00">
+        <input type="text" name="amount" id="exp-amount" required inputmode="decimal"
+               value="{{ draft.get('amount', '') }}" placeholder="0,00">
       </div>
       <div>
         <label for="exp-currency">Valuta</label>
         <select name="currency" id="exp-currency">
           {% for c in currencies %}
-            <option value="{{ c.code }}" {% if c.code == group.base_currency %}selected{% endif %}>
+            <option value="{{ c.code }}" {% if c.code == draft.get('currency', group.base_currency) %}selected{% endif %}>
               {{ c.code }} — {{ c.name }}
             </option>
           {% endfor %}
@@ -319,7 +326,8 @@
     <!-- Tasso di cambio: appare solo se la valuta != base del gruppo -->
     <div id="fx-row" style="display:none">
       <label for="exp-fx">Tasso di cambio (1 {{ group.base_currency }} = ? della valuta della spesa)</label>
-      <input type="text" name="fx_rate" id="exp-fx" inputmode="decimal" placeholder="Es. 36.5">
+      <input type="text" name="fx_rate" id="exp-fx" inputmode="decimal"
+             value="{{ draft.get('fx_rate', '') }}" placeholder="Es. 36.5">
       <p class="muted small" id="fx-auto" style="margin:6px 0 0">
         Lascia vuoto se la valuta è fra quelle note (calcolato automaticamente).
       </p>
@@ -334,7 +342,7 @@
         <label for="exp-paid-by">Chi ha pagato</label>
         <select id="exp-paid-by" name="paid_by" required>
           {% for m in view.members if m.active %}
-            <option value="{{ m.user_id }}" {% if m.user_id == user.id %}selected{% endif %}>{{ m.name }}</option>
+            <option value="{{ m.user_id }}" {% if m.user_id == draft.get('paid_by', user.id) %}selected{% endif %}>{{ m.name }}</option>
           {% endfor %}
         </select>
       </div>
@@ -343,8 +351,9 @@
     <div class="field-label" id="split-people-label">Chi divide</div>
     <div class="people-picker" id="people-picker" role="group" aria-labelledby="split-people-label">
       {% for m in view.members if m.active %}
-        <label class="pp on" data-uid="{{ m.user_id }}">
-          <input type="checkbox" name="members" value="{{ m.user_id }}" checked>
+        <label class="pp {% if not draft or m.user_id|string in draft.get('members', []) %}on{% endif %}" data-uid="{{ m.user_id }}">
+          <input type="checkbox" name="members" value="{{ m.user_id }}"
+                 {% if not draft or m.user_id|string in draft.get('members', []) %}checked{% endif %}>
           <span class="avatar" style="background:{{ m.color }};width:22px;height:22px;font-size:0.7rem">{{ m.name[0]|upper }}</span>
           {{ m.name }}
         </label>
@@ -356,7 +365,7 @@
       {% for method in split_methods %}
         <span>
           <input type="radio" name="split_method" value="{{ method.value }}" id="m-{{ method.value }}"
-                 {% if method.value == 'even' %}checked{% endif %}>
+                 {% if method.value == draft.get('split_method', 'even') %}checked{% endif %}>
           <label class="chip-radio" for="m-{{ method.value }}">
             {% if method.value == 'even' %}Equa{% elif method.value == 'exact' %}Importi esatti{% else %}Percentuale{% endif %}
           </label>
@@ -474,7 +483,7 @@
       <div>
         <label for="pay-to">A</label>
         <select id="pay-to" name="to_user" required>
-          {% for m in view.members if m.active %}<option value="{{ m.user_id }}">{{ m.name }}</option>{% endfor %}
+          {% for m in view.members if m.active %}<option value="{{ m.user_id }}" {% if loop.index0 == 1 %}selected{% endif %}>{{ m.name }}</option>{% endfor %}
         </select>
       </div>
     </div>
@@ -566,6 +575,8 @@ var splitSeg = document.getElementById('split-seg');
 var splitInputs = document.getElementById('split-inputs');
 var membersData = {{ view.members | selectattr('active') | map(attribute='name') | list | tojson }};
 var memberIds = {{ view.members | selectattr('active') | map(attribute='user_id') | list | tojson }};
+// Valori già scritti prima di un errore: li rimettiamo al loro posto.
+var draftShares = {{ draft.get('shares', {}) | tojson }};
 
 function currentMethod() {
   var checked = splitSeg.querySelector('input:checked');
@@ -607,7 +618,9 @@ function rebuildSplitInputs() {
       '<span style="flex:1">' + safeName + '</span>' +
       '<input style="flex:1" type="text" inputmode="decimal" ' +
       'aria-label="' + esc(label + ' per ' + name) + '" ' +
-      'name="' + namePrefix + uid + '" placeholder="0' + (method === 'exact' ? ',00' : '') + '">' +
+      'name="' + namePrefix + uid + '" ' +
+      'value="' + esc(draftShares[namePrefix + uid] || '') + '" ' +
+      'placeholder="0' + (method === 'exact' ? ',00' : '') + '">' +
       '<span class="muted small" style="width:24px">' + unit + '</span>' +
       '</div>';
   });
@@ -691,18 +704,43 @@ payForm.addEventListener('submit', function (e) {
   }
 });
 
-function copyInvite() {
-  navigator.clipboard.writeText({{ request.url_for('join_by_code', code=group.invite_code) | string | tojson }})
-    .then(function () {
-      if (window.blToast) blToast('Link di invito copiato', 'ok');
-      else alert('Link copiato!');
-    });
+// Copia con fallback: in webview o su http la Clipboard API può mancare
+// oppure rifiutare la scrittura. Senza fallback il pulsante restava muto.
+function copyText(text, btn, message) {
+  function done() {
+    if (window.blToast) blToast(message, 'ok');
+    if (btn) {
+      var previous = btn.textContent;
+      btn.textContent = 'Copiato';
+      setTimeout(function () { btn.textContent = previous; }, 2000);
+    }
+  }
+  function fallback() {
+    var area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try {
+      if (document.execCommand('copy')) done();
+      else if (window.blToast) blToast('Copia non riuscita: seleziona il testo a mano', 'err');
+    } catch (e) {
+      if (window.blToast) blToast('Copia non riuscita: seleziona il testo a mano', 'err');
+    }
+    document.body.removeChild(area);
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(fallback);
+  } else {
+    fallback();
+  }
 }
 
-function copyShare(btn) {
-  navigator.clipboard.writeText(document.getElementById('share-url').value);
-  btn.textContent = 'Copiato';
-  setTimeout(function () { btn.textContent = 'Copia'; }, 2000);
+function copyInvite(btn) {
+  copyText({{ request.url_for('join_by_code', code=group.invite_code) | string | tojson }},
+           btn, 'Link di invito copiato');
 }
 
 // --- Menu di sezione: evidenzia dove sei, senza cambiare la pagina ---

@@ -93,17 +93,35 @@
     button.setAttribute('aria-busy', 'true');
   }
 
+  function clearBusy() {
+    var buttons = document.querySelectorAll
+      ? document.querySelectorAll('.btn.is-busy')
+      : [];
+    Array.prototype.forEach.call(buttons, function (button) {
+      button.classList.remove('is-busy');
+      button.removeAttribute('aria-busy');
+    });
+  }
+
   function watchForms() {
-    document.addEventListener(
-      'submit',
-      function (event) {
-        var form = event.target;
-        if (!form || form.tagName !== 'FORM') return;
-        if (event.defaultPrevented) return;
-        markBusy(form);
-      },
-      true
-    );
+    // IMPORTANTE: niente fase capture. I validatori delle pagine sono in
+    // fase bubble: se li precedessimo, segnaleremmo "occupied" anche quando
+    // il form viene bloccato (demo, login, pagamento), lasciando il pulsante
+    // inerte per sempre. Qui, in fase bubble, defaultPrevented è già noto.
+    document.addEventListener('submit', function (event) {
+      var form = event.target;
+      if (!form || form.tagName !== 'FORM') return;
+      if (event.defaultPrevented) return;
+      markBusy(form);
+    });
+    // Se il browser restaura la pagina dalla cache (back/forward), puliamo
+    // eventuali stati "occupied" rimasti appesi all'istanza precedente.
+    if (window.addEventListener) {
+      window.addEventListener('pageshow', function (event) {
+        if (!event || !event.persisted) return;
+        clearBusy();
+      });
+    }
   }
 
   /* ------------------------------------------- 3. cambio pagina morbido */

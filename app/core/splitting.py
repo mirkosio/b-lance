@@ -34,17 +34,32 @@ def split_even(total_minor: int, member_ids: list[int]) -> dict[int, int]:
     return dict(zip(member_ids, amounts))
 
 
-def split_exact(total_minor: int, shares: dict[int, int]) -> dict[int, int]:
+def _fmt_minor(minor: int, exponent: int, currency: str) -> str:
+    """Importo leggibile per l'utente: niente centesimi grezzi nei messaggi."""
+    value = f"{minor / (10 ** exponent):.{exponent}f}"
+    if exponent:
+        value = value.replace(".", ",")
+    return f"{value} {currency}"
+
+
+def split_exact(
+    total_minor: int,
+    shares: dict[int, int],
+    exponent: int = 2,
+    currency: str = "EUR",
+) -> dict[int, int]:
     """Importi esatti per persona. Verifica che sommino al totale."""
     _check_minor(total_minor)
     if not shares:
-        raise MoneyError("nessuna quota specificata")
+        raise MoneyError("Nessuna quota specificata.")
     for uid, amount in shares.items():
         _check_minor(amount)
     total_shares = sum(shares.values())
     if total_shares != total_minor:
         raise MoneyError(
-            f"le quote sommano a {total_shares}, ma la spesa è {total_minor}"
+            "Le quote inserite sommano a "
+            f"{_fmt_minor(total_shares, exponent, currency)}, ma la spesa è "
+            f"{_fmt_minor(total_minor, exponent, currency)}."
         )
     return dict(shares)
 
@@ -59,10 +74,12 @@ def split_percent(
     """
     _check_minor(total_minor)
     if not percentages:
-        raise MoneyError("nessuna percentuale specificata")
+        raise MoneyError("Nessuna percentuale specificata.")
     total_pct = sum(Decimal(str(p)) for p in percentages.values())
     if total_pct != Decimal("100"):
-        raise MoneyError(f"le percentuali sommano a {total_pct}, devono fare 100")
+        raise MoneyError(
+            f"Le percentuali inserite sommano a {total_pct}%, devono fare 100%."
+        )
 
     # Quota ideale in centesimi, non arrotondata (serve per il resto).
     exact = {
@@ -91,14 +108,16 @@ def compute_shares(
     member_ids: list[int],
     exact_shares: dict[int, int] | None = None,
     percentages: dict[int, Decimal] | None = None,
+    exponent: int = 2,
+    currency: str = "EUR",
 ) -> dict[int, int]:
     """Facciata unica. Sceglie il metodo e valida il risultato."""
     if method == SplitMethod.EVEN:
         result = split_even(total_minor, member_ids)
     elif method == SplitMethod.EXACT:
         if exact_shares is None:
-            raise MoneyError("modalità exact richiede gli importi")
-        result = split_exact(total_minor, exact_shares)
+            raise MoneyError("Modalità importi esatti: specifica gli importi.")
+        result = split_exact(total_minor, exact_shares, exponent, currency)
     elif method == SplitMethod.PERCENT:
         if percentages is None:
             raise MoneyError("modalità percent richiede le percentuali")

@@ -478,7 +478,7 @@ class NetChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = pos ? posColor : negColor;
+    final color = pos ? posOn(context) : negOn(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(

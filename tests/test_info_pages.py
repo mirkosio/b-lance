@@ -6,7 +6,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.database import Base, engine
-from app.main import app
+from app.main import APP_VERSION, app
 
 INFO_PAGES = [
     ("/come-funziona", "Come funziona"),
@@ -31,7 +31,7 @@ def test_info_pages_are_public_and_have_metadata(client: TestClient, path: str, 
     assert r.status_code == 200, r.text
     assert title in r.text
     assert '<meta name="description"' in r.text
-    assert 'app.css?v=34' in r.text
+    assert 'app.css?v=35' in r.text
     assert 'info-hero' in r.text
 
 
@@ -72,7 +72,7 @@ def test_faq_uses_accordion_and_facts(client: TestClient) -> None:
 def test_android_page_explains_release_and_signature(client: TestClient) -> None:
     r = client.get("/android")
     assert r.status_code == 200
-    assert "1.6.0" in r.text
+    assert f"v{APP_VERSION}" in r.text
     assert "firma" in r.text
     assert "https://github.com/mirkosio/b-lance/releases" in r.text
 
@@ -191,3 +191,16 @@ def test_transfer_offers_copy_without_bank_details(client: TestClient) -> None:
     assert "versa" in copy_text
     assert "IBAN" not in copy_text
     assert "@" not in copy_text
+
+
+def test_versione_coerente_sito_app_e_readme(client: TestClient) -> None:
+    """Una sola versione: sito, costante Flutter e README non possono divergere."""
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    ui = (root / "app-android" / "lib" / "ui.dart").read_text()
+    readme = (root / "README.md").read_text()
+    assert f"kAppVersion = '{APP_VERSION}';" in ui
+    assert f"Ultima versione **{APP_VERSION}**" in readme
+    assert f"<b>{APP_VERSION}</b>" in client.get("/about").text
+    assert f"v{APP_VERSION}" in client.get("/android").text
