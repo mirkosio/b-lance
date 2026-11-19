@@ -130,3 +130,48 @@ def test_budget_mensile_facoltativo(client: TestClient) -> None:
         follow_redirects=False,
     )
     assert "Nessun limite impostato" in client.get(f"/groups/{gid}/stats").text
+
+
+def test_statistiche_hanno_grafici_svg(client: TestClient) -> None:
+    gid = _setup(client)
+    client.post(
+        f"/groups/{gid}/expenses",
+        data={
+            "description": "Cena", "amount": "90,00", "paid_by": "1",
+            "split_method": "even", "members": ["1"], "category": "food",
+        },
+        follow_redirects=False,
+    )
+    client.post(
+        f"/groups/{gid}/expenses",
+        data={
+            "description": "Taxi", "amount": "30,00", "paid_by": "1",
+            "split_method": "even", "members": ["1"], "category": "transport",
+        },
+        follow_redirects=False,
+    )
+    page = client.get(f"/groups/{gid}/stats").text
+    assert '<svg class="donut"' in page
+    assert '<svg class="linechart"' in page
+    assert 'aria-label="Ripartizione del totale per categoria"' in page
+    assert 'stroke-dasharray=' in page
+    assert 'polyline points=' in page
+
+
+def test_dati_dei_grafici_sono_calcolati() -> None:
+    from datetime import datetime
+
+    now = datetime(2026, 11, 19)
+    stats = build_stats(
+        [FakeExpense(10000, "food", 1, "A", when=now),
+         FakeExpense(5000, "transport", 1, "B", when=now)],
+        {1: "Marco"},
+        now=now,
+    )
+    assert len(stats["donut"]) == 2
+    assert stats["donut"][0]["dash"] == "67 33"
+    assert stats["donut"][1]["offset"] == -67
+    assert len(stats["chart_dots"]) == 6
+    assert stats["chart_dots"][0]["y"] == 138  # mese vuoto
+    assert stats["chart_dots"][-1]["y"] == 28   # mese con il picco
+    assert stats["chart_line"].startswith("30,")

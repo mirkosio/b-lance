@@ -120,6 +120,20 @@ def guard_register(db: Session, request: Request) -> None:
         )
 
 
+def guard_email_request(db: Session, request: Request, purpose: str) -> None:
+    """Limita invii di email (conferma e recupero) per IP: 10 all'ora."""
+    if not ENABLED:
+        return
+    _prune(db)
+    key = f"{purpose}:ip:{client_ip(request)}"
+    if _count(db, key, REGISTER_WINDOW) >= 10:
+        raise HTTPException(
+            status_code=429,
+            detail="Troppe email richieste da questa rete. Riprova più tardi.",
+        )
+    _hit(db, key)
+
+
 def record_register(db: Session, request: Request) -> None:
     if not ENABLED:
         return

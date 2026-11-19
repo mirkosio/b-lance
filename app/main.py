@@ -89,6 +89,7 @@ from .permissions import (
 from .services import compute_balances
 from .throttle import (
     clear_login_failures,
+    guard_email_request,
     guard_login,
     guard_register,
     record_login_failure,
@@ -111,7 +112,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.7.7"
+APP_VERSION = "1.7.8"
 logger = logging.getLogger("b-lance")
 
 
@@ -614,14 +615,31 @@ def register(
             )
         token = new_token(db, user.id, "verify", hours=24)
         link = str(request.base_url).rstrip("/") + f"/verify-email?token={token}"
-        send_mail(
-            email,
-            "Conferma la tua email — b-lance",
-            "Ciao,\n\nconferma il tuo indirizzo aprendo questo link "
-            "(vale 24 ore e si può usare una sola volta):\n\n"
-            f"{link}\n\n"
-            "Se non hai creato tu questo account, ignora il messaggio.\n",
-        )
+        try:
+            send_mail(
+                email,
+                "Conferma la tua email — b-lance",
+                "Ciao,\n\nconferma il tuo indirizzo aprendo questo link "
+                "(vale 24 ore e si può usare una sola volta):\n\n"
+                f"{link}\n\n"
+                "Se non hai creato tu questo account, ignora il messaggio.\n",
+            )
+        except EmailUnavailable:
+            db.delete(user)
+            db.commit()
+            return templates.TemplateResponse(
+                request,
+                "register.html",
+                {
+                    "request": request,
+                    "next": next_url,
+                    "error": (
+                        "Non siamo riusciti a mandare la email di conferma. "
+                        "Nessun account è stato creato: riprova più tardi."
+                    ),
+                },
+                status_code=503,
+            )
         return templates.TemplateResponse(
             request,
             "register.html",
@@ -807,6 +825,7 @@ def resend_verification(
     db: Session = Depends(get_db),
 ):
     """Risposta identica per email sconosciuta: non riveliamo chi è iscritto."""
+    guard_email_request(db, request, "verify")
     if verification_required() and smtp_configured():
         user = get_user_by_email(db, email)
         if user is not None and not is_verified(db, user.id):
@@ -856,6 +875,7 @@ def recover_email(
                 "Se hai i codici di recupero, usa l'altra pagina."
             )
         )
+    guard_email_request(db, request, "recover")
     user = get_user_by_email(db, email)
     if user is not None:
         token = new_token(db, user.id, "recover", hours=1)
@@ -2550,6 +2570,11 @@ def restore_payment(
             status_code=403,
             detail="Puoi ripristinare solo i pagamenti in cui sei coinvolto",
         )
+    if payment.voided_at is None:
+        raise HTTPException(
+            status_code=409,
+            detail="Questo pagamento non è annullato: nessun ripristino necessario.",
+        )
     payment.voided_at = None
     db.commit()
     return RedirectResponse(f"/groups/{group.id}#pagamenti", status_code=303)
@@ -2718,6 +2743,11 @@ def void_expense(
             status_code=403,
             detail="Puoi annullare solo le spese che hai inserito tu",
         )
+    if expense.voided_at is not None:
+        raise HTTPException(
+            status_code=409,
+            detail="Questa spesa è già stata annullata da qualcun altro.",
+        )
     from .models import utcnow
 
     expense.voided_at = utcnow()
@@ -2746,6 +2776,11 @@ def restore_expense(
         raise HTTPException(
             status_code=403,
             detail="Puoi ripristinare solo le spese che hai inserito tu",
+        )
+    if expense.voided_at is None:
+        raise HTTPException(
+            status_code=409,
+            detail="Questa spesa non è annullata: nessun ripristino necessario.",
         )
     expense.voided_at = None
     db.commit()

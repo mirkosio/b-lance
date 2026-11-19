@@ -1,6 +1,6 @@
-## b-lance 1.7.7 (versionCode 27)
+## b-lance 1.7.8 (versionCode 28)
 
-Aggiornamento in-place dalla 1.7.1: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.7.7: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -17,6 +17,10 @@ disinstallazione necessaria.
 - Dall'app, chi gestisce il gruppo può promuovere o retrocedere un membro e
   rimuoverlo, con conferma. Le stesse regole del sito: il creatore non si
   tocca, non ci si modifica da soli, chi ha saldi aperti non viene rimosso.
+- **Promemoria saldi**, disattivati di default: dal Profilo si attivano con
+  il permesso di sistema e arrivano una volta alla settimana solo se ci sono
+  debiti aperti. Nessun dato lascia il telefono e si possono spegnere quando
+  vuoi.
 
 ### Web (stesso giro di rilascio)
 
@@ -49,11 +53,16 @@ disinstallazione necessaria.
   utilizzabile finché non è confermato. Recupero password via email con link
   di un'ora, accanto ai codici monouso già esistenti.
 - Limite di 20 registrazioni all'ora per indirizzo IP già attivo, ora
-  documentato: niente account creati a raffica.
+  documentato; anche i link via email sono limitati a 10 all'ora per IP.
+  Se l'invio della conferma fallisce, nessun account viene creato.
+- Annullare due volte una spesa o ripristinare qualcosa che non era
+  annullato ora dà un conflitto esplicito invece di un esito silenzioso.
 
-- Nuova pagina **Statistiche** in ogni gruppo: totale, media, spese per
-  categoria, ultimi sei mesi, chi ha pagato e spesa più alta. Barre semplici,
-  niente grafici animati; le spese annullate non contano.
+- Nuova pagina **Statistiche** in ogni gruppo: totale, media, chi ha pagato
+  e spesa più alta. Un grafico a torta mostra la ripartizione per categoria,
+  una curva mostra l'andamento degli ultimi sei mesi; sotto, barre con i
+  valori esatti. Grafici SVG statici, leggibili senza JavaScript e senza
+  animazioni; le spese annullate non contano.
 - **Budget mensile facoltativo** per gruppo: imposti un limite, vedi quanto
   è rimasto o quanto hai superato. Non blocca alcuna spesa e non avvisa
   nessuno.

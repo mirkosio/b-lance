@@ -305,8 +305,11 @@ def api_register(data: RegisterIn, request: Request, db: Session = Depends(get_d
                 f"{link}\n",
             )
         except EmailUnavailable:
+            db.delete(user)
+            db.commit()
             raise HTTPException(
-                status_code=503, detail="Invio email non riuscito."
+                status_code=503,
+                detail="Invio email non riuscito: nessun account creato.",
             )
         return {
             "verification_required": True,

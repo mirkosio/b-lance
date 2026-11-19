@@ -63,6 +63,25 @@
 
 <div class="card" style="margin-top:16px">
   <h2 class="section-title">Per categoria</h2>
+  <div class="chart-wrap">
+    <svg class="donut" viewBox="0 0 120 120" role="img"
+         aria-label="Ripartizione del totale per categoria">
+      <circle cx="60" cy="60" r="46" fill="none" stroke="var(--border)" stroke-width="14"/>
+      {% for d in stats.donut %}
+      <circle cx="60" cy="60" r="46" fill="none" stroke="{{ d.color }}"
+              stroke-width="14" pathLength="100"
+              stroke-dasharray="{{ d.dash }}" stroke-dashoffset="{{ d.offset }}"
+              transform="rotate(-90 60 60)"/>
+      {% endfor %}
+      <text x="60" y="58" text-anchor="middle" class="donut-total">{{ stats.total_minor | money(group.base_currency) }}</text>
+      <text x="60" y="74" text-anchor="middle" class="donut-label">totale</text>
+    </svg>
+    <ul class="chart-legend">
+      {% for d in stats.donut %}
+      <li><span class="swatch" style="background:{{ d.color }}"></span>{{ category_label(d.key) }}</li>
+      {% endfor %}
+    </ul>
+  </div>
   {% for c in stats.categories %}
   <div class="stat-row">
     <div class="stat-row-head">
@@ -77,6 +96,16 @@
 
 <div class="card" style="margin-top:16px">
   <h2 class="section-title">Ultimi sei mesi</h2>
+  <svg class="linechart" viewBox="0 0 600 165" role="img"
+       aria-label="Andamento delle spese negli ultimi sei mesi">
+    <polygon points="{{ stats.chart_area }}" fill="var(--primary-soft)"></polygon>
+    <polyline points="{{ stats.chart_line }}" fill="none" stroke="var(--primary)"
+              stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    {% for d in stats.chart_dots %}
+    <circle cx="{{ d.x }}" cy="{{ d.y }}" r="4.5" fill="var(--primary)"></circle>
+    <text x="{{ d.x }}" y="160" text-anchor="middle" class="chart-x">{{ d.label }}</text>
+    {% endfor %}
+  </svg>
   {% for m in stats.months %}
   <div class="stat-row">
     <div class="stat-row-head">

@@ -4,6 +4,10 @@
          NESSUNA rete. Nel template stava solo nel manifest di debug e
          nell'APK di produzione non entrava mai. -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Promemoria locali: nulla viene inviato a un server. Su Android 13+
+         l'utente deve comunque dare il permesso, chiesto solo se attiva
+         l'impostazione. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="b-lance"
         android:name="${applicationName}"

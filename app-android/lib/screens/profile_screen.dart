@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../models.dart';
+import '../notifications.dart';
 import '../theme_controller.dart';
 import '../sheets/about_sheet.dart';
 import '../ui.dart';
@@ -26,6 +27,28 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _busy = false;
+  bool _reminders = false;
+
+  @override
+  void initState() {
+    super.initState();
+    remindersEnabled().then((value) {
+      if (mounted) setState(() => _reminders = value);
+    });
+  }
+
+  Future<void> _toggleReminders(bool value) async {
+    final ok = await setRemindersEnabled(value);
+    if (!mounted) return;
+    if (!ok) {
+      _snack('Permesso negato: il promemoria resta disattivato.');
+      return;
+    }
+    setState(() => _reminders = value);
+    _snack(value
+        ? 'Promemoria attivato: una volta alla settimana, solo sul telefono.'
+        : 'Promemoria disattivato.');
+  }
 
   void _snack(String msg) {
     if (!mounted) return;
@@ -277,6 +300,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () => showThemePicker(context),
                   );
                 },
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _MenuCard(
+            children: [
+              SwitchListTile(
+                secondary: Icon(Icons.notifications_none_outlined, color: accent),
+                title: const Text('Promemoria saldi'),
+                subtitle: const Text(
+                  'Un avviso alla settimana solo se ci sono debiti aperti. '
+                  'Nessun dato lascia il telefono.',
+                ),
+                value: _reminders,
+                onChanged: _busy ? null : _toggleReminders,
               ),
             ],
           ),

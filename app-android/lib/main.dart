@@ -7,6 +7,7 @@ import 'package:quick_actions/quick_actions.dart';
 import 'api.dart';
 import 'cashier/cashier_screen.dart';
 import 'models.dart';
+import 'notifications.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
 import 'theme_controller.dart';
@@ -15,9 +16,10 @@ import 'widgets/brand_loader.dart';
 
 final quickActions = QuickActions();
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   loadThemeMode();
+  await initNotifications();
   _setupQuickActions();
   runApp(const BlanceApp());
 }

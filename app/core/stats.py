@@ -55,6 +55,20 @@ def build_stats(expenses, names: dict[int, str], now: datetime | None = None) ->
         )
     ]
 
+    # Colori del design system, nell'ordine in cui compaiono le categorie.
+    palette = ("#5f8d6e", "#a8823c", "#a84a34", "#3b7a52", "#5c6b60", "#47684f")
+    donut = []
+    cumulative = 0.0
+    for item in categories:
+        pct = item["pct"]
+        donut.append({
+            "key": item["key"],
+            "color": palette[len(donut) % len(palette)],
+            "dash": f"{pct} {100 - pct}",
+            "offset": -cumulative,
+        })
+        cumulative += pct
+
     months = []
     year, month = today.year, today.month
     for _ in range(6):
@@ -69,11 +83,24 @@ def build_stats(expenses, names: dict[int, str], now: datetime | None = None) ->
             month, year = 12, year - 1
     months.reverse()
 
+    peak = max((m["amount_minor"] for m in months), default=0)
+    dots = []
+    for i, m in enumerate(months):
+        x = 30 + i * 108
+        y = 138 - (m["amount_minor"] * 110 // peak if peak else 0)
+        dots.append({"x": x, "y": y, "label": m["label"]})
+    line = " ".join(f"{d['x']},{d['y']}" for d in dots)
+    area = f"30,150 {line} 570,150"
+
     return {
         "total_minor": total,
         "count": count,
         "average_minor": total // count if count else 0,
         "categories": categories,
+        "donut": donut,
+        "chart_line": line,
+        "chart_area": area,
+        "chart_dots": dots,
         "people": people,
         "months": months,
         "biggest": (

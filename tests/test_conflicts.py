@@ -136,3 +136,34 @@ def test_annullare_pagamento_due_volte_da_conflitto(client: TestClient) -> None:
     second = client.delete(f"/api/groups/{gid}/payments/{payment['id']}", headers=ah)
     assert second.status_code == 409, second.text
     assert "già stato annullato" in second.json()["detail"]
+
+
+def test_doppio_annullamento_e_ripristino_sul_web_danno_conflitto(client: TestClient) -> None:
+    client.post(
+        "/register",
+        data={"name": "Marco", "email": "marco@example.com", "password": "secret123"},
+        follow_redirects=False,
+    )
+    gid = int(
+        client.post(
+            "/groups/new",
+            data={"name": "Weekend", "kind": "trip", "base_currency": "EUR"},
+            follow_redirects=False,
+        ).headers["location"].split("?")[0].rstrip("/").split("/")[-1]
+    )
+    client.post(
+        f"/groups/{gid}/expenses",
+        data={
+            "description": "Cena", "amount": "30", "paid_by": "1",
+            "split_method": "even", "members": ["1"],
+        },
+        follow_redirects=False,
+    )
+    first = client.post(f"/groups/{gid}/expenses/1/void", follow_redirects=False)
+    assert first.status_code == 303
+    second = client.post(f"/groups/{gid}/expenses/1/void", follow_redirects=False)
+    assert second.status_code == 409
+
+    client.post(f"/groups/{gid}/expenses/1/restore", follow_redirects=False)
+    again = client.post(f"/groups/{gid}/expenses/1/restore", follow_redirects=False)
+    assert again.status_code == 409

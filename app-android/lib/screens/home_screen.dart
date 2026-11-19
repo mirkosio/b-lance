@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api.dart';
 import '../models.dart';
+import '../notifications.dart';
 import '../sheets/group_sheets.dart';
 import '../sheets/onboarding_sheet.dart';
 import '../ui.dart';
@@ -186,6 +187,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (mounted) _maybeOnboarding(groups.isEmpty);
               });
             }
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (!mounted) return;
+              syncReminder(
+                hasOpenBalance: data.netByCurrency.values.any((v) => v != 0),
+              );
+            });
             return ListView(
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),

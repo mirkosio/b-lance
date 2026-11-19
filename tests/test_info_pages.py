@@ -32,7 +32,7 @@ def test_info_pages_are_public_and_have_metadata(client: TestClient, path: str, 
     assert r.status_code == 200, r.text
     assert title in r.text
     assert '<meta name="description"' in r.text
-    assert 'app.css?v=36' in r.text
+    assert 'app.css?v=37' in r.text
     assert 'info-hero' in r.text
 
 

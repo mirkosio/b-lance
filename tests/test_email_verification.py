@@ -166,3 +166,37 @@ def test_conferma_attiva_senza_smtp_non_crea_account(
         follow_redirects=False,
     )
     assert denied.status_code == 400  # l'account non è stato creato
+
+
+def test_troppi_link_di_recupero_vengono_bloccati(client: TestClient, email_on) -> None:
+    for i in range(10):
+        r = client.post("/recover-email", data={"email": f"nessuno{i}@example.com"})
+        assert r.status_code == 200
+    blocked = client.post(
+        "/recover-email", data={"email": "ultimo@example.com"}
+    )
+    assert blocked.status_code == 429
+
+
+def test_invio_email_fallito_non_lascia_account(client: TestClient, email_on, monkeypatch) -> None:
+    from app.email_flow import EmailUnavailable
+
+    def explode(*args, **kwargs):
+        raise EmailUnavailable("smtp giù")
+
+    monkeypatch.setattr("app.main.send_mail", explode)
+    r = client.post(
+        "/register",
+        data={
+            "name": "Sara", "email": "sara@example.com", "password": "secret123"
+        },
+        follow_redirects=False,
+    )
+    assert r.status_code == 503
+    assert "Nessun account è stato creato" in r.text
+    denied = client.post(
+        "/login",
+        data={"email": "sara@example.com", "password": "secret123"},
+        follow_redirects=False,
+    )
+    assert denied.status_code == 400
