@@ -1,6 +1,6 @@
-## b-lance 1.7.13 (versionCode 33)
+## b-lance 1.7.14 (versionCode 34)
 
-Aggiornamento in-place dalla 1.7.12: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.7.13: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
