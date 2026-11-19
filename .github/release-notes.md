@@ -1,6 +1,6 @@
-## b-lance 1.7.8 (versionCode 28)
+## b-lance 1.7.9 (versionCode 29)
 
-Aggiornamento in-place dalla 1.7.7: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.7.8: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -66,6 +66,9 @@ disinstallazione necessaria.
 - **Budget mensile facoltativo** per gruppo: imposti un limite, vedi quanto
   è rimasto o quanto hai superato. Non blocca alcuna spesa e non avvisa
   nessuno.
+
+- Corretta la configurazione Android della build: dipendenza delle notifiche
+  compatibile con l'SDK già usato e desugaring abilitato.
 
 ### Verifiche
 
