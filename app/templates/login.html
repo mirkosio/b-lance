@@ -8,6 +8,12 @@
   <h1 class="section-title" style="justify-content:center">Accedi</h1>
   {% if reset %}<div class="alert ok" role="status">Password aggiornata. Accedi con la nuova password.</div>{% endif %}
   {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+  {% if unverified_email %}
+  <form method="post" action="/resend-verification" style="margin:0 0 14px">
+    <input type="hidden" name="email" value="{{ unverified_email }}">
+    <button class="btn ghost block" type="submit">Invia di nuovo il link di conferma</button>
+  </form>
+  {% endif %}
   <form method="post" action="/login" data-inline-validation novalidate>
     <input type="hidden" name="next" value="{{ next|default('') }}">
     <label for="login-email">Email</label>

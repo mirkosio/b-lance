@@ -35,6 +35,14 @@ from .auth import (
     hash_password,
     verify_password,
 )
+from .email_flow import (
+    EmailUnavailable,
+    is_verified,
+    new_token,
+    send_mail,
+    smtp_configured,
+    verification_required,
+)
 from .core.categories import clean_category
 from .core.currencies import CURRENCIES, get_currency, is_valid_currency, sorted_currencies
 from .core.exchange import convert, current_rates, get_rate, rate_date, rate_source
@@ -219,6 +227,11 @@ class ExpenseIn(BaseModel):
     category: str = "other"
     # uid -> "importo" (exact) o "percentuale" (percent), come stringhe.
     values: dict[str, str] | None = None
+    # Versione vista dal dispositivo quando ha aperto il form. Se il server
+    # ne ha un'altra, qualcuno ha modificato la spesa nel frattempo.
+    base: str | None = None
+    # Scelta esplicita dell'utente dopo aver visto il conflitto.
+    force: bool = False
 
 
 class RecurringIn(ExpenseIn):
@@ -274,6 +287,32 @@ def api_register(data: RegisterIn, request: Request, db: Session = Depends(get_d
     db.add(user)
     db.commit()
     record_register(db, request)
+    if verification_required():
+        if not smtp_configured():
+            db.delete(user)
+            db.commit()
+            raise HTTPException(
+                status_code=503,
+                detail="Conferma email attiva ma servizio email non configurato.",
+            )
+        token = new_token(db, user.id, "verify", hours=24)
+        link = str(request.base_url).rstrip("/") + f"/verify-email?token={token}"
+        try:
+            send_mail(
+                email,
+                "Conferma la tua email — b-lance",
+                "Conferma il tuo indirizzo (link valido 24 ore, monouso):\n\n"
+                f"{link}\n",
+            )
+        except EmailUnavailable:
+            raise HTTPException(
+                status_code=503, detail="Invio email non riuscito."
+            )
+        return {
+            "verification_required": True,
+            "email": email,
+            "detail": "Controlla la email per confermare l'account.",
+        }
     return {
         "token": create_session_token(user.id, user.session_version),
         "user": _user_json(user),
@@ -288,6 +327,14 @@ def api_login(data: LoginIn, request: Request, db: Session = Depends(get_db)):
         record_login_failure(db, request, data.email)
         raise HTTPException(401, detail="Email o password errati.")
     clear_login_failures(db, data.email)
+    if verification_required() and not is_verified(db, user.id):
+        raise HTTPException(
+            status_code=403,
+            detail=(
+                "Conferma la tua email prima di accedere: controlla la "
+                "posterella o chiedi un nuovo link sul sito."
+            ),
+        )
     return {
         "token": create_session_token(user.id, user.session_version),
         "user": _user_json(user),
@@ -1260,6 +1307,11 @@ def _expense_json(expense: Expense, names: dict[int, str]) -> dict:
         "payer_name": names.get(expense.paid_by, "?"),
         "created_at": expense.created_at.isoformat() if expense.created_at else None,
         "updated_at": expense.updated_at.isoformat() if expense.updated_at else None,
+        # Valore da rimandare indietro come `base` quando si modifica:
+        # updated_at se c'è già stata una modifica, altrimenti created_at.
+        "base": (
+            expense.updated_at or expense.created_at
+        ).isoformat() if (expense.updated_at or expense.created_at) else None,
         "voided_at": expense.voided_at.isoformat() if expense.voided_at else None,
         "shares": [
             {"user_id": s.user_id, "amount_minor": s.amount_minor}
@@ -1350,6 +1402,25 @@ def api_edit_expense(
         )
     if expense.voided_at is not None:
         raise HTTPException(status_code=400, detail="Una spesa annullata non si modifica")
+
+    # Nessun sovrascrivimento silenzioso: il dispositivo che ha aperto il
+    # form ha mandato la versione che vedeva. Se il server ne ha un'altra,
+    # si ferma e lascia scegliere all'utente. I client vecchi, che non
+    # mandano `base`, continuano a funzionare come prima.
+    stored_base = (
+        (expense.updated_at or expense.created_at).isoformat()
+        if (expense.updated_at or expense.created_at)
+        else ""
+    )
+    if data.base is not None and not data.force and data.base != stored_base:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Un'altra persona ha modificato questa spesa mentre la "
+                "correggevi. Niente è stato sovrascritto: aggiorna per "
+                "vedere la versione salvata, oppure scegli di tenere la tua."
+            ),
+        )
 
     try:
         parsed = _prepare_expense(db, group, data)
@@ -1496,6 +1567,15 @@ def api_delete_payment(
         raise HTTPException(
             status_code=403,
             detail="Puoi eliminare solo i pagamenti in cui sei coinvolto",
+        )
+    if payment.voided_at is not None:
+        raise HTTPException(
+            status_code=409,
+            detail=(
+                "Questo pagamento è già stato annullato da qualcun altro. "
+                "Aggiorna la pagina prima di riprovare: nessun altro dato "
+                "è stato toccato."
+            ),
         )
     payment.voided_at = utcnow()
     db.commit()

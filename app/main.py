@@ -54,6 +54,15 @@ from .core.recurring import materialize_due
 from .core.share import share_expires_at, share_is_expired
 from .core.splitting import SplitMethod, compute_shares
 from .database import get_db, init_db
+from .email_flow import (
+    EmailUnavailable,
+    consume_token,
+    is_verified,
+    new_token,
+    send_mail,
+    smtp_configured,
+    verification_required,
+)
 from .export import group_csv, group_pdf, summary_pdf
 from .models import (
     Expense,
@@ -62,6 +71,7 @@ from .models import (
     Payment,
     RecoveryCode,
     RecurringExpense,
+    EmailToken,
     Share,
     User,
     utcnow,
@@ -99,7 +109,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.7.5"
+APP_VERSION = "1.7.6"
 logger = logging.getLogger("b-lance")
 
 
@@ -581,6 +591,41 @@ def register(
     db.add(user)
     db.commit()
     record_register(db, request)
+
+    if verification_required():
+        if not smtp_configured():
+            # Meglio non creare un account che nessuno potrebbe confermare.
+            db.delete(user)
+            db.commit()
+            return templates.TemplateResponse(
+                request,
+                "register.html",
+                {
+                    "request": request,
+                    "next": next_url,
+                    "error": (
+                        "La conferma email è attiva ma il servizio email non "
+                        "è configurato. Riprova più tardi o scrivici su GitHub."
+                    ),
+                },
+                status_code=503,
+            )
+        token = new_token(db, user.id, "verify", hours=24)
+        link = str(request.base_url).rstrip("/") + f"/verify-email?token={token}"
+        send_mail(
+            email,
+            "Conferma la tua email — b-lance",
+            "Ciao,\n\nconferma il tuo indirizzo aprendo questo link "
+            "(vale 24 ore e si può usare una sola volta):\n\n"
+            f"{link}\n\n"
+            "Se non hai creato tu questo account, ignora il messaggio.\n",
+        )
+        return templates.TemplateResponse(
+            request,
+            "register.html",
+            {"request": request, "next": next_url, "sent": email},
+        )
+
     # Torna dove stava l'utente (es. il link di invito al gruppo).
     resp = RedirectResponse(_safe_next(next_url), status_code=303)
     resp.set_cookie(
@@ -632,6 +677,21 @@ def login(
             status_code=400,
         )
     clear_login_failures(db, email)
+    if verification_required() and not is_verified(db, user.id):
+        return templates.TemplateResponse(
+            request,
+            "login.html",
+            {
+                "request": request,
+                "next": next_url,
+                "error": (
+                    "Conferma prima il tuo indirizzo email: controlla la "
+                    "posterella o chiedi un nuovo link qui sotto."
+                ),
+                "unverified_email": user.email,
+            },
+            status_code=403,
+        )
     # Torna dove stava l'utente (es. il link di invito al gruppo).
     resp = RedirectResponse(_safe_next(next_url), status_code=303)
     resp.set_cookie(
@@ -710,6 +770,141 @@ def recover_password(
     # chi era dentro non resta dentro.
     user.session_version += 1
     matched.used_at = utcnow()
+    db.commit()
+    return RedirectResponse("/login?reset=1", status_code=303)
+
+
+# ------------------------------------------- conferma email e link di recupero
+@app.get("/verify-email")
+def verify_email(
+    request: Request,
+    token: str = Query(""),
+    db: Session = Depends(get_db),
+):
+    row = consume_token(db, token, "verify")
+    if row is None:
+        return templates.TemplateResponse(
+            request, "verify_email.html", {"request": request, "ok": False}
+        )
+    user = db.get(User, row.user_id)
+    if user is None:
+        return templates.TemplateResponse(
+            request, "verify_email.html", {"request": request, "ok": False}
+        )
+    row.used_at = utcnow()
+    db.commit()
+    return templates.TemplateResponse(
+        request, "verify_email.html", {"request": request, "ok": True}
+    )
+
+
+@app.post("/resend-verification")
+def resend_verification(
+    request: Request,
+    email: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    """Risposta identica per email sconosciuta: non riveliamo chi è iscritto."""
+    if verification_required() and smtp_configured():
+        user = get_user_by_email(db, email)
+        if user is not None and not is_verified(db, user.id):
+            token = new_token(db, user.id, "verify", hours=24)
+            link = str(request.base_url).rstrip("/") + f"/verify-email?token={token}"
+            try:
+                send_mail(
+                    user.email,
+                    "Conferma la tua email — b-lance",
+                    "Conferma il tuo indirizzo (link valido 24 ore, monouso):\n\n"
+                    f"{link}\n",
+                )
+            except EmailUnavailable:
+                pass
+    return RedirectResponse("/login?resent=1", status_code=303)
+
+
+@app.get("/recover-email")
+def recover_email_form(
+    request: Request,
+    user: User | None = Depends(current_user),
+):
+    if user:
+        return RedirectResponse("/account", status_code=303)
+    return templates.TemplateResponse(
+        request, "recover_email.html", {"request": request}
+    )
+
+
+@app.post("/recover-email")
+def recover_email(
+    request: Request,
+    email: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    def render(**extra):
+        return templates.TemplateResponse(
+            request,
+            "recover_email.html",
+            {"request": request, "email": email.strip(), **extra},
+        )
+
+    if not smtp_configured():
+        return render(
+            error=(
+                "Il recupero via email non è disponibile su questa istanza. "
+                "Se hai i codici di recupero, usa l'altra pagina."
+            )
+        )
+    user = get_user_by_email(db, email)
+    if user is not None:
+        token = new_token(db, user.id, "recover", hours=1)
+        link = str(request.base_url).rstrip("/") + f"/reset-password?token={token}"
+        send_mail(
+            user.email,
+            "Reimposta la password — b-lance",
+            "Hai chiesto una nuova password. Apri questo link entro un'ora "
+            "(si può usare una sola volta):\n\n"
+            f"{link}\n\n"
+            "Se non sei stato tu, ignora il messaggio: la password resta invariata.\n",
+        )
+    return render(sent=True)
+
+
+@app.get("/reset-password")
+def reset_password_form(
+    request: Request,
+    token: str = Query(""),
+):
+    return templates.TemplateResponse(
+        request, "reset_password.html", {"request": request, "token": token}
+    )
+
+
+@app.post("/reset-password")
+def reset_password(
+    request: Request,
+    token: str = Form(""),
+    password: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    def render_error(message: str):
+        return templates.TemplateResponse(
+            request,
+            "reset_password.html",
+            {"request": request, "token": token, "error": message},
+            status_code=400,
+        )
+
+    if len(password) < 6:
+        return render_error("La nuova password deve avere almeno 6 caratteri.")
+    row = consume_token(db, token, "recover")
+    if row is None:
+        return render_error("Il link non è valido, è scaduto o è già stato usato.")
+    user = db.get(User, row.user_id)
+    if user is None:
+        return render_error("Il link non è valido, è scaduto o è già stato usato.")
+    user.password_hash = hash_password(password)
+    user.session_version += 1
+    row.used_at = utcnow()
     db.commit()
     return RedirectResponse("/login?reset=1", status_code=303)
 

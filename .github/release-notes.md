@@ -1,4 +1,4 @@
-## b-lance 1.7.5 (versionCode 25)
+## b-lance 1.7.6 (versionCode 26)
 
 Aggiornamento in-place dalla 1.7.1: stessa chiave di firma, nessuna
 disinstallazione necessaria.
@@ -40,6 +40,16 @@ disinstallazione necessaria.
 - Nuova pagina "I tuoi dati" (`/i-tuoi-dati`): cosa salviamo, cosa puoi
   scaricare in JSON e cosa succede se elimini l'account. Collegata dal footer,
   dall'about e dall'account.
+
+- Modifica di una spesa: se un altro dispositivo ha salvato nel frattempo,
+  l'app mostra "Tieni la mia / Vedi la versione salvata" e non sovrascrive
+  nulla (409). Stessa protezione per un pagamento già annullato.
+- Conferma email all'iscrizione, attivabile con `EMAIL_VERIFICATION_REQUIRED=1`
+  e un provider SMTP: token firmato e monouso, link di 24 ore, account non
+  utilizzabile finché non è confermato. Recupero password via email con link
+  di un'ora, accanto ai codici monouso già esistenti.
+- Limite di 20 registrazioni all'ora per indirizzo IP già attivo, ora
+  documentato: niente account creati a raffica.
 
 ### Verifiche
 

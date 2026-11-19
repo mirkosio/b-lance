@@ -69,6 +69,26 @@ class RecoveryCode(Base):
     )
 
 
+class EmailToken(Base):
+    """Token monouso per confermare l'email o reimpostare la password.
+
+    Solo l'hash HMAC nel database: se la banca dati viene rubata, i link
+    rubati non valgono. `kind` distingue conferma e recupero.
+    """
+
+    __tablename__ = "email_tokens"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True)
+    kind: Mapped[str] = mapped_column(String(10), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
 class Group(Base):
     __tablename__ = "groups"
 

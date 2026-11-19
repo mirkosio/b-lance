@@ -527,6 +527,13 @@ class Api {
       '/api/register',
       body: {'name': name, 'email': email, 'password': password},
     ) as Map<String, dynamic>;
+    if (data['verification_required'] == true) {
+      throw ApiException(
+        202,
+        'Controlla la email: devi confermare l\'indirizzo prima di accedere '
+        'dall\'app. Apri b-lance.vercel.app e usa il link di conferma.',
+      );
+    }
     await saveToken(data['token'] as String);
     return User.fromJson(data['user'] as Map<String, dynamic>);
   }
@@ -782,11 +789,15 @@ class Api {
     String fxRate = '',
     String category = 'other',
     Map<String, String> values = const {},
+    String? base,
+    bool force = false,
   }) async {
     final data = await _req(
       'PATCH',
       '/api/groups/$groupId/expenses/$expenseId',
       body: {
+        'base': base,
+        'force': force,
         'description': description,
         'amount': amount,
         'paid_by': paidBy,

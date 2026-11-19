@@ -148,7 +148,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
       ? 'Importo fisso'
       : 'Percentuale';
 
-  Future<void> _submit() async {
+  Future<void> _submit({bool force = false}) async {
     final desc = _desc.text.trim();
     if (desc.isEmpty) {
       _snack('Scrivi cosa hai pagato (es. Cena)');
@@ -192,6 +192,8 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
           fxRate: fx,
           category: _category,
           values: values,
+          base: widget.existing!.base,
+          force: force,
         );
       } else if (_recurring) {
         await widget.api.addRecurring(
@@ -243,6 +245,40 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text(e.message)));
     } on ApiException catch (e) {
+      if (e.status == 409 && !force && mounted) {
+        // Un altro dispositivo ha modificato la spesa: nessun dato è stato
+        // sovrascritto. L'utente sceglie in modo esplicito cosa tenere.
+        final keepMine = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Due versioni della stessa spesa'),
+            content: Text(
+              '${e.message}\n\nVuoi tenere la tua versione anche se un altro '
+              'dispositivo ha salvato la sua?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Vedi la versione salvata'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Tieni la mia'),
+              ),
+            ],
+          ),
+        );
+        if (keepMine == true) {
+          if (mounted) setState(() => _busy = true);
+          await _submit(force: true);
+          return;
+        }
+        if (mounted) {
+          Navigator.of(context).pop();
+          widget.onDone();
+        }
+        return;
+      }
       _snack(e.message);
       if (mounted) setState(() => _busy = false);
     } catch (e) {
@@ -524,7 +560,7 @@ class _ExpenseSheetState extends State<_ExpenseSheet> {
             ],
             const SizedBox(height: 18),
             FilledButton(
-              onPressed: _busy ? null : _submit,
+              onPressed: _busy ? null : () => _submit(),
               child: _busy
                   ? const SizedBox(
                       width: 20,

@@ -229,6 +229,7 @@ class Expense {
     required this.voided,
     this.voidedAt,
     this.fxRate,
+    this.base,
   });
 
   final int id;
@@ -252,6 +253,10 @@ class Expense {
   /// Tasso usato al momento del registro (1 unita' di currency in base).
   final String? fxRate;
 
+  /// Versione vista quando il form è stato aperto: serve a rilevare
+  /// modifiche fatte da un altro dispositivo prima di sovrascrivere.
+  final String? base;
+
   factory Expense.fromJson(Map<String, dynamic> j) => Expense(
     id: j['id'] as int,
     description: j['description'] as String,
@@ -271,6 +276,7 @@ class Expense {
     voided: j['voided_at'] != null,
     voidedAt: j['voided_at'] as String?,
     fxRate: j['fx_rate'] as String?,
+    base: j['base'] as String? ?? j['updated_at'] as String? ?? j['created_at'] as String?,
   );
 }
 

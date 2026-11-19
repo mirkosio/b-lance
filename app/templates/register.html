@@ -7,6 +7,17 @@
   </div>
   <h1 class="section-title" style="justify-content:center">Crea account</h1>
   {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+  {% if sent %}
+  <div class="alert ok" role="status">
+    Abbiamo mandato un link di conferma a <b>{{ sent }}</b>. Aprilo per
+    entrare: il link vale 24 ore e si può usare una sola volta.
+    Non hai ricevuto nulla?
+    <form method="post" action="/resend-verification" style="margin:8px 0 0">
+      <input type="hidden" name="email" value="{{ sent }}">
+      <button class="btn sm ghost" type="submit">Invia di nuovo</button>
+    </form>
+  </div>
+  {% endif %}
   <form method="post" action="/register" data-inline-validation novalidate>
     <input type="hidden" name="next" value="{{ next|default('') }}">
     <label for="register-name">Nome</label>
