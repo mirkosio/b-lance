@@ -1,6 +1,6 @@
-## b-lance 1.8.2 (versionCode 38)
+## b-lance 1.8.3 (versionCode 39)
 
-Aggiornamento in-place dalla 1.8.1: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.8.2: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -112,6 +112,14 @@ disinstallazione necessaria.
 - Non fatta e dichiarata: parità iOS e widget "Il mio saldo": servono un
   progetto iOS e dispositivi reali. Le traduzioni IT/EN complete di sito
   e app restano un passo separato.
+
+- **Foto profilo** nella pagina account: anteprima, caricamento di una foto
+  ritagliata sul dispositivo (max 512 KB), 16 avatar geometrici predefiniti
+  e semplice iniziale. Il colore di sfondo si può scegliere sia con
+  l'iniziale sia con i disegni. L'avatar appare anche nella barra e nella
+  dashboard.
+- Avvio dell'app più robusto: se notifiche o azioni rapide non sono
+  disponibili sul dispositivo, l'app parte comunque e l'errore resta nei log.
 
 ### Verifiche
 

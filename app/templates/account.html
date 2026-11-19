@@ -3,6 +3,43 @@
 {% block content %}
 <div class="card">
   <h1 class="section-title">Il tuo account</h1>
+  <div class="avatar-editor">
+    <div class="avatar-preview">{{ avatar_html(request, user, 96) | safe }}</div>
+    <div>
+      <h2 class="section-title">Foto profilo</h2>
+      <p class="muted small">
+        Scegli una foto, uno dei 16 disegni o solo l'iniziale. Il colore di
+        sfondo si applica all'iniziale e ai disegni. Ogni scelta viene salvata
+        subito.
+      </p>
+      <form id="avatar-form" method="post" action="/account/avatar" enctype="multipart/form-data">
+        <input type="hidden" name="kind" id="avatar-kind" value="{% if avatar %}{{ avatar.kind }}{% else %}initial{% endif %}">
+        <input type="hidden" name="preset" id="avatar-preset" value="{{ avatar.preset if avatar and avatar.preset is not none else 0 }}">
+        <input type="hidden" name="background" id="avatar-background" value="{% if avatar %}{{ avatar.background }}{% else %}{{ user.color }}{% endif %}">
+        <input type="hidden" name="photo" id="avatar-photo" value="">
+        <div class="avatar-options" role="group" aria-label="Scegli l'avatar">
+          <button type="button" class="avatar-choice" data-kind="initial"
+                  aria-label="Usa l'iniziale">{{ user.name[0]|upper }}</button>
+          {% for i in range(preset_count) %}
+          <button type="button" class="avatar-choice" data-kind="preset"
+                  data-preset="{{ i }}" aria-label="Disegno {{ i + 1 }}">
+            {{ preset_svg(i, avatar.background if avatar else user.color) | safe }}
+          </button>
+          {% endfor %}
+          <label class="avatar-choice avatar-upload" aria-label="Carica una foto">
+            <span aria-hidden="true">+</span>
+            <input type="file" id="avatar-file" accept="image/jpeg,image/png" hidden>
+          </label>
+        </div>
+        <div class="row" style="margin-top:12px;align-items:center">
+          <label for="avatar-color">Colore sfondo</label>
+          <input type="color" id="avatar-color"
+                 value="{% if avatar %}{{ avatar.background }}{% else %}{{ user.color }}{% endif %}">
+          <span class="muted small">Fino a {{ avatar_max_kb }} KB</span>
+        </div>
+      </form>
+    </div>
+  </div>
   {% if error or err %}<p class="error" role="alert">{{ error or err }}</p>{% endif %}
   {% if ok %}<p class="muted small" role="status">Salvato.</p>{% endif %}
   <form method="post" action="/account" data-inline-validation novalidate>
@@ -159,4 +196,57 @@
             style="background:#A0432F;border-color:#A0432F">Elimina account</button>
   </form>
 </div>
+<script>
+(function () {
+  var form = document.getElementById('avatar-form');
+  if (!form) return;
+  var kind = document.getElementById('avatar-kind');
+  var preset = document.getElementById('avatar-preset');
+  var background = document.getElementById('avatar-background');
+  var photo = document.getElementById('avatar-photo');
+  var color = document.getElementById('avatar-color');
+  var file = document.getElementById('avatar-file');
+
+  Array.prototype.forEach.call(
+    document.querySelectorAll('.avatar-choice[data-kind]'),
+    function (button) {
+      button.addEventListener('click', function () {
+        kind.value = button.getAttribute('data-kind');
+        preset.value = button.getAttribute('data-preset') || 0;
+        form.submit();
+      });
+    }
+  );
+
+  color.addEventListener('change', function () {
+    background.value = color.value;
+    if (kind.value !== 'photo') form.submit();
+  });
+
+  file.addEventListener('change', function () {
+    var chosen = file.files && file.files[0];
+    if (!chosen) return;
+    var reader = new FileReader();
+    reader.onload = function (event) {
+      var img = new Image();
+      img.onload = function () {
+        var canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 256;
+        var ctx = canvas.getContext('2d');
+        var side = Math.min(img.width, img.height);
+        ctx.drawImage(
+          img,
+          (img.width - side) / 2, (img.height - side) / 2, side, side,
+          0, 0, 256, 256
+        );
+        photo.value = canvas.toDataURL('image/jpeg', 0.82);
+        kind.value = 'photo';
+        form.submit();
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(chosen);
+  });
+})();
+</script>
 {% endblock %}

@@ -16,6 +16,7 @@ from datetime import date, datetime, timezone
 from sqlalchemy import (
     Boolean,
     Date,
+    LargeBinary,
     DateTime,
     ForeignKey,
     Integer,
@@ -68,6 +69,22 @@ class RecoveryCode(Base):
     used_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+
+class UserAvatar(Base):
+    """Avatar scelto dall'utente: foto, disegno geometrico o iniziale."""
+
+    __tablename__ = "user_avatars"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), primary_key=True
+    )
+    kind: Mapped[str] = mapped_column(String(10))  # photo | preset | initial
+    preset: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    background: Mapped[str] = mapped_column(String(7), default="#5F8D6E")
+    mime: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    data: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class UserWallet(Base):

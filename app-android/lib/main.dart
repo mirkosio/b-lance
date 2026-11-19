@@ -18,9 +18,22 @@ final quickActions = QuickActions();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (details) {
+    // Un errore di un plugin non deve nascondere l'interfaccia all'utente:
+    // il dettaglio resta nei log e l'app continua a partire.
+    debugPrint('[blance] ${details.exceptionAsString()}');
+  };
   loadThemeMode();
-  await initNotifications();
-  _setupQuickActions();
+  try {
+    await initNotifications();
+  } catch (e) {
+    debugPrint('[blance] notifiche non disponibili: $e');
+  }
+  try {
+    _setupQuickActions();
+  } catch (e) {
+    debugPrint('[blance] azioni rapide non disponibili: $e');
+  }
   runApp(const BlanceApp());
 }
 

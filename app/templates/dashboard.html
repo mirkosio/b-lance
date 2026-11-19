@@ -180,7 +180,7 @@
     <section class="card rail-card">
       <div class="section-title">Il tuo account</div>
       <a class="rail-user" href="/account">
-        <span class="avatar" style="background:{{ user.color }}" aria-hidden="true">{{ user.name[0]|upper }}</span>
+        {{ avatar_html(request, user, 40) | safe }}
         <span><b>{{ user.name }}</b><span>{% if user.handle %}@{{ user.handle }}{% else %}{{ user.email }}{% endif %}</span></span>
       </a>
       <a class="rail-action" href="/account" style="margin-top:6px">Profilo e sicurezza <span class="go"><svg width="18" height="18"><use href="#i-chevron"></use></svg></span></a>

@@ -36,6 +36,14 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from xml.sax.saxutils import escape
 
 from .account import anonymize_user
+from .avatars import (
+    avatar_html,
+    clean_color as clean_avatar_color,
+    decode_photo,
+    preset_svg,
+    DEFAULT_BG,
+    MAX_PHOTO_BYTES,
+)
 from .analytics import (
     EVENTS,
     daily as usage_daily,
@@ -94,6 +102,7 @@ from .models import (
     RecoveryCode,
     RecurringExpense,
     UserWallet,
+    UserAvatar,
     EmailToken,
     Share,
     User,
@@ -133,7 +142,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.8.2"
+APP_VERSION = "1.8.3"
 logger = logging.getLogger("b-lance")
 
 
@@ -375,6 +384,7 @@ def _jinja_filters() -> None:
     # Esponente della valuta (cifre decimali): serve al contatore animato
     # per formattare come il backend. 2 per l'euro, 0 per lo yen.
     templates.env.globals["currency_exponent"] = _currency_exponent
+    templates.env.globals["preset_svg"] = preset_svg
 
 
 _jinja_filters()
@@ -384,7 +394,22 @@ _jinja_filters()
 def current_user(request: Request, db: Session = Depends(get_db)) -> User | None:
     """Utente loggato oppure None. Le rotte protette lo rifiutano."""
     token = request.cookies.get(SESSION_COOKIE)
-    return get_current_user(db, token)
+    user = get_current_user(db, token)
+    if user is not None:
+        request.state.avatar = db.get(UserAvatar, user.id)
+        request.state.user_id = user.id
+    return user
+
+
+def _avatar_tag(request: Request, user: User, size: int = 40, avatar=None) -> str:
+    """Tag HTML dell'avatar, usato dai template con |safe."""
+    if avatar is None:
+        avatar = getattr(request.state, "avatar", None)
+    return avatar_html(user.id, user.name, user.color, size, avatar)
+
+
+# Registrato dopo la definizione: _jinja_filters() gira all'import del modulo.
+templates.env.globals["avatar_html"] = _avatar_tag
 
 
 def _safe_next(target: str | None) -> str:
@@ -1763,7 +1788,72 @@ def _account_context(
         "recovery_remaining": remaining,
         "wallets": _wallets_for(db, [user.id]).get(user.id, {}),
         "wallet_providers": WALLET_PROVIDERS,
+        "avatar": db.get(UserAvatar, user.id),
+        "preset_count": 16,
+        "avatar_max_kb": MAX_PHOTO_BYTES // 1024,
     }
+
+
+@app.get("/avatar/{user_id}")
+def avatar_image(
+    user_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Foto profilo: solo immagini caricate dall'utente, nessun file pubblico."""
+    row = db.get(UserAvatar, user_id)
+    if row is None or row.kind != "photo" or not row.data:
+        raise HTTPException(404, detail="Foto non trovata")
+    return Response(
+        content=row.data,
+        media_type=row.mime or "image/jpeg",
+        headers={"Cache-Control": "private, no-cache"},
+    )
+
+
+@app.post("/account/avatar")
+async def account_avatar(
+    request: Request,
+    kind: str = Form(...),
+    preset: int = Form(0),
+    background: str = Form(DEFAULT_BG),
+    photo: str = Form(""),
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Salva foto, uno dei 16 disegni o la sola iniziale con colore scelto."""
+    try:
+        bg = clean_avatar_color(background)
+        if kind not in ("photo", "preset", "initial"):
+            raise ValueError("Tipo di avatar non valido")
+        if kind == "preset" and not (0 <= preset < 16):
+            raise ValueError("Disegno non valido")
+        if kind == "photo":
+            data, mime = decode_photo(photo)
+        else:
+            data, mime = None, None
+    except ValueError as exc:
+        return templates.TemplateResponse(
+            request,
+            "account.html",
+            _account_context(request, user, db, err=str(exc)),
+            status_code=400,
+        )
+
+    row = db.get(UserAvatar, user.id)
+    if row is None:
+        row = UserAvatar(user_id=user.id, kind=kind)
+        db.add(row)
+    row.kind = kind
+    row.background = bg
+    row.preset = preset if kind == "preset" else None
+    row.updated_at = utcnow()
+    if kind == "photo":
+        row.data, row.mime = data, mime
+    else:
+        row.data, row.mime = None, None
+    db.commit()
+    return RedirectResponse("/account?ok=1", status_code=303)
 
 
 @app.post("/account/wallets")

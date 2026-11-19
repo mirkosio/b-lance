@@ -55,7 +55,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..600,0..100,0..1&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=40">
+  <link rel="stylesheet" href="/static/app.css?v=41">
   <link rel="stylesheet" href="/static/motion.css?v=4">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
@@ -178,7 +178,7 @@
   </nav>
 
   <a class="side-user" href="/account">
-    <span class="avatar" style="background:{{ user.color }}" aria-hidden="true">{{ user.name[0]|upper }}</span>
+    {{ avatar_html(request, user, 40) | safe }}
     <div style="min-width:0">
       <b>{{ user.name }}</b>
       <span>Profilo e impostazioni</span>
@@ -205,7 +205,7 @@
       <svg width="19" height="19"><use href="#i-moon"></use></svg>
     </button>
     <a class="avatar-link" href="/account" aria-label="Profilo di {{ user.name }}">
-      <span class="avatar" style="background:{{ user.color }}" aria-hidden="true">{{ user.name[0]|upper }}</span>
+      {{ avatar_html(request, user, 40) | safe }}
     </a>
   </span>
 </header>
