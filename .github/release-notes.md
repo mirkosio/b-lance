@@ -1,6 +1,6 @@
-## b-lance 1.7.9 (versionCode 29)
+## b-lance 1.7.10 (versionCode 30)
 
-Aggiornamento in-place dalla 1.7.8: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.7.9: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -69,6 +69,10 @@ disinstallazione necessaria.
 
 - Corretta la configurazione Android della build: dipendenza delle notifiche
   compatibile con l'SDK già usato e desugaring abilitato.
+- Il link del riepilogo era già revocabile e scadeva dopo 30 giorni: ora la
+  revoca chiede conferma per evitare un clic accidentale. Il link con i dati
+  nel frammento (`#`) resta invece senza server e non revocabile, com'è
+  dichiarato pubblicamente.
 
 ### Verifiche
 

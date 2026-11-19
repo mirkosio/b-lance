@@ -155,3 +155,22 @@ def test_share_card_on_group_page(client: TestClient) -> None:
     page = client.get(f"/groups/{group_id}").text
     assert "Apri riepilogo" in page
     assert "/s/" in page
+
+
+def test_revoca_dal_web_rende_il_vecchio_link_inutilizzabile(client: TestClient) -> None:
+    group_id = _group_with_two_members(client)
+    assert client.post(
+        f"/groups/{group_id}/share", follow_redirects=False
+    ).status_code == 303
+    page = client.get(f"/groups/{group_id}").text
+    token = re.search(r"/s/([A-Za-z0-9_-]+)", page).group(1)
+    assert client.get(f"/s/{token}").status_code == 200
+    assert "Revoca link" in page
+    assert "Revocare il link?" in page
+
+    r = client.post(
+        f"/groups/{group_id}/share/revoke", follow_redirects=False
+    )
+    assert r.status_code == 303
+    assert client.get(f"/s/{token}").status_code == 404
+    assert "Crea link condivisibile" in client.get(f"/groups/{group_id}").text

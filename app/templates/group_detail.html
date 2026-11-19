@@ -270,7 +270,8 @@
     <div class="row" style="margin-top:12px">
       <a class="btn sm" href="{{ share_url }}" target="_blank" rel="noopener">Apri riepilogo</a>
       <a class="btn sm ghost" href="/s/{{ share_token }}/pdf">PDF</a>
-      <form method="post" action="/groups/{{ group.id }}/share/revoke" style="margin:0">
+      <form method="post" action="/groups/{{ group.id }}/share/revoke" style="margin:0"
+            onsubmit="return confirm('Revocare il link? Chi lo ha salvato non lo potrà più aprire.')">
         <button class="btn sm ghost" type="submit">Revoca link</button>
       </form>
     </div>
