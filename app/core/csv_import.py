@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import io
+import re
 from decimal import Decimal, InvalidOperation
 
 MAX_ROWS = 500
@@ -18,10 +19,19 @@ FIELDS = ("data", "descrizione", "importo", "pagatore", "categoria")
 
 ALIASES = {
     "data": ("data", "date", "datum", "fecha"),
-    "descrizione": ("descrizione", "description", "details", "item", "nome"),
-    "importo": ("importo", "amount", "value", "price", "costo", "spesa"),
-    "pagatore": ("pagatore", "payer", "paid by", "pagato da", "who paid"),
-    "categoria": ("categoria", "category", "categorie"),
+    "descrizione": (
+        "descrizione", "description", "details", "item", "nome",
+        "omschrijving", "libellé", "libelle",
+    ),
+    "importo": (
+        "importo", "amount", "value", "price", "costo", "spesa",
+        "bedrag", "montant",
+    ),
+    "pagatore": (
+        "pagatore", "payer", "paid by", "pagato da", "who paid",
+        "betaald door", "payé par", "paye par",
+    ),
+    "categoria": ("categoria", "category", "categorie", "catégorie"),
 }
 
 
@@ -71,7 +81,8 @@ def guess_columns(headers: list[str]) -> dict[str, str]:
 
 def parse_amount(value: str) -> int:
     """Importo in centesimi: accetta '1.234,56' e '1234.56'."""
-    raw = (value or "").strip().replace(" ", "")
+    # Tolli simboli di valuta e codici: restano solo cifre, separatori e segno.
+    raw = re.sub(r"[^0-9.,\-]", "", (value or "").replace(" ", ""))
     if not raw:
         raise InvalidOperation
     if "," in raw and "." in raw:

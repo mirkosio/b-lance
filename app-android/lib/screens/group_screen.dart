@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -7,6 +9,7 @@ import '../categories.dart';
 import '../export_csv.dart';
 import '../filters.dart';
 import '../models.dart';
+import '../receipt_parser.dart';
 import '../sheets/detail_sheets.dart';
 import '../sheets/expense_sheet.dart';
 import '../sheets/group_sheets.dart';
@@ -617,6 +620,48 @@ class _GroupScreenState extends State<GroupScreen> {
     await _run(() async {
       await widget.api.regenerateInvite(widget.groupId);
     }, ok: 'Nuovo codice generato: condividilo di nuovo');
+  }
+
+  Future<void> _scanReceipt(GroupDetail d) async {
+    try {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        maxWidth: 1600,
+        imageQuality: 80,
+      );
+      if (image == null) return;
+      final recognizer = TextRecognizer(script: TextRecognitionScript.latin);
+      final recognized = await recognizer.processImage(
+        InputImage.fromFilePath(image.path),
+      );
+      await recognizer.close();
+      final draft = parseReceipt(recognized.text);
+      if (!mounted) return;
+      final review = await showModalBottomSheet<_ReceiptReview>(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        builder: (_) => _ReceiptReviewSheet(draft: draft, detail: d),
+      );
+      if (review == null || review.amountMinor <= 0) {
+        if (mounted && review != null) _snack('Controlla l\'importo letto dalla ricevuta');
+        return;
+      }
+      await _run(
+        () => widget.api.addExpense(
+          d.id,
+          description: review.description,
+          amount: (review.amountMinor / 100).toStringAsFixed(2),
+          paidBy: review.paidBy,
+          members: d.members.where((m) => m.active).map((m) => m.userId).toList(),
+        ),
+        ok: 'Spesa dalla ricevuta aggiunta',
+      );
+    } on ApiException catch (e) {
+      _snack(e.message);
+    } catch (_) {
+      _snack('Lettura non riuscita: inserisci la spesa a mano.');
+    }
   }
 
   // ---------------------------------------------------------------- build
@@ -1325,11 +1370,139 @@ class _GroupScreenState extends State<GroupScreen> {
                     label: const Text('Spesa'),
                   ),
                 ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.tonalIcon(
+                    onPressed: () => _scanReceipt(d),
+                    icon: const Icon(Icons.document_scanner_outlined, size: 19),
+                    label: const Text('Ricevuta'),
+                  ),
+                ),
               ],
             ),
           ),
         );
       },
+    );
+  }
+}
+
+class _ReceiptReview {
+  const _ReceiptReview({
+    required this.description,
+    required this.amountMinor,
+    required this.paidBy,
+  });
+
+  final String description;
+  final int amountMinor;
+  final int paidBy;
+}
+
+class _ReceiptReviewSheet extends StatefulWidget {
+  const _ReceiptReviewSheet({required this.draft, required this.detail});
+
+  final ReceiptDraft draft;
+  final GroupDetail detail;
+
+  @override
+  State<_ReceiptReviewSheet> createState() => _ReceiptReviewSheetState();
+}
+
+class _ReceiptReviewSheetState extends State<_ReceiptReviewSheet> {
+  late final TextEditingController _description =
+      TextEditingController(text: widget.draft.description);
+  late final TextEditingController _amount = TextEditingController(
+    text: widget.draft.amountMinor > 0
+        ? (widget.draft.amountMinor / 100).toStringAsFixed(2)
+        : '',
+  );
+  late int _paidBy = widget.detail.members
+      .firstWhere((m) => m.isMe && m.active,
+          orElse: () => widget.detail.members.first)
+      .userId;
+
+  @override
+  void dispose() {
+    _description.dispose();
+    _amount.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final active = widget.detail.members.where((m) => m.active).toList();
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Controlla la ricevuta',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 6),
+            const Text(
+              'La lettura è automatica ma può sbagliare: niente viene '
+              'salvato finché non confermi.',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _description,
+              decoration: const InputDecoration(labelText: 'Descrizione'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _amount,
+              keyboardType: TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Importo'),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<int>(
+              initialValue: _paidBy,
+              decoration: const InputDecoration(labelText: 'Ha pagato'),
+              items: [
+                for (final m in active)
+                  DropdownMenuItem(value: m.userId, child: Text(m.name)),
+              ],
+              onChanged: (value) {
+                if (value != null) setState(() => _paidBy = value);
+              },
+            ),
+            const SizedBox(height: 12),
+            ExpansionTile(
+              title: const Text('Testo letto dalla ricevuta'),
+              children: [
+                for (final line in widget.draft.lines)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2),
+                    child: Text(line, style: const TextStyle(fontSize: 12)),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  final value = double.tryParse(
+                    _amount.text.replaceAll(',', '.'),
+                  );
+                  Navigator.of(context).pop(
+                    _ReceiptReview(
+                      description: _description.text.trim(),
+                      amountMinor: value == null ? 0 : (value * 100).round(),
+                      paidBy: _paidBy,
+                    ),
+                  );
+                },
+                child: const Text('Salva spesa'),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

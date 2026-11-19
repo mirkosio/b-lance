@@ -1,6 +1,6 @@
-## b-lance 1.8.0 (versionCode 36)
+## b-lance 1.8.1 (versionCode 37)
 
-Aggiornamento in-place dalla 1.7.15: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.8.0: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -102,9 +102,16 @@ disinstallazione necessaria.
   li inserisci tu nel profilo, sul sito e nell'app. Nei bonifici suggeriti
   compare un pulsante per copiare l'handle di chi deve ricevere. b-lance non
   gestisce transazioni e non contatta questi servizi.
-- Non fatti in questa versione, dichiarati: OCR ricevute on-device (serve
-  un set di ricevute concordato) e parità iOS/widget "Il mio saldo" (servono
-  dispositivi e progetto iOS).
+- **OCR ricevute on-device** nell'app: dal gruppo premi "Ricevuta",
+  fotografi lo scontrino, il testo viene letto sul telefono (nessuna
+  immagine inviata a un server) e descrizione, importo e pagatore vanno
+  sempre revisionati a mano prima del salvataggio.
+- Import CSV: campioni sintetici con intestazioni stile Splitwise e
+  Tricount (anche olandese/francese e simboli di valuta) usati nei test,
+  insieme alla mappatura delle colonne.
+- Non fatta e dichiarata: parità iOS e widget "Il mio saldo": servono un
+  progetto iOS e dispositivi reali. Le traduzioni IT/EN complete di sito
+  e app restano un passo separato.
 
 ### Verifiche
 

@@ -140,3 +140,21 @@ def test_import_con_riga_invalida_non_salva_nulla(client: TestClient) -> None:
     group = client.get(f"/groups/{gid}").text
     assert "CenaUnica123" not in group
     assert "RegaloUnico123" not in group
+
+
+def test_campioni_splitwise_e_tricount() -> None:
+    """File di esempio sintetici con le intestazioni tipiche dei due servizi."""
+    from pathlib import Path
+
+    base = Path(__file__).parent / "samples"
+    for name in ("splitwise-example.csv", "tricount-example.csv"):
+        headers, rows = parse_csv((base / name).read_bytes())
+        mapping = guess_columns(headers)
+        assert mapping.get("descrizione") and mapping.get("importo")
+        assert mapping.get("pagatore")
+        prepared, errors = validate_rows(
+            rows, mapping, {"marco": 1, "luca": 2}, 1
+        )
+        assert not errors, errors
+        assert len(prepared) == 2
+        assert prepared[0]["amount_minor"] in (4550, 6000)
