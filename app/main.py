@@ -99,7 +99,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.7.2"
+APP_VERSION = "1.7.3"
 logger = logging.getLogger("b-lance")
 
 
@@ -1528,6 +1528,7 @@ def account_update(
 
 @app.post("/account/password")
 def account_password(
+    request: Request,
     current: str = Form(...),
     new: str = Form(...),
     user: User = Depends(require_user),
@@ -1610,6 +1611,16 @@ def _parse_day(value: str) -> date | None:
         return None
 
 
+def _empty_draft() -> dict:
+    """Dipendenza interna: nessuna bozza, tranne quando la passa il form."""
+    return {}
+
+
+def _empty_form_error() -> str:
+    """Dipendenza interna: nessun messaggio di errore accanto al form."""
+    return ""
+
+
 @app.get("/groups/{group_id}")
 def group_detail(
     request: Request,
@@ -1624,8 +1635,12 @@ def group_detail(
     undo_payment: int | None = Query(None),
     user: User = Depends(require_user),
     db: Session = Depends(get_db),
-    draft: dict | None = None,
-    form_error: str = "",
+    # NOTA: parametri interni via Depends. Con la sola annotazione `dict`,
+    # FastAPI li considererebbe un corpo JSON: su una GET consumerebbe lo
+    # stream della richiesta e il retry per DB "addormentato" resterebbe
+    # appeso. Così non finiscono nemmeno nell'URL pubblico.
+    draft: dict = Depends(_empty_draft),
+    form_error: str = Depends(_empty_form_error),
 ):
     group = _get_group_for_user(db, group_id, user)
     member = _member_row(db, group_id, user)

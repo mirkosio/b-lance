@@ -477,3 +477,31 @@ def test_cookie_di_sessione_e_secure_su_https() -> None:
         assert "Secure" in cookie
         assert "HttpOnly" in cookie
         assert "SameSite=lax" in cookie
+
+
+def test_footer_della_home_e_presente_su_ogni_pagina(client: TestClient) -> None:
+    """Stesso footer ovunque: home, pagine pubbliche e pagine dell'account."""
+    pages = ["/", "/come-funziona", "/android", "/faq", "/privacy",
+             "/come-manteniamo", "/about", "/demo", "/login", "/register"]
+    for path in pages:
+        r = client.get(path)
+        assert r.status_code == 200, path
+        assert '<footer class="site-footer">' in r.text, path
+        assert 'Nessuna pubblicità, nessuna vendita di dati' in r.text, path
+        assert 'Collegamenti del sito' in r.text, path
+
+    _register(client)
+    group_id = _create_group(client)
+    for path in ["/account", f"/groups/{group_id}"]:
+        r = client.get(path)
+        assert r.status_code == 200, path
+        assert '<footer class="site-footer">' in r.text, path
+
+
+def test_get_gruppo_non_dichiara_un_corpo_json(client: TestClient) -> None:
+    """I campi interni della bozza non devono diventare un body su GET:
+    consumerebbe lo stream e impalerebbe il retry per il DB che si sveglia."""
+    schema = app.openapi()
+    get_group = schema["paths"]["/groups/{group_id}"]["get"]
+    assert "requestBody" not in get_group
+    assert all(p["in"] != "body" for p in get_group.get("parameters", []))

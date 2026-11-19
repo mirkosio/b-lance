@@ -1,4 +1,4 @@
-## b-lance 1.7.2 (versionCode 22)
+## b-lance 1.7.3 (versionCode 23)
 
 Aggiornamento in-place dalla 1.7.1: stessa chiave di firma, nessuna
 disinstallazione necessaria.
@@ -25,6 +25,11 @@ disinstallazione necessaria.
   non si sovrappongono più.
 - Header di sicurezza su tutte le risposte (tipo di contenuto, frame,
   referrer, permessi).
+- Lo stesso footer della home (progetto, prodotto, trasparenza) ora compare
+  su tutte le pagine del sito, comprese quelle dell'account.
+- Corretti due difetti emersi dai test completi: il cambio password
+  funziona di nuovo e il retry per il database che si sveglia non resta
+  più appeso.
 
 ### Verifiche
 
