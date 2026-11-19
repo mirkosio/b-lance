@@ -131,7 +131,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.7.14"
+APP_VERSION = "1.7.15"
 logger = logging.getLogger("b-lance")
 
 
@@ -503,6 +503,8 @@ def sitemap(request: Request) -> Response:
         "/faq",
         "/privacy",
         "/come-manteniamo",
+        "/chi-siamo",
+        "/guida-vacanza",
         "/i-tuoi-dati",
         "/andamento",
         "/demo",
@@ -1518,6 +1520,128 @@ _INFO_PAGES = {
         },
         "secondary": {"href": "/privacy", "label": "Leggi la Privacy"},
     },
+    "chi-siamo": {
+        "eyebrow": "Il progetto",
+        "title": "Chi siamo",
+        "intro": (
+            "b-lance è nato per risolvere un fastidio concreto: finire una "
+            "gita e non sapere chi deve cosa a chi. Dietro c'è una persona, "
+            "non un'azienda."
+        ),
+        "facts": ["Una persona", "Codice aperto", "Nessun investitore"],
+        "layout": "prose",
+        "sections": [
+            {
+                "title": "Chi lo fa",
+                "body": (
+                    "Il progetto è mantenuto da una sola persona, che lo "
+                    "sviluppa e paga l'hosting di tasca propria. Non c'è un "
+                    "team, non ci sono investitori e non c'è una società "
+                    "dietro. Il codice è pubblico: chi vuole può leggerlo "
+                    "e controllare cosa fa."
+                ),
+            },
+            {
+                "title": "Perché esiste",
+                "body": (
+                    "Perché i fogli di calcolo si sbagliano, le quote scritte "
+                    "a mano non tornano e 'poi vediamo' non è un modo per "
+                    "chiudere un viaggio in amicizia. b-lance calcola le "
+                    "quote al centesimo, tiene lo storico e suggerisce il "
+                    "minor numero di bonifici."
+                ),
+            },
+            {
+                "title": "Cosa non è",
+                "body": (
+                    "Non è una banca, non gestisce pagamenti e non vende "
+                    "dati. Non mostra recensioni o numeri d'uso inventati: "
+                    "le uniche statistiche sono quelle che puoi leggere "
+                    "nella pagina apposita, raccolte solo con il tuo consenso."
+                ),
+            },
+            {
+                "title": "Come parlarci",
+                "body": (
+                    "Apri una issue nel repository GitHub per segnalare un "
+                    "problema o proporre una funzione. Le risposte e le "
+                    "decisioni restano pubbliche: anche questo è un modo "
+                    "per fidarsi."
+                ),
+            },
+        ],
+        "closing": (
+            "Se vuoi capire quanto costa mantenere il progetto o quali dati "
+            "salviamo, le pagine dedicate sono a un clic."
+        ),
+        "cta": {
+            "href": "https://github.com/mirkosio/b-lance",
+            "label": "Vedi il codice su GitHub",
+        },
+        "secondary": {"href": "/come-manteniamo", "label": "Come si mantiene"},
+    },
+    "guida-vacanza": {
+        "eyebrow": "Guida pratica",
+        "title": "Dividere le spese di una vacanza",
+        "intro": (
+            "Una guida in cinque passi, pensata per chi deve organizzare "
+            "un viaggio con amici e vuole tornare a casa con i conti chiusi."
+        ),
+        "facts": ["5 passi", "Nessun account per provare", "Saldi sempre visibili"],
+        "layout": "prose",
+        "sections": [
+            {
+                "title": "1. Prova prima con la demo",
+                "body": (
+                    "La demo ti fa aggiungere una spesa e mostra subito saldi "
+                    "e bonifici. I dati restano nella pagina e non vengono "
+                    "inviati: serve solo a capire se il metodo ti torna."
+                ),
+                "cta": {"href": "/demo", "label": "Apri la demo"},
+            },
+            {
+                "title": "2. Crea il gruppo e invita gli altri",
+                "body": (
+                    "Dai un nome al gruppo e scegli la valuta usata per i "
+                    "saldi. Condividi il codice o il link d'invito: chi entra "
+                    "non deve installare nulla per vedere il gruppo dal browser."
+                ),
+            },
+            {
+                "title": "3. Registra le spese mentre succedono",
+                "body": (
+                    "Per ogni spesa scrivi importo, chi ha pagato e chi "
+                    "partecipa. Puoi dividere in parti uguali, inserire "
+                    "importi esatti o percentuali. Le quote devono sempre "
+                    "sommare al totale: se non torna, il form te lo dice "
+                    "e ti tiene i campi compilati."
+                ),
+            },
+            {
+                "title": "4. Segna i pagamenti parziali",
+                "body": (
+                    "Se un amico ti restituisce 20 € su un debito più grande, "
+                    "registra 20 €: lo storico resta e il saldo si aggiorna. "
+                    "Non serve aspettare di saldare tutto in una volta."
+                ),
+            },
+            {
+                "title": "5. Chiudi con i bonifici suggeriti",
+                "body": (
+                    "Il gruppo mostra chi deve dare cosa a chi con il minor "
+                    "numero di bonifici. Se hai sbagliato, puoi annullare "
+                    "spese e pagamenti: restano nello storico barrati e i "
+                    "saldi tornano indietro."
+                ),
+            },
+        ],
+        "closing": (
+            "Per i casi diversi dalla divisione equa — per esempio una "
+            "spesa pagata da due persone — leggi anche le domande frequenti."
+        ),
+        "cta": {"href": "/register", "label": "Crea il tuo gruppo"},
+        "secondary": {"href": "/faq", "label": "Domande frequenti"},
+    },
 }
 
 
@@ -1562,6 +1686,16 @@ def sustain_page(request: Request, user: User | None = Depends(current_user)):
 @app.get("/i-tuoi-dati")
 def your_data_page(request: Request, user: User | None = Depends(current_user)):
     return _info_topic(request, "i-tuoi-dati", user)
+
+
+@app.get("/chi-siamo")
+def who_we_are_page(request: Request, user: User | None = Depends(current_user)):
+    return _info_topic(request, "chi-siamo", user)
+
+
+@app.get("/guida-vacanza")
+def vacation_guide_page(request: Request, user: User | None = Depends(current_user)):
+    return _info_topic(request, "guida-vacanza", user)
 
 
 @app.get("/cashier-link")

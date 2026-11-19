@@ -482,8 +482,8 @@ def test_cookie_di_sessione_e_secure_su_https() -> None:
 def test_footer_della_home_e_presente_su_ogni_pagina(client: TestClient) -> None:
     """Stesso footer ovunque: home, pagine pubbliche e pagine dell'account."""
     pages = ["/", "/come-funziona", "/android", "/faq", "/privacy",
-             "/come-manteniamo", "/i-tuoi-dati", "/about", "/demo",
-             "/login", "/register"]
+             "/come-manteniamo", "/chi-siamo", "/guida-vacanza",
+             "/i-tuoi-dati", "/about", "/demo", "/login", "/register"]
     for path in pages:
         r = client.get(path)
         assert r.status_code == 200, path

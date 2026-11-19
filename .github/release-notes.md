@@ -1,6 +1,6 @@
-## b-lance 1.7.14 (versionCode 34)
+## b-lance 1.7.15 (versionCode 35)
 
-Aggiornamento in-place dalla 1.7.13: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.7.14: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -92,6 +92,11 @@ disinstallazione necessaria.
   gruppi creati, spese inserite e saldi consultati. Niente IP, email, nomi
   o percorsi salvati; la tabella ha solo giorno ed evento. I numeri sono
   osservati e non vengono fissati obiettivi prima di una baseline reale.
+
+- Nuove pagine **Chi siamo** e **Guida alla vacanza**: chi sta dietro al
+  progetto, perché esiste, cosa non è, e cinque passi pratici per dividere
+  le spese di un viaggio. Nessuna testimonianza o numero inventato.
+  Collegate da footer, hub delle informazioni e sitemap.
 
 ### Verifiche
 
