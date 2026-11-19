@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Statistiche di {{ group.name }} — b-lance{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <a class="info-back" href="/groups/{{ group.id }}">← Torna al gruppo</a>
+  <h1>Statistiche</h1>
+  <p>{{ group.name }} · numeri calcolati dallo storico, spese annullate escluse.</p>
+</div>
+
+{% if stats.count == 0 %}
+<div class="card empty">
+  <h2 class="section-title">Ancora nessuna spesa</h2>
+  <p class="muted">Aggiungi la prima spesa al gruppo: qui compariranno categorie, mesi e chi ha pagato.</p>
+  <a class="btn" href="/groups/{{ group.id }}">Vai al gruppo</a>
+</div>
+{% else %}
+<div class="summary">
+  <div class="stat">
+    <div class="num">{{ stats.total_minor | money(group.base_currency) }}</div>
+    <div class="lbl">Totale speso</div>
+  </div>
+  <div class="stat">
+    <div class="num">{{ stats.count }}</div>
+    <div class="lbl">Spese registrate</div>
+  </div>
+  <div class="stat">
+    <div class="num">{{ stats.average_minor | money(group.base_currency) }}</div>
+    <div class="lbl">Media per spesa</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="section-title">Budget di {{ current_month }}</h2>
+  {% if budget %}
+    <div class="stat-row-head">
+      <span>Speso questo mese: {{ month_spent | money(group.base_currency) }}</span>
+      <span class="num">su {{ budget | money(group.base_currency) }}</span>
+    </div>
+    <div class="stat-track">
+      <div class="stat-fill {% if month_spent > budget %}over{% endif %}"
+           style="width:{% if budget %}{{ [month_spent * 100 // budget, 100] | min }}{% else %}0{% endif %}%"></div>
+    </div>
+    <p class="muted small" style="margin-top:8px">
+      {% if month_spent > budget %}
+        Oltre il limite di {{ (month_spent - budget) | money(group.base_currency) }}.
+      {% else %}
+        Ancora {{ (budget - month_spent) | money(group.base_currency) }} disponibili.
+      {% endif %}
+    </p>
+  {% else %}
+    <p class="muted small">Nessun limite impostato: il budget è facoltativo e non blocca le spese.</p>
+  {% endif %}
+  <form method="post" action="/groups/{{ group.id }}/budget" class="row" style="margin-top:12px">
+    <label class="sr-only" for="budget-month">Mese</label>
+    <input type="month" id="budget-month" name="month" value="{{ current_month }}" required>
+    <label class="sr-only" for="budget-amount">Limite</label>
+    <input type="text" id="budget-amount" name="amount" inputmode="decimal"
+           placeholder="0,00" value="{% if budget %}{{ budget | money_input(group.base_currency) }}{% endif %}">
+    <button class="btn sm" type="submit">Salva budget</button>
+  </form>
+  <p class="muted small" style="margin-top:8px">Lascia 0 per togliere il limite.</p>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2 class="section-title">Per categoria</h2>
+  {% for c in stats.categories %}
+  <div class="stat-row">
+    <div class="stat-row-head">
+      <span>{{ category_label(c.key) }}</span>
+      <span class="num">{{ c.amount_minor | money(group.base_currency) }}</span>
+    </div>
+    <div class="stat-track"><div class="stat-fill" style="width:{{ c.pct }}%"></div></div>
+    <span class="muted small">{{ c.pct }}% del totale</span>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2 class="section-title">Ultimi sei mesi</h2>
+  {% for m in stats.months %}
+  <div class="stat-row">
+    <div class="stat-row-head">
+      <span>{{ m.label }}</span>
+      <span class="num">{{ m.amount_minor | money(group.base_currency) }}</span>
+    </div>
+    <div class="stat-track">
+      <div class="stat-fill" style="width:{% if stats.max_month %}{{ (m.amount_minor * 100 // stats.max_month) }}{% else %}0{% endif %}%"></div>
+    </div>
+  </div>
+  {% endfor %}
+  <p class="muted small" style="margin-top:12px">
+    I mesi senza spese restano vuoti: non sono mesi "da recuperare".
+  </p>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2 class="section-title">Chi ha pagato</h2>
+  {% for p in stats.people %}
+  <div class="balance-row">
+    <span>{{ p.name }}</span>
+    <span class="num">{{ p.amount_minor | money(group.base_currency) }}</span>
+  </div>
+  {% endfor %}
+</div>
+
+{% if stats.biggest %}
+<div class="card" style="margin-top:16px">
+  <h2 class="section-title">Spesa più alta</h2>
+  <p>
+    <b>{{ stats.biggest.description }}</b> —
+    {{ stats.biggest.amount_minor | money(group.base_currency) }}
+  </p>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

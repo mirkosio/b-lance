@@ -52,6 +52,7 @@ from .core.money import (
 )
 from .core.recurring import materialize_due
 from .core.share import share_expires_at, share_is_expired
+from .core.stats import build_stats
 from .core.splitting import SplitMethod, compute_shares
 from .database import get_db, init_db
 from .email_flow import (
@@ -67,6 +68,7 @@ from .export import group_csv, group_pdf, summary_pdf
 from .models import (
     Expense,
     Group,
+    GroupBudget,
     GroupMember,
     Payment,
     RecoveryCode,
@@ -109,7 +111,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.7.6"
+APP_VERSION = "1.7.7"
 logger = logging.getLogger("b-lance")
 
 
@@ -1893,6 +1895,92 @@ def _empty_draft() -> dict:
 def _empty_form_error() -> str:
     """Dipendenza interna: nessun messaggio di errore accanto al form."""
     return ""
+
+
+@app.get("/groups/{group_id}/stats")
+def group_stats_page(
+    request: Request,
+    group_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Statistiche del gruppo: numeri veri dallo storico, niente grafici vuoti."""
+    group = _get_group_for_user(db, group_id, user)
+    expenses = db.scalars(
+        select(Expense)
+        .options(selectinload(Expense.shares))
+        .where(Expense.group_id == group.id)
+    ).all()
+    view = compute_balances(db, group)
+    stats = build_stats(
+        expenses,
+        {m.user_id: m.name for m in view.members},
+    )
+    current_month = utcnow().strftime("%Y-%m")
+    budget = db.scalar(
+        select(GroupBudget).where(
+            GroupBudget.group_id == group.id,
+            GroupBudget.month == current_month,
+        )
+    )
+    return templates.TemplateResponse(
+        request,
+        "group_stats.html",
+        {
+            "request": request,
+            "user": user,
+            "group": group,
+            "stats": stats,
+            "budget": budget.limit_minor if budget else 0,
+            "current_month": current_month,
+            "month_spent": next(
+                (m["amount_minor"] for m in stats["months"]
+                 if m["key"] == current_month),
+                0,
+            ),
+        },
+    )
+
+
+@app.post("/groups/{group_id}/budget")
+def set_budget(
+    group_id: int,
+    month: str = Form(...),
+    amount: str = Form(...),
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Limite mensile facoltativo: non blocca le spese, solo le mette a confronto."""
+    group, _ = _require_perm(db, group_id, user, "group_edit")
+    import re as _re
+
+    if not _re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", month.strip()):
+        raise HTTPException(400, detail="Mese non valido")
+    limit = parse_user_amount(
+        amount.strip(), exponent=_currency_exponent(group.base_currency)
+    )
+    if limit < 0:
+        raise HTTPException(400, detail="Il budget non può essere negativo")
+    existing = db.scalar(
+        select(GroupBudget).where(
+            GroupBudget.group_id == group.id, GroupBudget.month == month.strip()
+        )
+    )
+    if limit == 0:
+        if existing is not None:
+            db.delete(existing)
+            db.commit()
+        return RedirectResponse(f"/groups/{group.id}/stats", status_code=303)
+    if existing is None:
+        db.add(
+            GroupBudget(
+                group_id=group.id, month=month.strip(), limit_minor=limit
+            )
+        )
+    else:
+        existing.limit_minor = limit
+    db.commit()
+    return RedirectResponse(f"/groups/{group.id}/stats", status_code=303)
 
 
 @app.get("/groups/{group_id}")

@@ -69,6 +69,19 @@ class RecoveryCode(Base):
     )
 
 
+class GroupBudget(Base):
+    """Budget facoltativo per mese e gruppo: nessun addebito, solo confronto."""
+
+    __tablename__ = "group_budgets"
+    __table_args__ = (UniqueConstraint("group_id", "month", name="uq_budget_group_month"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    group_id: Mapped[int] = mapped_column(ForeignKey("groups.id"), index=True)
+    month: Mapped[str] = mapped_column(String(7))
+    limit_minor: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class EmailToken(Base):
     """Token monouso per confermare l'email o reimpostare la password.
 

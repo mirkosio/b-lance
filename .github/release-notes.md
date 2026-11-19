@@ -1,4 +1,4 @@
-## b-lance 1.7.6 (versionCode 26)
+## b-lance 1.7.7 (versionCode 27)
 
 Aggiornamento in-place dalla 1.7.1: stessa chiave di firma, nessuna
 disinstallazione necessaria.
@@ -50,6 +50,13 @@ disinstallazione necessaria.
   di un'ora, accanto ai codici monouso già esistenti.
 - Limite di 20 registrazioni all'ora per indirizzo IP già attivo, ora
   documentato: niente account creati a raffica.
+
+- Nuova pagina **Statistiche** in ogni gruppo: totale, media, spese per
+  categoria, ultimi sei mesi, chi ha pagato e spesa più alta. Barre semplici,
+  niente grafici animati; le spese annullate non contano.
+- **Budget mensile facoltativo** per gruppo: imposti un limite, vedi quanto
+  è rimasto o quanto hai superato. Non blocca alcuna spesa e non avvisa
+  nessuno.
 
 ### Verifiche
 
