@@ -54,6 +54,11 @@ android {
 
     buildTypes {
         release {
+            // Regole per l'OCR on-device: vedere proguard-rules.pro.
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             // APK firmato con la chiave dell'app; in fallback la debug.
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")

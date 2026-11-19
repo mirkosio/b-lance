@@ -1,6 +1,6 @@
-## b-lance 1.8.1 (versionCode 37)
+## b-lance 1.8.2 (versionCode 38)
 
-Aggiornamento in-place dalla 1.8.0: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.8.1: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
