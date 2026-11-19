@@ -1260,6 +1260,18 @@ body.landing footer { margin-left: 0; }
 .consent-bar[hidden] { display: none !important; }
 .consent-bar p { margin: 0 0 10px; font-size: 0.84rem; line-height: 1.5; }
 
+.wallet-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.4fr) 1fr auto;
+  align-items: end;
+  gap: 10px;
+  margin: 10px 0;
+}
+.wallet-row label { margin: 0; font-size: 0.85rem; font-weight: 700; }
+@media (max-width: 520px) {
+  .wallet-row { grid-template-columns: 1fr; }
+}
+
 .balance-row {
   display: flex;
   align-items: center;

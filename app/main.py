@@ -72,6 +72,7 @@ from .core.csv_import import (
 )
 from .core.share import share_expires_at, share_is_expired
 from .core.stats import build_stats
+from .core.wallets import WALLET_PROVIDERS, clean_wallet
 from .core.splitting import SplitMethod, compute_shares
 from .database import get_db, init_db
 from .email_flow import (
@@ -92,6 +93,7 @@ from .models import (
     Payment,
     RecoveryCode,
     RecurringExpense,
+    UserWallet,
     EmailToken,
     Share,
     User,
@@ -131,7 +133,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.7.15"
+APP_VERSION = "1.8.0"
 logger = logging.getLogger("b-lance")
 
 
@@ -1724,6 +1726,18 @@ def demo_page(request: Request, user: User | None = Depends(current_user)):
 
 
 # ---------------------------------------------------------------- account
+def _wallets_for(db: Session, user_ids: list[int]) -> dict[int, dict[str, str]]:
+    if not user_ids:
+        return {}
+    rows = db.scalars(
+        select(UserWallet).where(UserWallet.user_id.in_(user_ids))
+    ).all()
+    out: dict[int, dict[str, str]] = {}
+    for row in rows:
+        out.setdefault(row.user_id, {})[row.provider] = row.handle
+    return out
+
+
 def _account_context(
     request: Request,
     user: User,
@@ -1747,7 +1761,48 @@ def _account_context(
         "err": err,
         "recovery_codes": recovery_codes,
         "recovery_remaining": remaining,
+        "wallets": _wallets_for(db, [user.id]).get(user.id, {}),
+        "wallet_providers": WALLET_PROVIDERS,
     }
+
+
+@app.post("/account/wallets")
+def account_wallets(
+    request: Request,
+    provider: str = Form(...),
+    handle: str = Form(""),
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    """Salva o rimuove un wallet. Nessun pagamento viene gestito qui."""
+    try:
+        clean = clean_wallet(provider, handle)
+        code = provider.strip().lower()
+    except ValueError as exc:
+        raise HTTPException(400, detail=str(exc))
+    existing = db.scalar(
+        select(UserWallet).where(
+            UserWallet.user_id == user.id,
+            UserWallet.provider == code,
+        )
+    )
+    if not clean:
+        if existing is not None:
+            db.delete(existing)
+            db.commit()
+        return RedirectResponse("/account?ok=1", status_code=303)
+    if existing is None:
+        db.add(
+            UserWallet(
+                user_id=user.id,
+                provider=code,
+                handle=clean,
+            )
+        )
+    else:
+        existing.handle = clean
+    db.commit()
+    return RedirectResponse("/account?ok=1", status_code=303)
 
 
 @app.get("/account")
@@ -2438,6 +2493,9 @@ def group_detail(
             ),
             "share_expires_at": share_expires_at(group.share_created_at),
             "share_expired": share_is_expired(group.share_created_at),
+            "wallets": _wallets_for(
+                db, [m.user_id for m in view.members]
+            ),
         },
     )
 

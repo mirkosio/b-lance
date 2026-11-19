@@ -68,6 +68,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _editWallets() async {
+    final changed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (_) => _WalletSheet(api: widget.api),
+    );
+    if (changed == true && mounted) _snack('Wallet aggiornati');
+  }
+
   Future<void> _deleteAccount() async {
     hapticConfirm();
     final ok = await showDialog<bool>(
@@ -282,6 +292,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 subtitle: const Text('Come ti vedono gli altri membri'),
                 trailing: const Icon(Icons.chevron_right, size: 20),
                 onTap: _busy ? null : _editAccount,
+              ),
+              const Divider(indent: 16, endIndent: 16),
+              ListTile(
+                leading: Icon(Icons.account_balance_wallet_outlined, color: accent),
+                title: const Text('Wallet di pagamento'),
+                subtitle: const Text('PayPal, Satispay, Revolut o IBAN, se vuoi'),
+                trailing: const Icon(Icons.chevron_right, size: 20),
+                onTap: _busy ? null : _editWallets,
               ),
               const Divider(indent: 16, endIndent: 16),
               ValueListenableBuilder<ThemeMode>(
@@ -715,6 +733,107 @@ class _ChangePasswordSheetState extends State<_ChangePasswordSheet> {
                       ),
                     )
                   : const Text('Aggiorna password'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WalletSheet extends StatefulWidget {
+  const _WalletSheet({required this.api});
+
+  final Api api;
+
+  @override
+  State<_WalletSheet> createState() => _WalletSheetState();
+}
+
+class _WalletSheetState extends State<_WalletSheet> {
+  static const _providers = [
+    ('paypal', 'PayPal'),
+    ('satispay', 'Satispay'),
+    ('revolut', 'Revolut'),
+    ('iban', 'IBAN'),
+  ];
+
+  final _controllers = <String, TextEditingController>{};
+  bool _busy = true;
+
+  @override
+  void initState() {
+    super.initState();
+    for (final p in _providers) {
+      _controllers[p.$1] = TextEditingController();
+    }
+    widget.api.wallets().then((values) {
+      if (!mounted) return;
+      for (final p in _providers) {
+        _controllers[p.$1]!.text = values[p.$1] ?? '';
+      }
+      setState(() => _busy = false);
+    }).catchError((_) {
+      if (mounted) setState(() => _busy = false);
+    });
+  }
+
+  @override
+  void dispose() {
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    setState(() => _busy = true);
+    for (final p in _providers) {
+      await widget.api.setWallet(p.$1, _controllers[p.$1]!.text.trim());
+    }
+    if (!mounted) return;
+    Navigator.of(context).pop(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Wallet di pagamento',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            const Text(
+              'Inserisci solo dati che vuoi condividere. b-lance non gestisce '
+              'pagamenti: li usi solo per copiare l\'handle. Lascia vuoto per '
+              'rimuovere.',
+            ),
+            const SizedBox(height: 16),
+            for (final p in _providers)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: TextField(
+                  controller: _controllers[p.$1],
+                  textCapitalization: p.$1 == 'iban'
+                      ? TextCapitalization.characters
+                      : TextCapitalization.none,
+                  decoration: InputDecoration(labelText: p.$2),
+                ),
+              ),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _busy ? null : _save,
+                child: const Text('Salva wallet'),
+              ),
             ),
           ],
         ),

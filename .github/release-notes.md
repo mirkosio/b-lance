@@ -1,6 +1,6 @@
-## b-lance 1.7.15 (versionCode 35)
+## b-lance 1.8.0 (versionCode 36)
 
-Aggiornamento in-place dalla 1.7.14: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.7.15: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -97,6 +97,14 @@ disinstallazione necessaria.
   progetto, perché esiste, cosa non è, e cinque passi pratici per dividere
   le spese di un viaggio. Nessuna testimonianza o numero inventato.
   Collegate da footer, hub delle informazioni e sitemap.
+
+- **Wallet di pagamento facoltativi** (PayPal, Satispay, Revolut, IBAN):
+  li inserisci tu nel profilo, sul sito e nell'app. Nei bonifici suggeriti
+  compare un pulsante per copiare l'handle di chi deve ricevere. b-lance non
+  gestisce transazioni e non contatta questi servizi.
+- Non fatti in questa versione, dichiarati: OCR ricevute on-device (serve
+  un set di ricevute concordato) e parità iOS/widget "Il mio saldo" (servono
+  dispositivi e progetto iOS).
 
 ### Verifiche
 

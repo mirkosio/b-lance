@@ -548,6 +548,20 @@ class Api {
     return User.fromJson(data['user'] as Map<String, dynamic>);
   }
 
+  Future<Map<String, String>> wallets() async {
+    final data = await _req('GET', '/api/wallets') as Map<String, dynamic>;
+    return (data['wallets'] as Map<String, dynamic>? ?? const {}).map(
+      (k, v) => MapEntry(k, v),
+    );
+  }
+
+  Future<void> setWallet(String provider, String handle) =>
+      _req(
+        'POST',
+        '/api/wallets',
+        body: {'provider': provider, 'handle': handle},
+      );
+
   Future<User> me() async {
     final data = await _req('GET', '/api/me') as Map<String, dynamic>;
     return User.fromJson(data['user'] as Map<String, dynamic>);

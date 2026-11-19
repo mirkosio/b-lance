@@ -44,6 +44,7 @@ from .email_flow import (
     verification_required,
 )
 from .core.categories import clean_category
+from .core.wallets import WALLET_PROVIDERS, clean_wallet
 from .core.currencies import CURRENCIES, get_currency, is_valid_currency, sorted_currencies
 from .core.exchange import convert, current_rates, get_rate, rate_date, rate_source
 from .core.money import MoneyError, format_amount, parse_user_amount
@@ -61,6 +62,7 @@ from .models import (
     RecurringExpense,
     Share,
     User,
+    UserWallet,
     utcnow,
 )
 from .permissions import ALL_PERMS, EDITABLE_ROLES, can, clamped_perms, effective_perms
@@ -257,6 +259,11 @@ class JoinIn(BaseModel):
     code: str
 
 
+class WalletIn(BaseModel):
+    provider: str
+    handle: str = ""
+
+
 class MemberPatchIn(BaseModel):
     role: str | None = None
     perms: list[str] | None = None
@@ -410,6 +417,50 @@ def api_update_me(
         user.handle = handle
     db.commit()
     return {"user": _user_json(user)}
+
+
+@router.get("/wallets")
+def api_get_wallets(
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    """Handle di pagamento dell'utente, forniti da lui stesso."""
+    rows = db.scalars(
+        select(UserWallet).where(UserWallet.user_id == user.id)
+    ).all()
+    return {"wallets": {r.provider: r.handle for r in rows}}
+
+
+@router.post("/wallets")
+def api_set_wallet(
+    data: WalletIn,
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        clean = clean_wallet(data.provider, data.handle)
+        code = data.provider.strip().lower()
+    except ValueError as exc:
+        raise HTTPException(400, detail=str(exc))
+    existing = db.scalar(
+        select(UserWallet).where(
+            UserWallet.user_id == user.id, UserWallet.provider == code
+        )
+    )
+    if not clean:
+        if existing is not None:
+            db.delete(existing)
+            db.commit()
+        return {"ok": True, "wallets": {}}
+    if existing is None:
+        db.add(UserWallet(user_id=user.id, provider=code, handle=clean))
+    else:
+        existing.handle = clean
+    db.commit()
+    rows = db.scalars(
+        select(UserWallet).where(UserWallet.user_id == user.id)
+    ).all()
+    return {"ok": True, "wallets": {r.provider: r.handle for r in rows}}
 
 
 @router.post("/me/password")

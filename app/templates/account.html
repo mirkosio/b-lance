@@ -31,6 +31,26 @@
 </div>
 
 <div class="card">
+  <h2 class="section-title">Wallet per farsi pagare</h2>
+  <p class="muted small">
+    Facoltativo. Inserisci solo dati che vuoi condividere: b-lance li mostra
+    negli inviti a pagare perché tu li copi. Non gestiamo transazioni e non
+    inviamo nulla a questi servizi. Lascia vuoto il campo per rimuoverlo.
+  </p>
+  {% for code, label in wallet_providers.items() %}
+  <form method="post" action="/account/wallets" class="wallet-row">
+    <input type="hidden" name="provider" value="{{ code }}">
+    <label for="wallet-{{ code }}">{{ label }}</label>
+    <input type="text" id="wallet-{{ code }}" name="handle"
+           value="{{ wallets.get(code, '') }}"
+           placeholder="{% if code == 'iban' %}IT00 0000 0000 0000 0000 0000 000{% else %}@nomeutente{% endif %}"
+           {% if code == 'iban' %}inputmode="text"{% else %}autocapitalize="none"{% endif %}>
+    <button class="btn sm ghost" type="submit">Salva</button>
+  </form>
+  {% endfor %}
+</div>
+
+<div class="card">
   <h2 class="section-title">Password</h2>
   <form method="post" action="/account/password" data-inline-validation novalidate>
     <label for="account-current">Password attuale</label>

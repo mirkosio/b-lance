@@ -70,6 +70,21 @@ class RecoveryCode(Base):
     )
 
 
+class UserWallet(Base):
+    """Handle di pagamento forniti dall'utente: b-lance non gestisce soldi."""
+
+    __tablename__ = "user_wallets"
+    __table_args__ = (
+        UniqueConstraint("user_id", "provider", name="uq_wallet_user_provider"),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    provider: Mapped[str] = mapped_column(String(20))
+    handle: Mapped[str] = mapped_column(String(120))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class UsageEvent(Base):
     """Contatore giornaliero di eventi d'uso, solo con consenso.
 
