@@ -19,7 +19,7 @@ class FakeResponse {
   clone() { return new FakeResponse(this.body, { status: this.status, headers: this.headers }); }
 }
 
-function load(offline) {
+function load(offline, cachedLanding = false) {
   const handlers = {};
   const cache = { puts: [], put(req, res) { this.puts.push({ req, res }); } };
   const context = {
@@ -34,7 +34,11 @@ function load(offline) {
       open: () => Promise.resolve(cache),
       keys: () => Promise.resolve(['blance-v9-pages']),
       delete: () => Promise.resolve(true),
-      match: () => Promise.resolve(null),
+      match: (key) => Promise.resolve(
+        cachedLanding && (key === '/' || String(key).endsWith('/'))
+          ? new FakeResponse('landing salvata')
+          : null
+      ),
     },
     self: {
       location: { origin: 'https://b-lance.test' },
@@ -93,4 +97,11 @@ test('offline le API rispondono JSON, non HTML', async () => {
 test('la versione della cache cambia: quelle vecchie vengono eliminate', async () => {
   assert.match(SRC, /VERSION = "blance-v10"/);
   assert.match(SRC, /!k\.startsWith\(VERSION\)/);
+});
+
+test('offline la home salvata si apre ancora (avvio della PWA su iPhone)', async () => {
+  const ctx = load(true, true);
+  const res = await dispatch(ctx, '/');
+  assert.equal(res.status, 200);
+  assert.equal(res.body, 'landing salvata');
 });

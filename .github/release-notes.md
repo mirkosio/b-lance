@@ -1,6 +1,6 @@
-## b-lance 1.7.11 (versionCode 31)
+## b-lance 1.7.12 (versionCode 32)
 
-Aggiornamento in-place dalla 1.7.10: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.7.11: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -81,6 +81,10 @@ disinstallazione necessaria.
   Limite 500 righe e 256 KB, separatori `,`, `;` e tab.
   La compatibilità con export Splitwise/Tricount reali non è ancora
   verificata: serve un file campione fornito da chi lo usa.
+
+- PWA: icona Apple senza parametro di cache (Safari la ignora con la query
+  string) e test del service worker che verifica l'apertura offline della
+  home, cioè lo schermo d'avvio dell'app installata.
 
 ### Verifiche
 
