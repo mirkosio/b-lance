@@ -8,6 +8,9 @@
       <a class="btn sm ghost" href="/groups/{{ group.id }}/export.csv">CSV</a>
       <a class="btn sm ghost" href="/groups/{{ group.id }}/export.pdf">PDF</a>
       <a class="btn sm ghost" href="/groups/{{ group.id }}/stats">Statistiche</a>
+      {% if 'expense_manage' in perms %}
+        <a class="btn sm ghost" href="/groups/{{ group.id }}/import">Importa CSV</a>
+      {% endif %}
       {% if 'group_edit' in perms %}
         <a class="btn sm ghost" href="/groups/{{ group.id }}/edit">Modifica</a>
       {% endif %}

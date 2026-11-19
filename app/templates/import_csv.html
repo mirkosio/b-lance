@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Importa spese — {{ group.name }} — b-lance{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <a class="info-back" href="/groups/{{ group.id }}">← Torna al gruppo</a>
+  <h1>Importa spese da CSV</h1>
+  <p>{{ group.name }} · anteprima e mappatura prima di salvare nulla.</p>
+</div>
+
+{% if step == 'upload' %}
+<div class="card" style="max-width:640px">
+  {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+  <p class="muted small">
+    Il file deve avere un'intestazione. Puoi usare un export Splitwise,
+    Tricount o un foglio tuo: nella schermata dopo scegli quali colonne
+    sono descrizione, importo, pagatore, data e categoria.
+    Niente viene salvato prima della conferma. Massimo {{ 500 }} righe e 256 KB.
+  </p>
+  <form method="post" action="/groups/{{ group.id }}/import" enctype="multipart/form-data">
+    <label for="csv-file">File CSV</label>
+    <input type="file" id="csv-file" name="file" accept=".csv,text/csv" required>
+    <div style="margin-top:18px">
+      <button class="btn" type="submit">Mostra anteprima</button>
+    </div>
+  </form>
+  <p class="muted small" style="margin-top:16px">
+    Se una riga non è valida, l'intero import viene rifiutato: non troverai
+    metà spese salvate e metà mancanti.
+  </p>
+</div>
+{% else %}
+<div class="card">
+  <h2 class="section-title">Mappa le colonne</h2>
+  {% if errors %}
+  <div class="alert" role="alert">
+    <p>Nessuna spesa è stata salvata. Correggi e riprova:</p>
+    <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
+  <form method="post" action="/groups/{{ group.id }}/import/confirm">
+    <input type="hidden" name="payload" value="{{ payload }}">
+    <div class="import-map">
+      {% for field, label in [
+          ('descrizione', 'Descrizione'), ('importo', 'Importo'),
+          ('pagatore', 'Pagatore'), ('data', 'Data'), ('categoria', 'Categoria')
+        ] %}
+      <div>
+        <label for="col-{{ field }}">{{ label }}</label>
+        <select id="col-{{ field }}" name="col_{{ field }}">
+          <option value="">— non presente —</option>
+          {% for h in headers %}
+          <option value="{{ h }}" {% if mapping.get(field) == h %}selected{% endif %}>{{ h }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endfor %}
+    </div>
+    <h2 class="section-title" style="margin-top:20px">Anteprima ({{ total_rows }} righe)</h2>
+    <div class="import-preview">
+      <table>
+        <thead><tr><th>#</th>{% for h in headers %}<th>{{ h }}</th>{% endfor %}</tr></thead>
+        <tbody>
+          {% for row in rows %}
+          <tr><td>{{ loop.index + 1 }}</td>{% for h in headers %}<td>{{ row.get(h, '') }}</td>{% endfor %}</tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="row" style="margin-top:18px">
+      <button class="btn" type="submit">Importa {{ total_rows }} spese</button>
+      <a class="btn ghost" href="/groups/{{ group.id }}/import">Annulla</a>
+    </div>
+  </form>
+  <p class="muted small" style="margin-top:12px">
+    La divisione sarà equa tra i membri attuali del gruppo. Se il CSV ha
+    quote diverse, per ora non vengono importate: aggiustale dopo dal gruppo.
+  </p>
+</div>
+{% endif %}
+{% endblock %}

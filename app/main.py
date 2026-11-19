@@ -11,6 +11,8 @@ Punti di forza rispetto ai competitor:
 from __future__ import annotations
 
 import asyncio
+import base64
+import binascii
 import json
 import logging
 import secrets
@@ -19,7 +21,10 @@ from datetime import date
 from pathlib import Path
 from urllib.parse import quote, urlsplit
 
-from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request, Response
+from fastapi import (
+    Depends, FastAPI, File, Form, HTTPException, Query, Request, Response,
+    UploadFile,
+)
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -51,6 +56,12 @@ from .core.money import (
     parse_user_amount,
 )
 from .core.recurring import materialize_due
+from .core.csv_import import (
+    ImportError_,
+    guess_columns,
+    parse_csv,
+    validate_rows,
+)
 from .core.share import share_expires_at, share_is_expired
 from .core.stats import build_stats
 from .core.splitting import SplitMethod, compute_shares
@@ -112,7 +123,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.7.10"
+APP_VERSION = "1.7.11"
 logger = logging.getLogger("b-lance")
 
 
@@ -1915,6 +1926,137 @@ def _empty_draft() -> dict:
 def _empty_form_error() -> str:
     """Dipendenza interna: nessun messaggio di errore accanto al form."""
     return ""
+
+
+@app.get("/groups/{group_id}/import")
+def import_form(
+    request: Request,
+    group_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    group, _ = _require_perm(db, group_id, user, "expense_manage")
+    return templates.TemplateResponse(
+        request,
+        "import_csv.html",
+        {"request": request, "user": user, "group": group, "step": "upload"},
+    )
+
+
+@app.post("/groups/{group_id}/import")
+async def import_preview(
+    request: Request,
+    group_id: int,
+    file: UploadFile = File(...),
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    group, _ = _require_perm(db, group_id, user, "expense_manage")
+    raw = await file.read()
+    try:
+        headers, rows = parse_csv(raw)
+    except (ImportError_, UnicodeDecodeError) as exc:
+        return templates.TemplateResponse(
+            request,
+            "import_csv.html",
+            {
+                "request": request, "user": user, "group": group,
+                "step": "upload", "error": str(exc),
+            },
+        )
+    return templates.TemplateResponse(
+        request,
+        "import_csv.html",
+        {
+            "request": request,
+            "user": user,
+            "group": group,
+            "step": "preview",
+            "headers": headers,
+            "rows": rows[:8],
+            "total_rows": len(rows),
+            "mapping": guess_columns(headers),
+            "payload": base64.b64encode(raw).decode("ascii"),
+        },
+    )
+
+
+@app.post("/groups/{group_id}/import/confirm")
+async def import_confirm(
+    request: Request,
+    group_id: int,
+    payload: str = Form(...),
+    col_data: str = Form(""),
+    col_descrizione: str = Form(""),
+    col_importo: str = Form(""),
+    col_pagatore: str = Form(""),
+    col_categoria: str = Form(""),
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    group, _ = _require_perm(db, group_id, user, "expense_manage")
+    try:
+        raw = base64.b64decode(payload, validate=True)
+        headers, rows = parse_csv(raw)
+    except (binascii.Error, ValueError, ImportError_, UnicodeDecodeError) as exc:
+        raise HTTPException(400, detail=f"File non valido: {exc}")
+    mapping = {
+        "data": col_data,
+        "descrizione": col_descrizione,
+        "importo": col_importo,
+        "pagatore": col_pagatore,
+        "categoria": col_categoria,
+    }
+    mapping = {key: value for key, value in mapping.items() if value in headers}
+    view = compute_balances(db, group)
+    names = {
+        m.name.strip().lower(): m.user_id
+        for m in view.members if m.active
+    }
+    prepared, errors = validate_rows(rows, mapping, names, user.id)
+    if errors or not prepared:
+        return templates.TemplateResponse(
+            request,
+            "import_csv.html",
+            {
+                "request": request,
+                "user": user,
+                "group": group,
+                "step": "preview",
+                "headers": headers,
+                "rows": rows[:8],
+                "total_rows": len(rows),
+                "mapping": mapping,
+                "payload": payload,
+                "errors": errors or ["Nessuna riga valida da importare."],
+            },
+            status_code=400,
+        )
+
+    member_ids = sorted(m.user_id for m in view.members if m.active)
+    for item in prepared:
+        shares = compute_shares(item["amount_minor"], SplitMethod.EVEN, member_ids)
+        expense = Expense(
+            group_id=group.id,
+            description=item["description"],
+            category=item["category"],
+            amount_minor=item["amount_minor"],
+            currency=group.base_currency,
+            base_amount_minor=item["amount_minor"],
+            base_currency=group.base_currency,
+            fx_rate="1.0",
+            split_method=SplitMethod.EVEN.value,
+            paid_by=item["payer_id"],
+            created_by=user.id,
+        )
+        db.add(expense)
+        db.flush()
+        for uid, amount in shares.items():
+            db.add(Share(expense_id=expense.id, user_id=uid, amount_minor=amount))
+    db.commit()
+    return RedirectResponse(
+        f"/groups/{group.id}?ok=Importate+{len(prepared)}+spese", status_code=303
+    )
 
 
 @app.get("/groups/{group_id}/stats")

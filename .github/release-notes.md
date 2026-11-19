@@ -1,6 +1,6 @@
-## b-lance 1.7.10 (versionCode 30)
+## b-lance 1.7.11 (versionCode 31)
 
-Aggiornamento in-place dalla 1.7.9: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.7.10: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -73,6 +73,14 @@ disinstallazione necessaria.
   revoca chiede conferma per evitare un clic accidentale. Il link con i dati
   nel frammento (`#`) resta invece senza server e non revocabile, com'è
   dichiarato pubblicamente.
+
+- **Import CSV** in ogni gruppo per chi può aggiungere spese: carichi il
+  file, vedi l'anteprima, scegli quale colonna è descrizione/importo/
+  pagatore/data/categoria e confermi. Se una riga non è valida, l'intero
+  import viene rifiutato con il numero di riga e non si salva nulla.
+  Limite 500 righe e 256 KB, separatori `,`, `;` e tab.
+  La compatibilità con export Splitwise/Tricount reali non è ancora
+  verificata: serve un file campione fornito da chi lo usa.
 
 ### Verifiche
 
