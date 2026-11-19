@@ -1,6 +1,6 @@
-## b-lance 1.7.12 (versionCode 32)
+## b-lance 1.7.13 (versionCode 33)
 
-Aggiornamento in-place dalla 1.7.11: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.7.12: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -85,6 +85,13 @@ disinstallazione necessaria.
 - PWA: icona Apple senza parametro di cache (Safari la ignora con la query
   string) e test del service worker che verifica l'apertura offline della
   home, cioè lo schermo d'avvio dell'app installata.
+
+- **Statistiche d'uso con consenso** (`/andamento`): barra discreta che
+  chiede una sola volta, preferenza salvata nel browser, nessun cookie di
+  tracciamento. Vengono contati solo visite, avvii demo, registrazioni,
+  gruppi creati, spese inserite e saldi consultati. Niente IP, email, nomi
+  o percorsi salvati; la tabella ha solo giorno ed evento. I numeri sono
+  osservati e non vengono fissati obiettivi prima di una baseline reale.
 
 ### Verifiche
 

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Statistiche d'uso — b-lance{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <span class="eyebrow">Trasparenza</span>
+  <h1>Statistiche d'uso</h1>
+  <p>Numeri raccolti solo da chi ha accettato. Nessun cookie di tracciamento, nessun dato personale.</p>
+</div>
+
+<div class="card">
+  <h2 class="section-title">Cosa conta davvero</h2>
+  <p class="muted small">
+    Contiamo solo quante volte succede un passo: visita, avvio della demo,
+    registrazione, creazione di un gruppo, prima spesa, saldo consultato.
+    Non salviamo indirizzi IP, nome, email o il percorso visitato.
+    Il consenso si può cambiare cancellando i dati del sito dal browser.
+  </p>
+  {% if not consento %}
+  <p class="muted small">Questo browser non ha accettato le statistiche: i suoi eventi non vengono inviati.</p>
+  {% endif %}
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2 class="section-title">Ultimi 30 giorni</h2>
+  <div class="summary">
+    <div class="stat">
+      <div class="num">{{ counts.get('page_view', 0) }}</div>
+      <div class="lbl">Visite</div>
+    </div>
+    <div class="stat">
+      <div class="num">{{ counts.get('demo_start', 0) }}</div>
+      <div class="lbl">Avvii demo</div>
+    </div>
+    <div class="stat">
+      <div class="num">{{ counts.get('register', 0) }}</div>
+      <div class="lbl">Registrazioni</div>
+    </div>
+    <div class="stat">
+      <div class="num">{{ counts.get('group_create', 0) }}</div>
+      <div class="lbl">Gruppi creati</div>
+    </div>
+    <div class="stat">
+      <div class="num">{{ counts.get('expense_add', 0) }}</div>
+      <div class="lbl">Spese inserite</div>
+    </div>
+    <div class="stat">
+      <div class="num">{{ counts.get('balance_view', 0) }}</div>
+      <div class="lbl">Saldi consultati</div>
+    </div>
+  </div>
+  <p class="muted small" style="margin-top:14px">
+    Sono numeri osservati, non stime. Finché la raccolta non ha una base
+    stabile non fissiamo obiettivi: prima serve una baseline vera.
+  </p>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2 class="section-title">Visite degli ultimi 14 giorni</h2>
+  {% for d in series %}
+  <div class="stat-row">
+    <div class="stat-row-head">
+      <span>{{ d.day }}</span>
+      <span class="num">{{ d.count }}</span>
+    </div>
+    <div class="stat-track">
+      <div class="stat-fill" style="width:{% if max_count %}{{ d.count * 100 // max_count }}{% else %}0{% endif %}%"></div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

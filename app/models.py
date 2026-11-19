@@ -11,10 +11,11 @@ Note di progetto (le scelte "da azienda"):
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from sqlalchemy import (
     Boolean,
+    Date,
     DateTime,
     ForeignKey,
     Integer,
@@ -67,6 +68,21 @@ class RecoveryCode(Base):
     used_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+
+
+class UsageEvent(Base):
+    """Contatore giornaliero di eventi d'uso, solo con consenso.
+
+    Niente IP, niente user_id, niente percorso: solo il giorno e il nome
+    dell'evento, così non si può risalire a una persona.
+    """
+
+    __tablename__ = "usage_events"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    day: Mapped[date] = mapped_column(Date, index=True)
+    event: Mapped[str] = mapped_column(String(30), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class GroupBudget(Base):

@@ -1242,6 +1242,24 @@ body.landing footer { margin-left: 0; }
 }
 .import-preview th { color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.06em; }
 
+/* Consenso statistiche: una barra discreta, nessun overlay. */
+.consent-bar {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  z-index: 60;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--card);
+  box-shadow: 0 12px 36px rgba(20, 24, 22, 0.16);
+}
+.consent-bar[hidden] { display: none !important; }
+.consent-bar p { margin: 0 0 10px; font-size: 0.84rem; line-height: 1.5; }
+
 .balance-row {
   display: flex;
   align-items: center;

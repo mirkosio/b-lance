@@ -55,7 +55,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..600,0..100,0..1&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=38">
+  <link rel="stylesheet" href="/static/app.css?v=39">
   <link rel="stylesheet" href="/static/motion.css?v=4">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
@@ -217,7 +217,7 @@
   {% set p = request.url.path %}
   <nav class="public-links" aria-label="Sezioni del sito">
     <a href="/come-funziona" {% if p == '/come-funziona' %}class="active" aria-current="page"{% endif %}>Come funziona</a>
-    <a href="/demo" {% if p == '/demo' %}class="active" aria-current="page"{% endif %}>Demo</a>
+    <a data-analytics="demo_start" href="/demo" {% if p == '/demo' %}class="active" aria-current="page"{% endif %}>Demo</a>
     <a href="/#funzioni">Funzioni</a>
     <a href="/android" {% if p == '/android' %}class="active" aria-current="page"{% endif %}>App Android</a>
     <a href="/faq" {% if p == '/faq' %}class="active" aria-current="page"{% endif %}>FAQ</a>
@@ -227,8 +227,8 @@
     <button class="icon-btn" type="button" data-theme-toggle aria-label="Cambia tema">
       <svg width="19" height="19"><use href="#i-moon"></use></svg>
     </button>
-    <a class="btn sm ghost" href="/login">Accedi</a>
-    <a class="btn sm" href="/register">Registrati</a>
+    <a data-analytics="login_start" class="btn sm ghost" href="/login">Accedi</a>
+    <a data-analytics="register_start" class="btn sm" href="/register">Registrati</a>
   </span>
 </header>
 {% endif %}
@@ -260,15 +260,16 @@
         <h3>Prodotto</h3>
         <a href="/android">App Android</a>
         <a href="/#funzioni">Funzioni</a>
-        <a href="/register">Crea un account</a>
+        <a data-analytics="register_start" href="/register">Crea un account</a>
         <a href="https://github.com/mirkosio/b-lance" rel="noopener">Codice su GitHub</a>
       </div>
       <div class="footer-col">
         <h3>Trasparenza</h3>
         <a href="/privacy">Privacy</a>
         <a href="/i-tuoi-dati">I tuoi dati</a>
+        <a href="/andamento">Statistiche d'uso</a>
         <a href="/faq">Domande frequenti</a>
-        <a href="/login">Accedi</a>
+        <a data-analytics="login_start" href="/login">Accedi</a>
       </div>
     </nav>
     <p class="footer-note">
@@ -283,9 +284,9 @@
 <!-- Navigazione pubblica mobile: solo testo, niente icone decorative. -->
 <nav class="bottomnav guest-nav" aria-label="Navigazione principale">
   <a class="bn-item {% if request.url.path == '/' %}active{% endif %}" href="/" {% if request.url.path == '/' %}aria-current="page"{% endif %}>Home</a>
-  <a class="bn-item {% if request.url.path == '/demo' %}active{% endif %}" href="/demo" {% if request.url.path == '/demo' %}aria-current="page"{% endif %}>Demo</a>
-  <a class="bn-item" href="/login">Accedi</a>
-  <a class="bn-item strong" href="/register">Registrati</a>
+  <a data-analytics="demo_start" class="bn-item {% if request.url.path == '/demo' %}active{% endif %}" href="/demo" {% if request.url.path == '/demo' %}aria-current="page"{% endif %}>Demo</a>
+  <a data-analytics="login_start" class="bn-item" href="/login">Accedi</a>
+  <a data-analytics="register_start" class="bn-item strong" href="/register">Registrati</a>
 </nav>
 {% endif %}
 
@@ -681,5 +682,50 @@
 })();
 </script>
 <script src="/static/motion.js?v=4" defer></script>
+<div class="consent-bar" id="consent-bar" hidden role="region" aria-label="Preferenze statistiche">
+  <p>Puoi accettare statistiche d'uso anonime: contiamo solo quante persone usano il sito. Nessun cookie di tracciamento, nessun dato personale.</p>
+  <div class="row">
+    <button class="btn sm" id="consent-yes" type="button">Accetta</button>
+    <button class="btn sm ghost" id="consent-no" type="button">No, grazie</button>
+  </div>
+</div>
+<script>
+(function () {
+  var key = 'bl_analytics_consent';
+  var bar = document.getElementById('consent-bar');
+  function choice() {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+  function send(event) {
+    if (choice() !== 'yes') return;
+    try {
+      fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: event }),
+        keepalive: true
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  function set(value) {
+    try { localStorage.setItem(key, value); } catch (e) {}
+    document.cookie = 'bl_analytics_consent=' + value +
+      '; path=/; max-age=31536000; SameSite=Lax';
+    if (bar) bar.hidden = true;
+    if (value === 'yes') send('page_view');
+  }
+  var yes = document.getElementById('consent-yes');
+  var no = document.getElementById('consent-no');
+  if (yes) yes.addEventListener('click', function () { set('yes'); });
+  if (no) no.addEventListener('click', function () { set('no'); });
+  document.addEventListener('click', function (e) {
+    var el = e.target.closest ? e.target.closest('[data-analytics]') : null;
+    if (el) send(el.getAttribute('data-analytics'));
+  });
+  if (!choice() && bar) bar.hidden = false;
+  if (choice() === 'yes') send('page_view');
+  window.blAnalytics = { send: send };
+})();
+</script>
 </body>
 </html>

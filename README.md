@@ -50,7 +50,7 @@ compagni di viaggio, non per la contabilità di un'impresa.
   browser. Nessun dato viene inviato o salvato.
 - **App Android**: dalla
   [pagina delle release](https://github.com/mirkosio/b-lance/releases).
-  Ultima versione **1.7.12** (`APK_1.7.12.apk`, circa 60 MB). Il file `.sha256` accanto
+  Ultima versione **1.7.13** (`APK_1.7.13.apk`, circa 60 MB). Il file `.sha256` accanto
   permette di verificare il download.
 
 ## Privacy

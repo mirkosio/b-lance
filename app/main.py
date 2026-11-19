@@ -36,6 +36,14 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from xml.sax.saxutils import escape
 
 from .account import anonymize_user
+from .analytics import (
+    EVENTS,
+    daily as usage_daily,
+    guard_event_request,
+    has_consent,
+    record_event,
+    totals as usage_totals,
+)
 from .api import router as api_router
 from .auth import (
     create_session_token,
@@ -123,7 +131,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.7.12"
+APP_VERSION = "1.7.13"
 logger = logging.getLogger("b-lance")
 
 
@@ -496,6 +504,7 @@ def sitemap(request: Request) -> Response:
         "/privacy",
         "/come-manteniamo",
         "/i-tuoi-dati",
+        "/andamento",
         "/demo",
         "/login",
         "/register",
@@ -605,6 +614,7 @@ def register(
     db.add(user)
     db.commit()
     record_register(db, request)
+    record_event(db, request, "register")
 
     if verification_required():
         if not smtp_configured():
@@ -1907,6 +1917,7 @@ def create_group(
     db.flush()
     db.add(GroupMember(group_id=group.id, user_id=user.id, role="owner"))
     db.commit()
+    record_event(db, request, "group_create")
     return RedirectResponse(f"/groups/{group.id}?welcome=1", status_code=303)
 
 
@@ -2253,6 +2264,9 @@ def group_detail(
     filters_active = bool(
         needle or category_filter or member_filter or day_from or day_to
     )
+
+    if expenses:
+        record_event(db, request, "balance_view")
 
     return templates.TemplateResponse(
         request,
@@ -2859,6 +2873,7 @@ async def add_expense(
         )
         response.status_code = 400
         return response
+    record_event(db, request, "expense_add")
     return RedirectResponse(f"/groups/{group.id}", status_code=303)
 
 
@@ -2970,6 +2985,44 @@ def add_payment(
     except (MoneyError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     return RedirectResponse(f"/groups/{group.id}", status_code=303)
+
+
+@app.post("/api/events")
+async def api_event(request: Request, db: Session = Depends(get_db)):
+    """Evento d'uso: solo con consenso, nessun dato personale salvato."""
+    guard_event_request(db, request)
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(400, detail="JSON non valido")
+    event = body.get("event") if isinstance(body, dict) else None
+    if event not in EVENTS:
+        raise HTTPException(400, detail="Evento non riconosciuto")
+    saved = record_event(db, request, event)
+    return {"ok": saved}
+
+
+@app.get("/andamento")
+def usage_page(
+    request: Request,
+    user: User | None = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    """Numeri reali raccolti con consenso. Nessun target prima della baseline."""
+    counts = usage_totals(db)
+    series = usage_daily(db, "page_view")
+    return templates.TemplateResponse(
+        request,
+        "usage.html",
+        {
+            "request": request,
+            "user": user,
+            "counts": counts,
+            "series": series,
+            "consento": has_consent(request),
+            "max_count": max((d["count"] for d in series), default=0),
+        },
+    )
 
 
 @app.get("/s/{token}", response_class=HTMLResponse)
