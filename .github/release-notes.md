@@ -1,35 +1,33 @@
-## b-lance 1.7.1 (versionCode 21)
+## b-lance 1.7.2 (versionCode 22)
 
-Aggiornamento in-place dalla 1.7.0: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.7.1: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
-### Carattere nuovo
+### App
 
-- Il wordmark, i saldi in evidenza e i titoli di stato vuoto passano a
-  **Fraunces**, un serif da carta stampata con curve morbide e qualche
-  spigolo irregolare. Sostituisce Calistoga, che sembrava un Times qualunque.
-- Inter resta per tutto il resto dell'interfaccia. Importi sempre tabellari,
-  segno esplicito `+`/`−`.
+- I chip dei saldi (verde per chi deve ricevere, terracotta per chi deve
+  pagare) ora leggono i colori del tema: in modalità scura non restano più
+  su sfondi chiari con testo illeggibile.
+- Il testo di sistema può arrivare al 200%: i layout a colonna reggono
+  anche con l'ingrandimento massimo di Android.
 
-### Movimento discreto
+### Web (stesso giro di rilascio)
 
-- Le schermate entrano con un fade e pochi pixel di salita: si posano, non
-  scivolano. Con "riduci animazioni" di sistema non si muove nulla.
-- L'avatar del gruppo vola dall'elenco alla testata del dettaglio, così si
-  capisce da dove sei arrivato. Il nome resta visibile anche mentre il
-  dettaglio carica.
-- Il saldo in evidenza cambia con un fade breve quando registri un
-  pagamento: nessun rimbalzo, i numeri non rimbalzano.
-
-### Web
-
-- Il telefono del pannello App è un esempio vero: un tocco salda i conti,
-  un altro li riapre. Stato annunciato anche ai lettori di schermo.
-- L'indice "In questa pagina" segue la lettura anche nelle pagine corte e
-  con molte voci: le ultime non restano più spente.
+- Sul telefono condiviso, le pagine dell'account, dei gruppi e i link
+  condivisi non restano più nella cache del service worker: dopo il logout
+  non si riaprono dalla memoria del browser.
+- Se il server rifiuta una spesa (per esempio quote che non tornano), la
+  pagina torna con i campi compilati e l'errore scritto accanto al form,
+  invece di un avviso che sparisce.
+- Il pulsante di invio non resta più bloccato quando un form viene
+  annullato dalla validazione della pagina.
+- Intestazione del gruppo su schermi stretti: valuta e pulsanti CSV/PDF
+  non si sovrappongono più.
+- Header di sicurezza su tutte le risposte (tipo di contenuto, frame,
+  referrer, permessi).
 
 ### Verifiche
 
-- 22 test JavaScript, 32 test delle pagine informative, 37 test Flutter,
-  `flutter analyze` pulito.
+- Suite Python, test JavaScript del sito, `flutter analyze` e `flutter test`
+  eseguiti dal workflow di rilascio prima della firma.
 - APK release firmato, con checksum SHA-256 accanto al file.
