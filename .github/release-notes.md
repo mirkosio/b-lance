@@ -1,4 +1,4 @@
-## b-lance 1.7.4 (versionCode 24)
+## b-lance 1.7.5 (versionCode 25)
 
 Aggiornamento in-place dalla 1.7.1: stessa chiave di firma, nessuna
 disinstallazione necessaria.
@@ -14,6 +14,9 @@ disinstallazione necessaria.
   aprono davvero il foglio corrispondente nell'account. Prima aprivano
   sempre il Cassiere locale, anche quando eri già dentro: se non hai ancora
   gruppi, viene proposto prima di crearne uno.
+- Dall'app, chi gestisce il gruppo può promuovere o retrocedere un membro e
+  rimuoverlo, con conferma. Le stesse regole del sito: il creatore non si
+  tocca, non ci si modifica da soli, chi ha saldi aperti non viene rimosso.
 
 ### Web (stesso giro di rilascio)
 

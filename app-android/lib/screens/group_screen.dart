@@ -16,6 +16,17 @@ import '../widgets/group_tile.dart';
 import '../widgets/hero_balance.dart';
 import '../widgets/skeleton.dart';
 
+/// Solo chi ha tutti i permessi può creare un altro admin: il server lo
+/// impone, qui evitiamo di mostrare una voce che darebbe errore.
+bool canPromoteMember(bool isOwner, List<String> perms) =>
+    isOwner ||
+    const {
+      'expense_manage',
+      'payment_manage',
+      'group_edit',
+      'members_manage',
+    }.every(perms.contains);
+
 class GroupScreen extends StatefulWidget {
   const GroupScreen({
     super.key,
@@ -324,6 +335,47 @@ class _GroupScreenState extends State<GroupScreen> {
     }
   }
 
+  Future<void> _memberAction(
+    GroupDetail d,
+    Member m,
+    String action,
+  ) async {
+    if (action == 'remove') {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text('Togliere ${m.name} dal gruppo?'),
+          content: const Text(
+            'Non potrà più vedere il gruppo. Se ha ancora un saldo aperto, '
+            'il server rifiuterà la rimozione e ti dirà quanto manca.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Annulla'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: negColor),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Rimuovi'),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+      await _run(
+        () => widget.api.removeMember(d.id, m.userId),
+        ok: '${m.name} rimosso dal gruppo',
+      );
+      return;
+    }
+    final role = action == 'admin' ? 'admin' : 'member';
+    await _run(
+      () => widget.api.updateMemberRole(d.id, m.userId, role),
+      ok: role == 'admin' ? '${m.name} è admin' : '${m.name} è membro',
+    );
+  }
+
   // ---------------------------------------------------------------- azioni
   Future<void> _rename(GroupDetail d) async {
     final name = TextEditingController(text: d.name);
@@ -621,6 +673,11 @@ class _GroupScreenState extends State<GroupScreen> {
           }
         }
         final canManageInvite = d.isOwner || d.perms.contains('members_manage');
+        final canManageMembers = canManageInvite;
+        // Promuovere ad admin richiede tutti i permessi: il server lo
+        // controlla, ma qui nascondiamo la voce che non potrebbe funzionare.
+        final canPromote =
+            canManageMembers && canPromoteMember(d.isOwner, d.perms);
         final filteredExpenses = filterExpenses(
           d.expenses,
           query: _search,
@@ -739,6 +796,31 @@ class _GroupScreenState extends State<GroupScreen> {
                                             .withValues(alpha: 0.7),
                                 ),
                               ),
+                              if (canManageMembers &&
+                                  !m.isMe &&
+                                  m.role != 'owner')
+                                PopupMenuButton<String>(
+                                  tooltip: 'Gestisci ${m.name}',
+                                  onSelected: (v) =>
+                                      _memberAction(d, m, v),
+                                  itemBuilder: (_) => [
+                                    if (canPromote)
+                                      PopupMenuItem(
+                                        value: m.role == 'admin'
+                                            ? 'member'
+                                            : 'admin',
+                                        child: Text(
+                                          m.role == 'admin'
+                                              ? 'Riporta a membro'
+                                              : 'Promuovi ad admin',
+                                        ),
+                                      ),
+                                    const PopupMenuItem(
+                                      value: 'remove',
+                                      child: Text('Rimuovi dal gruppo'),
+                                    ),
+                                  ],
+                                ),
                             ],
                           ),
                         ),

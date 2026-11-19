@@ -695,6 +695,19 @@ class Api {
   Future<void> renameGroup(int id, String name) =>
       _req('PATCH', '/api/groups/$id', body: {'name': name});
 
+  /// Cambia ruolo a un membro. Il server vieta di toccare il creatore e
+  /// di promuovere admin senza avere tutti i permessi.
+  Future<void> updateMemberRole(int groupId, int userId, String role) =>
+      _req(
+        'PATCH',
+        '/api/groups/$groupId/members/$userId',
+        body: {'role': role},
+      );
+
+  /// Rimuove un membro. Il server rifiuta se ha ancora un saldo aperto.
+  Future<void> removeMember(int groupId, int userId) =>
+      _req('DELETE', '/api/groups/$groupId/members/$userId');
+
   Future<void> deleteGroup(int id) => _req('DELETE', '/api/groups/$id');
 
   Future<String> regenerateInvite(int id) async {
