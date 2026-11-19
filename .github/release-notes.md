@@ -1,4 +1,4 @@
-## b-lance 1.7.3 (versionCode 23)
+## b-lance 1.7.4 (versionCode 24)
 
 Aggiornamento in-place dalla 1.7.1: stessa chiave di firma, nessuna
 disinstallazione necessaria.
@@ -10,6 +10,10 @@ disinstallazione necessaria.
   su sfondi chiari con testo illeggibile.
 - Il testo di sistema può arrivare al 200%: i layout a colonna reggono
   anche con l'ingrandimento massimo di Android.
+- Le icone rapide "Nuovo gruppo" e "Nuova spesa" della home del telefono
+  aprono davvero il foglio corrispondente nell'account. Prima aprivano
+  sempre il Cassiere locale, anche quando eri già dentro: se non hai ancora
+  gruppi, viene proposto prima di crearne uno.
 
 ### Web (stesso giro di rilascio)
 
@@ -30,6 +34,9 @@ disinstallazione necessaria.
 - Corretti due difetti emersi dai test completi: il cambio password
   funziona di nuovo e il retry per il database che si sveglia non resta
   più appeso.
+- Nuova pagina "I tuoi dati" (`/i-tuoi-dati`): cosa salviamo, cosa puoi
+  scaricare in JSON e cosa succede se elimini l'account. Collegata dal footer,
+  dall'about e dall'account.
 
 ### Verifiche
 

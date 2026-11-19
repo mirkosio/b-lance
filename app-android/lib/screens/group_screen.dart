@@ -23,10 +23,15 @@ class GroupScreen extends StatefulWidget {
     required this.groupId,
     this.heroTag,
     this.initialName,
+    this.openExpenseOnStart = false,
   });
 
   final Api api;
   final int groupId;
+
+  /// Apre subito il foglio "Nuova spesa" appena il gruppo è caricato:
+  /// usato dall'icona "Nuova spesa" della home del telefono.
+  final bool openExpenseOnStart;
 
   /// Tag dell'avatar nella riga di provenienza (Home o Gruppi).
   final String? heroTag;
@@ -47,6 +52,7 @@ class _GroupScreenState extends State<GroupScreen> {
   String? _filterCategory;
   int? _filterMember;
   DateTimeRange? _filterRange;
+  bool _expenseQuickOpened = false;
 
   @override
   void initState() {
@@ -594,6 +600,18 @@ class _GroupScreenState extends State<GroupScreen> {
           );
         }
         final d = snap.data!;
+        if (widget.openExpenseOnStart && !_expenseQuickOpened) {
+          _expenseQuickOpened = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            showExpenseSheet(
+              context,
+              api: widget.api,
+              detail: d,
+              onDone: _reload,
+            );
+          });
+        }
         final expo = Meta.exponentOf(d.baseCurrency);
         Member? me;
         for (final m in d.members) {

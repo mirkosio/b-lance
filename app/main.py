@@ -99,7 +99,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.7.3"
+APP_VERSION = "1.7.4"
 logger = logging.getLogger("b-lance")
 
 
@@ -471,6 +471,7 @@ def sitemap(request: Request) -> Response:
         "/faq",
         "/privacy",
         "/come-manteniamo",
+        "/i-tuoi-dati",
         "/demo",
         "/login",
         "/register",
@@ -1206,6 +1207,79 @@ _INFO_PAGES = {
         },
         "secondary": {"href": "/privacy", "label": "Come trattiamo i dati"},
     },
+    "i-tuoi-dati": {
+        "eyebrow": "Trasparenza",
+        "title": "I tuoi dati",
+        "intro": (
+            "Qui trovi, in parole semplici, cosa b-lance salva su di te e "
+            "cosa puoi fare con questi dati. Niente promesse che non "
+            "possiamo mantenere."
+        ),
+        "facts": ["Export in JSON", "Account cancellabile", "Nessuna vendita"],
+        "layout": "prose",
+        "sections": [
+            {
+                "title": "Cosa salviamo",
+                "body": (
+                    "Il tuo nome, l'email, la password in forma hashed, il "
+                    "colore scelto e l'eventuale nome utente. Poi i gruppi a "
+                    "cui partecipi, le spese, i pagamenti e le quote di "
+                    "ciascuno. Salvare le quote è il modo in cui teniamo i "
+                    "conti giusti, non un profilo per la pubblicità."
+                ),
+            },
+            {
+                "title": "Cosa non salviamo",
+                "body": (
+                    "Non vendiamo dati, non li usiamo per profilarti e non "
+                    "mostriamo pubblicità. I riepiloghi che condividi dal "
+                    "Cassiere viaggiano nel frammento del link, dopo il #, "
+                    "quindi non arrivano al server."
+                ),
+            },
+            {
+                "title": "Scaricare tutto",
+                "body": (
+                    "Dall'account puoi scaricare in qualsiasi momento un "
+                    "archivio JSON con profilo, gruppi, spese e pagamenti "
+                    "collegati al tuo account. L'export è gratuito e non "
+                    "c'è bisogno di chiedere permesso a nessuno."
+                ),
+                "cta": {"href": "/account", "label": "Vai al tuo account"},
+            },
+            {
+                "title": "Correggere o cancellare",
+                "body": (
+                    "Sempre dall'account puoi cambiare nome, email, nome "
+                    "utente e password. Puoi anche eliminare l'account: "
+                    "l'operazione richiede una conferma e rimuove il tuo "
+                    "profilo e le tue sessioni. Le spese restano nei gruppi "
+                    "condivisi perché gli altri membri devono ancora poter "
+                    "vedere e saldare i conti: non sono un tuo dato privato."
+                ),
+            },
+            {
+                "title": "Codici di recupero e sessioni",
+                "body": (
+                    "I codici di recupero sono salvati come hash e mostrati "
+                    "una sola volta. Cambiare password revoca tutte le "
+                    "sessioni aperte. Le pagine con dati del tuo account "
+                    "non vengono messe nella cache del browser."
+                ),
+            },
+        ],
+        "closing": (
+            "Per le domande sui dati c'è anche la pagina Privacy, scritta "
+            "per essere letta senza conoscenze tecniche."
+        ),
+        "cta": {
+            "href": "/account",
+            "label": "Vai al tuo account",
+            "auth_href": "/account",
+            "auth_label": "Vai al tuo account",
+        },
+        "secondary": {"href": "/privacy", "label": "Leggi la Privacy"},
+    },
 }
 
 
@@ -1245,6 +1319,11 @@ def privacy_page(request: Request, user: User | None = Depends(current_user)):
 @app.get("/come-manteniamo")
 def sustain_page(request: Request, user: User | None = Depends(current_user)):
     return _info_topic(request, "come-manteniamo", user)
+
+
+@app.get("/i-tuoi-dati")
+def your_data_page(request: Request, user: User | None = Depends(current_user)):
+    return _info_topic(request, "i-tuoi-dati", user)
 
 
 @app.get("/cashier-link")

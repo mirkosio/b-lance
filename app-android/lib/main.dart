@@ -6,6 +6,7 @@ import 'package:quick_actions/quick_actions.dart';
 
 import 'api.dart';
 import 'cashier/cashier_screen.dart';
+import 'models.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_shell.dart';
 import 'theme_controller.dart';
@@ -83,21 +84,46 @@ class _GateState extends State<_Gate> {
 
   String _phase = 'Avvio…';
   Object? _error;
+  User? _user;
+  String? _pendingAction;
+  bool _bootDone = false;
 
   @override
   void initState() {
     super.initState();
     _boot();
     _qaSub = _quickActionSubject.stream.listen((type) {
-      if (!mounted) return;
-      switch (type) {
-        case 'nuovo_gruppo':
-        case 'nuova_spesa':
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const CashierHomeScreen()),
-          );
-      }
+      if (type != 'nuovo_gruppo' && type != 'nuova_spesa') return;
+      _pendingAction = type;
+      // Se l'app sta ancora partendo, l'azione viene eseguita appena
+      // _boot() ha deciso se c'è un account: altrimenti si apriva il
+      // Cassiere sopra la schermata di caricamento e veniva sostituita.
+      if (_bootDone && mounted) _openPendingAction();
     });
+  }
+
+  void _openPendingAction() {
+    final action = _pendingAction;
+    if (action == null || !mounted) return;
+    _pendingAction = null;
+    final user = _user;
+    if (user == null) {
+      // Senza account resta utilizzabile il Cassiere locale, che funziona
+      // anche offline: è lì che si creano gruppi e spese sul telefono.
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const CashierHomeScreen()),
+      );
+      return;
+    }
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => MainShell(
+          api: _api,
+          user: user,
+          initialQuickAction: action,
+        ),
+      ),
+    );
   }
 
   @override
@@ -123,6 +149,12 @@ class _GateState extends State<_Gate> {
         _setPhase("Verifico l'account…");
         final user = await _api.me();
         if (!mounted) return;
+        _user = user;
+        _bootDone = true;
+        if (_pendingAction != null) {
+          _openPendingAction();
+          return;
+        }
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) => MainShell(api: _api, user: user),
@@ -136,6 +168,10 @@ class _GateState extends State<_Gate> {
       } catch (_) {}
       if (e is ApiException && e.status == 401) {
         if (!mounted) return;
+        // Sessione scaduta: prima serve il login, l'azione rapida si perde
+        // piuttosto che aprire il Cassiere fuori dal contesto dell'account.
+        _pendingAction = null;
+        _bootDone = true;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) => LoginScreen(
@@ -150,6 +186,11 @@ class _GateState extends State<_Gate> {
     }
     if (!mounted) return;
     if (_error != null) return;
+    _bootDone = true;
+    if (_pendingAction != null) {
+      _openPendingAction();
+      return;
+    }
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => LoginScreen(api: _api)),
     );

@@ -5,20 +5,37 @@ import 'package:flutter/material.dart';
 
 import '../api.dart';
 import '../models.dart';
+import '../sheets/group_sheets.dart';
 import '../ui.dart';
 import 'activity_screen.dart';
+import 'group_screen.dart';
 import 'groups_screen.dart';
 import 'home_screen.dart';
 import 'profile_screen.dart';
+
+/// Il gruppo usato da "Nuova spesa" quando arriva da un'icona della home
+/// del telefono: il primo della dashboard, ché il server non restituisce
+/// una data di ultimo accesso. Senza gruppi non c'è dove mettere la spesa.
+GroupSummary? quickActionGroup(List<GroupSummary> groups) =>
+    groups.isEmpty ? null : groups.first;
 
 /// Contenitore principale: quattro sezioni, come un'app bancaria.
 /// IndexedStack tiene vive le schermate; un contatore "revisione" le
 /// avvisa quando i dati cambiano (gruppo creato, spesa aggiunta...).
 class MainShell extends StatefulWidget {
-  const MainShell({super.key, required this.api, required this.user});
+  const MainShell({
+    super.key,
+    required this.api,
+    required this.user,
+    this.initialQuickAction,
+  });
 
   final Api api;
   final User user;
+
+  /// Azione arrivata da un'icona premuta prima dell'avvio: va eseguita
+  /// quando la shell è in piedi, non sulla schermata di caricamento.
+  final String? initialQuickAction;
 
   @override
   State<MainShell> createState() => _MainShellState();
@@ -39,6 +56,66 @@ class _MainShellState extends State<MainShell> {
     _links.getInitialLink().then((uri) {
       if (uri != null) _handleLink(uri);
     });
+    final action = widget.initialQuickAction;
+    if (action != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _runQuickAction(action));
+    }
+  }
+
+  Future<void> _runQuickAction(String type) async {
+    if (!mounted) return;
+    if (type == 'nuovo_gruppo') {
+      await _newGroupFromQuickAction(openExpense: false);
+      return;
+    }
+    if (type != 'nuova_spesa') return;
+    try {
+      final groups = await widget.api.groups();
+      if (!mounted) return;
+      final group = quickActionGroup(groups);
+      if (group == null) {
+        // Nessun gruppo: non c'è dove mettere la spesa. Apriamo il foglio
+        // di creazione e, una volta creato, il foglio spesa.
+        await _newGroupFromQuickAction(openExpense: true);
+        return;
+      }
+      await _openGroup(group.id, group.name, openExpense: true);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    }
+  }
+
+  Future<void> _newGroupFromQuickAction({required bool openExpense}) async {
+    final created = await showNewGroupSheet(context, api: widget.api);
+    if (created == null || !mounted) return;
+    _changed();
+    await _openGroup(
+      created.id,
+      created.name,
+      openExpense: openExpense,
+    );
+  }
+
+  Future<void> _openGroup(
+    int id,
+    String name, {
+    bool openExpense = false,
+  }) async {
+    await Navigator.of(context).push(
+      appRoute(
+        context,
+        (_) => GroupScreen(
+          api: widget.api,
+          groupId: id,
+          initialName: name,
+          openExpenseOnStart: openExpense,
+        ),
+      ),
+    );
+    if (mounted) _changed();
   }
 
   @override
