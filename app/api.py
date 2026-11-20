@@ -419,6 +419,22 @@ def api_update_me(
     return {"user": _user_json(user)}
 
 
+@router.get("/avatar/{user_id}")
+def api_avatar(
+    user_id: int,
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    row = db.get(UserAvatar, user_id)
+    if row is None or row.kind != "photo" or not row.data:
+        raise HTTPException(404, detail="Foto non trovata")
+    return Response(
+        content=row.data,
+        media_type=row.mime or "image/jpeg",
+        headers={"Cache-Control": "private, no-cache"},
+    )
+
+
 @router.get("/wallets")
 def api_get_wallets(
     user: User = Depends(require_api_user),
@@ -768,6 +784,20 @@ def api_group_detail(
         for p in payments
     ]
 
+    avatar_rows = db.scalars(
+        select(UserAvatar).where(
+            UserAvatar.user_id.in_([m.user_id for m in view.members])
+        )
+    ).all()
+    avatars = {
+        row.user_id: {
+            "kind": row.kind,
+            "preset": row.preset or 0,
+            "background": row.background,
+            "has_photo": bool(row.data),
+        }
+        for row in avatar_rows
+    }
     perms = effective_perms(member.role, member.perms)
     return {
         "group": _group_json(group),
@@ -793,6 +823,7 @@ def api_group_detail(
         "expenses": expenses_json,
         "payments": payments_json,
         "total_expenses_minor": view.total_expenses_minor(),
+        "avatars": avatars,
         "perms": sorted(perms),
         "is_owner": member.role == "owner",
     }

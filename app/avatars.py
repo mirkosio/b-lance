@@ -1,7 +1,8 @@
-"""Avatar del profilo: foto caricata, 16 disegni geometrici o iniziale.
+"""Avatar del profilo: foto caricata, 16 pixel art animali o iniziale.
 
-Niente emoji. I 16avatar sono figure geometriche generate qui, senza file
-da scaricare: cambiano con il colore di sfondo scelto dall'utente.
+Le pixel art sono disegnate qui come rettangoli su griglia 16x16, rese con
+SVG `crispEdges`: nessuna emoji, nessuna immagine esterna, nessun giallo.
+Il colore di sfondo scelto dall'utente si applica a tutte.
 """
 
 from __future__ import annotations
@@ -12,10 +13,63 @@ import re
 from html import escape
 
 COLOR_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
-PRESET_COLORS = ("#5f8d6e", "#a8823c", "#a84a34", "#47684f")
-DEFAULT_BG = "#5f8d6e"
+DEFAULT_BG = "#5F8D6E"
 MAX_PHOTO_BYTES = 512 * 1024
-SHAPES = ("circle", "square", "triangle", "hexagon")
+
+PIXELS = {
+    "d": "#1E2A23",  # contorno e occhi
+    "c": "#F5F4EF",  # crema
+    "g": "#5F8D6E",  # salvia
+    "G": "#85B395",  # salvia chiaro
+    "r": "#A84A34",  # terracotta
+    "p": "#D98F7B",  # rosa tenue, senza giallo
+    "w": "#EFF3EE",
+}
+
+# Ogni animale: (nome, lista di rettangoli x,y,w,h,colore su griglia 16x16).
+ANIMALS: tuple[tuple[str, tuple[tuple[int, int, int, int, str], ...]], ...] = (
+    ("Gatto", ((5, 4, 6, 8, "c"), (4, 3, 2, 3, "c"), (10, 3, 2, 3, "c"),
+               (5, 2, 2, 2, "c"), (9, 2, 2, 2, "c"), (6, 6, 1, 1, "d"),
+               (9, 6, 1, 1, "d"), (7, 9, 2, 1, "r"))),
+    ("Volpe", ((4, 4, 8, 7, "r"), (3, 3, 3, 3, "r"), (10, 3, 3, 3, "r"),
+               (5, 7, 6, 3, "c"), (6, 6, 1, 1, "d"), (9, 6, 1, 1, "d"),
+               (7, 9, 2, 1, "d"))),
+    ("Cane", ((5, 5, 6, 7, "g"), (3, 4, 2, 6, "d"), (11, 4, 2, 6, "d"),
+              (6, 7, 1, 1, "d"), (9, 7, 1, 1, "d"), (7, 10, 2, 1, "d"))),
+    ("Coniglio", ((5, 6, 6, 6, "c"), (5, 1, 2, 5, "c"), (9, 1, 2, 5, "c"),
+                  (6, 7, 1, 1, "d"), (9, 7, 1, 1, "d"), (7, 10, 2, 1, "p"))),
+    ("Panda", ((4, 4, 8, 7, "c"), (4, 3, 3, 3, "d"), (9, 3, 3, 3, "d"),
+               (5, 6, 2, 2, "d"), (9, 6, 2, 2, "d"), (7, 9, 2, 1, "d"))),
+    ("Rana", ((4, 6, 8, 6, "g"), (4, 4, 3, 3, "G"), (9, 4, 3, 3, "G"),
+              (5, 5, 1, 1, "d"), (10, 5, 1, 1, "d"), (6, 9, 4, 1, "d"))),
+    ("Pinguino", ((5, 3, 6, 10, "d"), (6, 5, 4, 7, "c"), (6, 5, 1, 1, "d"),
+                  (9, 5, 1, 1, "d"), (7, 8, 2, 1, "r"), (3, 9, 2, 5, "d"),
+                  (11, 9, 2, 5, "d"))),
+    ("Gufo", ((4, 4, 8, 8, "g"), (4, 3, 2, 2, "d"), (10, 3, 2, 2, "d"),
+              (5, 6, 3, 3, "w"), (8, 6, 3, 3, "w"), (6, 7, 1, 1, "d"),
+              (9, 7, 1, 1, "d"), (7, 10, 2, 1, "r"))),
+    ("Orso", ((4, 5, 8, 7, "r"), (4, 3, 3, 3, "r"), (9, 3, 3, 3, "r"),
+              (6, 7, 1, 1, "d"), (9, 7, 1, 1, "d"), (7, 9, 2, 2, "c"))),
+    ("Topo", ((5, 6, 6, 6, "G"), (4, 4, 3, 3, "p"), (9, 4, 3, 3, "p"),
+              (6, 7, 1, 1, "d"), (9, 7, 1, 1, "d"), (7, 10, 2, 1, "p"))),
+    ("Tartaruga", ((5, 5, 7, 6, "g"), (4, 3, 2, 2, "G"), (11, 3, 2, 2, "G"),
+                   (4, 11, 2, 2, "G"), (11, 11, 2, 2, "G"), (6, 6, 2, 2, "d"),
+                   (9, 8, 2, 2, "d"))),
+    ("Pulcino", ((5, 5, 6, 7, "c"), (5, 4, 2, 2, "c"), (9, 4, 2, 2, "c"),
+                 (6, 7, 1, 1, "d"), (9, 7, 1, 1, "d"), (7, 9, 3, 1, "r"))),
+    ("Maiale", ((4, 5, 8, 7, "p"), (4, 4, 2, 2, "p"), (10, 4, 2, 2, "p"),
+                (6, 7, 1, 1, "d"), (9, 7, 1, 1, "d"), (6, 9, 4, 2, "r"))),
+    ("Mucca", ((4, 5, 8, 7, "c"), (4, 4, 2, 2, "c"), (10, 4, 2, 2, "c"),
+               (5, 6, 2, 2, "d"), (9, 8, 2, 2, "d"), (6, 7, 1, 1, "d"),
+               (9, 7, 1, 1, "d"), (6, 10, 4, 1, "p"))),
+    ("Pecora", ((4, 5, 8, 7, "c"), (3, 6, 2, 4, "c"), (11, 6, 2, 4, "c"),
+                (5, 5, 2, 2, "c"), (9, 5, 2, 2, "c"), (6, 7, 1, 1, "d"),
+                (9, 7, 1, 1, "d"), (6, 10, 4, 2, "d"))),
+    ("Anatra", ((4, 6, 8, 6, "c"), (5, 4, 6, 3, "c"), (6, 5, 1, 1, "d"),
+                (9, 5, 1, 1, "d"), (3, 8, 3, 1, "c"), (11, 8, 2, 1, "r"))),
+)
+
+PRESET_NAMES = tuple(name for name, _ in ANIMALS)
 
 
 def clean_color(value: str) -> str:
@@ -26,30 +80,22 @@ def clean_color(value: str) -> str:
 
 
 def preset_svg(index: int, background: str = DEFAULT_BG) -> str:
-    """SVG sicuro: index e colore sono convalidati da chi chiama."""
+    """Pixel art SVG sicuro: index e colore convalidati da chi chiama."""
     try:
         i = int(index)
     except (TypeError, ValueError):
         i = 0
-    i = i % 16
-    shape = SHAPES[i // 4]
-    fg = PRESET_COLORS[i % 4]
-    bg = background if COLOR_RE.match(background) else DEFAULT_BG
-    if shape == "circle":
-        art = f'<circle cx="32" cy="32" r="17" fill="{fg}"/>'
-    elif shape == "square":
-        art = f'<rect x="15" y="15" width="34" height="34" rx="8" fill="{fg}"/>'
-    elif shape == "triangle":
-        art = f'<path d="M32 12 L52 50 H12 Z" fill="{fg}"/>'
-    else:
-        art = (
-            '<path d="M32 11 L50 21 V43 L32 53 L14 43 V21 Z" fill="'
-            + fg + '"/>'
-        )
+    i = i % len(ANIMALS)
+    bg = background if COLOR_RE.match(background or "") else DEFAULT_BG
+    _, rects = ANIMALS[i]
+    body = "".join(
+        f'<rect x="{x}" y="{y}" width="{w}" height="{h}" fill="{PIXELS[c]}"/>'
+        for x, y, w, h, c in rects
+    )
     return (
-        f'<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" '
-        f'aria-hidden="true"><rect width="64" height="64" fill="{bg}"/>'
-        f"{art}</svg>"
+        '<svg viewBox="0 0 16 16" shape-rendering="crispEdges" '
+        'xmlns="http://www.w3.org/2000/svg" aria-hidden="true">'
+        f'<rect width="16" height="16" fill="{bg}"/>{body}</svg>'
     )
 
 

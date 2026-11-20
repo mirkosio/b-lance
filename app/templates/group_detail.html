@@ -103,7 +103,7 @@
     {% for m in view.members %}
       <div class="balance-row">
         <div class="person">
-          <span class="avatar" style="background:{{ m.color }}">{{ m.name[0]|upper }}</span>
+          {{ avatar_piece(m.user_id, m.name, m.color, 38, avatars.get(m.user_id)) | safe }}
           <span>{{ m.name }}</span>
           {% if not m.active %}<span class="chip">non più membro</span>{% endif %}
         </div>
@@ -181,7 +181,7 @@
   {% for m in view.members %}
     <div class="balance-row">
       <div class="person">
-        <span class="avatar" style="background:{{ m.color }}">{{ m.name[0]|upper }}</span>
+        {{ avatar_piece(m.user_id, m.name, m.color, 38, avatars.get(m.user_id)) | safe }}
         <span>{{ m.name }}{% if m.user_id == user.id %} <span class="muted small">(tu)</span>{% endif %}</span>
         {% if not m.active %}<span class="chip">Ex membro</span>
         {% elif m.role == 'owner' %}<span class="chip">Creatore</span>
@@ -366,7 +366,7 @@
         <label class="pp {% if not draft or m.user_id|string in draft.get('members', []) %}on{% endif %}" data-uid="{{ m.user_id }}">
           <input type="checkbox" name="members" value="{{ m.user_id }}"
                  {% if not draft or m.user_id|string in draft.get('members', []) %}checked{% endif %}>
-          <span class="avatar" style="background:{{ m.color }};width:22px;height:22px;font-size:0.7rem">{{ m.name[0]|upper }}</span>
+          {{ avatar_piece(m.user_id, m.name, m.color, 22, avatars.get(m.user_id)) | safe }}
           {{ m.name }}
         </label>
       {% endfor %}

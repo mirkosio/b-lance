@@ -22,7 +22,8 @@
                   aria-label="Usa l'iniziale">{{ user.name[0]|upper }}</button>
           {% for i in range(preset_count) %}
           <button type="button" class="avatar-choice" data-kind="preset"
-                  data-preset="{{ i }}" aria-label="Disegno {{ i + 1 }}">
+                  data-preset="{{ i }}" aria-label="{{ preset_names[i] }}"
+                  title="{{ preset_names[i] }}">
             {{ preset_svg(i, avatar.background if avatar else user.color) | safe }}
           </button>
           {% endfor %}
@@ -206,6 +207,12 @@
   var photo = document.getElementById('avatar-photo');
   var color = document.getElementById('avatar-color');
   var file = document.getElementById('avatar-file');
+  var saving = false;
+  function save() {
+    if (saving) return;
+    saving = true;
+    form.submit();
+  }
 
   Array.prototype.forEach.call(
     document.querySelectorAll('.avatar-choice[data-kind]'),
@@ -213,14 +220,14 @@
       button.addEventListener('click', function () {
         kind.value = button.getAttribute('data-kind');
         preset.value = button.getAttribute('data-preset') || 0;
-        form.submit();
+        save();
       });
     }
   );
 
   color.addEventListener('change', function () {
     background.value = color.value;
-    if (kind.value !== 'photo') form.submit();
+    save();
   });
 
   file.addEventListener('change', function () {
@@ -241,7 +248,7 @@
         );
         photo.value = canvas.toDataURL('image/jpeg', 0.82);
         kind.value = 'photo';
-        form.submit();
+        save();
       };
       img.src = event.target.result;
     };

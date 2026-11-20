@@ -22,12 +22,12 @@
   --primary-deep: #47684f;
   --primary-soft: #eef2ec;
   --link: #3f6a52;
-  --accent: #a8823c;
+  --accent: #5f8d6e;
   --pos: #3b7a52;
   --neg: #a84a34;
   --danger: #a0432f;
-  --gold: #a8823c;
-  --gold-ink: #80602a;
+  --gold: #5f8d6e;
+  --gold-ink: #47684f;
   --rule: #ddd2bc;
   --ink: #1e2a23;
   --radius: 20px;
@@ -58,12 +58,12 @@
   --primary-deep: #5c8a6b;
   --primary-soft: #232d26;
   --link: #9ec6ac;
-  --accent: #cfa75e;
+  --accent: #85b395;
   --pos: #6fbf90;
   --neg: #dd8b70;
   --danger: #dd8b70;
-  --gold: #cfa75e;
-  --gold-ink: #cfa75e;
+  --gold: #85b395;
+  --gold-ink: #85b395;
   --rule: #333b34;
   --ink: #eef1eb;
   --shadow: 0 2px 4px rgba(0, 0, 0, 0.35), 0 16px 40px rgba(0, 0, 0, 0.4);
@@ -85,8 +85,8 @@ body {
   color: var(--text);
   background-color: var(--bg);
   background-image:
-    radial-gradient(1100px 520px at 85% -10%, rgba(95, 141, 110, 0.05), transparent 62%),
-    radial-gradient(820px 480px at -10% 8%, rgba(168, 130, 60, 0.04), transparent 62%),
+    radial-gradient(1100px 520px at 85% -10%, rgba(95, 141, 110, 0.07), transparent 62%),
+    radial-gradient(820px 480px at -10% 8%, rgba(95, 141, 110, 0.06), transparent 62%),
     /* Texture carta: rumore SVG leggerissimo, una sola richiesta inline */
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
   background-repeat: no-repeat, no-repeat, repeat;
@@ -756,7 +756,7 @@ select option { background: #fff; color: var(--text); }
   /* Un solo velo di colore, quasi invisibile: niente "effetto sci" */
   background:
     radial-gradient(620px 300px at 92% -12%, rgba(95, 141, 110, 0.13), transparent 70%),
-    radial-gradient(420px 260px at -6% 112%, rgba(168, 130, 60, 0.09), transparent 70%),
+    radial-gradient(420px 260px at -6% 112%, rgba(95, 141, 110, 0.09), transparent 70%),
     var(--card);
   box-shadow: var(--shadow);
 }
@@ -771,9 +771,9 @@ select option { background: #fff; color: var(--text); }
 }
 .hero h1 em { font-style: normal; color: var(--primary); }
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
-  /* Accento una-tantum: verde salvia che sfuma nell'oro dei soldi */
+  /* Accento una-tantum: verde salvia che si schiarisce, senza oro */
   .hero h1 em {
-    background: linear-gradient(115deg, #2f5a41 0%, #4f7f60 55%, #9a7530 115%);
+    background: linear-gradient(115deg, #2f5a41 0%, #4f7f60 55%, #85b395 115%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -782,7 +782,7 @@ select option { background: #fff; color: var(--text); }
 :root[data-theme="dark"] .hero h1 em { color: var(--primary); }
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {
   :root[data-theme="dark"] .hero h1 em {
-    background: linear-gradient(115deg, #9ec6ac 0%, #85b395 55%, #cfa75e 115%);
+    background: linear-gradient(115deg, #9ec6ac 0%, #85b395 55%, #85b395 115%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -815,7 +815,7 @@ select option { background: #fff; color: var(--text); }
   border: 1px solid rgba(95, 141, 110, 0.25);
 }
 .feature.green .ficon { background: rgba(59, 122, 82, 0.10); color: var(--pos); border-color: rgba(59, 122, 82, 0.25); }
-.feature.gold .ficon { background: rgba(168, 130, 60, 0.10); color: var(--gold); border-color: rgba(168, 130, 60, 0.28); }
+.feature.gold .ficon { background: rgba(95, 141, 110, 0.10); color: var(--gold); border-color: rgba(95, 141, 110, 0.28); }
 .feature h3 { margin: 0 0 4px; font-size: 1rem; }
 .feature p { margin: 0; color: var(--muted); font-size: 0.9rem; }
 
@@ -870,7 +870,7 @@ body.landing footer { margin-left: 0; }
   box-shadow: none;
   background:
     radial-gradient(760px 360px at 90% -10%, rgba(95, 141, 110, 0.18), transparent 70%),
-    radial-gradient(520px 310px at -5% 110%, rgba(168, 130, 60, 0.12), transparent 70%),
+    radial-gradient(520px 310px at -5% 110%, rgba(95, 141, 110, 0.12), transparent 70%),
     var(--bg);
   position: relative;
   overflow: hidden;
@@ -974,7 +974,7 @@ body.landing footer { margin-left: 0; }
   color: #fff;
   background:
     linear-gradient(135deg, #46654e 0%, #2d4636 100%),
-    radial-gradient(400px 300px at 110% 10%, rgba(168, 130, 60, 0.15), transparent 60%);
+    radial-gradient(400px 300px at 110% 10%, rgba(95, 141, 110, 0.15), transparent 60%);
   border-radius: 28px;
   box-shadow: 0 18px 48px rgba(35, 51, 41, 0.24);
   border: 1px solid rgba(255, 255, 255, 0.12);
@@ -1021,7 +1021,7 @@ body.landing footer { margin-left: 0; }
 .phone-row .neg { color: #dd8b70; }
 .dot { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; color: #fff; font-size: 0.66rem; font-weight: 800; }
 .dot.sage { background: #5f8d6e; }
-.dot.gold { background: #a8823c; }
+.dot.gold { background: #5f8d6e; }
 .phone-cta { margin-top: 12px; padding: 10px; border: 1px solid rgba(133, 179, 149, 0.35); border-radius: 10px; color: #9ec6ac; background: rgba(95, 141, 110, 0.12); font-size: 0.72rem; font-weight: 700; text-align: center; }
 
 .landing-inner.final-cta {
@@ -1034,7 +1034,7 @@ body.landing footer { margin-left: 0; }
   padding: clamp(30px, 4vw, 52px);
   background:
     var(--primary-soft),
-    radial-gradient(300px 200px at 100% 0, rgba(168, 130, 60, 0.12), transparent 60%);
+    radial-gradient(300px 200px at 100% 0, rgba(95, 141, 110, 0.12), transparent 60%);
   border: 1px solid rgba(95, 141, 110, 0.32);
   border-radius: 28px;
   box-shadow: var(--shadow-soft);
@@ -1152,7 +1152,7 @@ body.landing footer { margin-left: 0; }
   color: var(--primary);
 }
 .groupcard .gicon.green { background: rgba(59, 122, 82, 0.10); color: var(--pos); }
-.groupcard .gicon.gold { background: rgba(168, 130, 60, 0.12); color: var(--gold); }
+.groupcard .gicon.gold { background: rgba(95, 141, 110, 0.12); color: var(--gold); }
 .groupcard .gicon.slate { background: var(--bg-soft); color: var(--muted); }
 .groupcard b { display: block; font-size: 1rem; letter-spacing: -0.01em; }
 .groupcard .meta { color: var(--muted); font-size: 0.8rem; margin-top: 4px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
@@ -1649,7 +1649,7 @@ details summary { cursor: pointer; }
   overflow: hidden;
   background:
     radial-gradient(460px 220px at 100% 0, rgba(95, 141, 110, 0.15), transparent 72%),
-    radial-gradient(300px 200px at -10% 110%, rgba(168, 130, 60, 0.08), transparent 72%),
+    radial-gradient(300px 200px at -10% 110%, rgba(95, 141, 110, 0.08), transparent 72%),
     var(--card);
   border: 1px solid var(--border);
   border-radius: 28px;
@@ -1868,7 +1868,7 @@ input[aria-invalid="true"], select[aria-invalid="true"], textarea[aria-invalid="
   padding: 24px;
   background:
     var(--primary-soft),
-    radial-gradient(200px 150px at 100% 0, rgba(168, 130, 60, 0.12), transparent 60%);
+    radial-gradient(200px 150px at 100% 0, rgba(95, 141, 110, 0.12), transparent 60%);
   border: 1px solid rgba(95, 141, 110, 0.28);
   border-radius: var(--radius);
   box-shadow: var(--shadow-soft);
@@ -2415,7 +2415,7 @@ html.js-reveal .reveal.in {
   isolation: isolate;
   background:
     radial-gradient(720px 340px at 88% -12%, rgba(95, 141, 110, 0.12), transparent 70%),
-    radial-gradient(480px 280px at -6% 108%, rgba(168, 130, 60, 0.08), transparent 70%),
+    radial-gradient(480px 280px at -6% 108%, rgba(95, 141, 110, 0.08), transparent 70%),
     var(--bg);
 }
 
@@ -2452,7 +2452,7 @@ html.js-reveal .reveal.in {
   stroke-linecap: round;
   opacity: 0.8;
 }
-:root[data-theme="dark"] .hand-underline path { stroke: #cfa75e; opacity: 0.7; }
+:root[data-theme="dark"] .hand-underline path { stroke: #85b395; opacity: 0.7; }
 
 /* Occhiello: punto statico, nessun battito. */
 .eyebrow-dot {

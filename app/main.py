@@ -41,6 +41,7 @@ from .avatars import (
     clean_color as clean_avatar_color,
     decode_photo,
     preset_svg,
+    PRESET_NAMES,
     DEFAULT_BG,
     MAX_PHOTO_BYTES,
 )
@@ -142,7 +143,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.8.3"
+APP_VERSION = "1.8.4"
 logger = logging.getLogger("b-lance")
 
 
@@ -385,6 +386,7 @@ def _jinja_filters() -> None:
     # per formattare come il backend. 2 per l'euro, 0 per lo yen.
     templates.env.globals["currency_exponent"] = _currency_exponent
     templates.env.globals["preset_svg"] = preset_svg
+    templates.env.globals["preset_names"] = PRESET_NAMES
 
 
 _jinja_filters()
@@ -410,6 +412,7 @@ def _avatar_tag(request: Request, user: User, size: int = 40, avatar=None) -> st
 
 # Registrato dopo la definizione: _jinja_filters() gira all'import del modulo.
 templates.env.globals["avatar_html"] = _avatar_tag
+templates.env.globals["avatar_piece"] = avatar_html
 
 
 def _safe_next(target: str | None) -> str:
@@ -2586,6 +2589,10 @@ def group_detail(
             "wallets": _wallets_for(
                 db, [m.user_id for m in view.members]
             ),
+            "avatars": {
+                m.user_id: db.get(UserAvatar, m.user_id)
+                for m in view.members
+            },
         },
     )
 

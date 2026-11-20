@@ -19,7 +19,8 @@ def test_colori_e_disegni() -> None:
     for i in range(16):
         svg = preset_svg(i, "#123456")
         assert svg.startswith("<svg") and "#123456" in svg
-    assert "circle" in preset_svg(0) or "<circle" in preset_svg(0)
+    assert preset_svg(0).count("<rect") >= 9  # griglia pixel art
+    assert "crispEdges" in preset_svg(0)
 
 
 def test_foto_jpeg_minima() -> None:

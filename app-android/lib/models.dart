@@ -371,6 +371,27 @@ class InvitePreview {
   );
 }
 
+class AvatarInfo {
+  const AvatarInfo({
+    required this.kind,
+    required this.preset,
+    required this.background,
+    required this.hasPhoto,
+  });
+
+  final String kind;
+  final int preset;
+  final String background;
+  final bool hasPhoto;
+
+  factory AvatarInfo.fromJson(Map<String, dynamic> j) => AvatarInfo(
+        kind: j['kind'] as String? ?? 'initial',
+        preset: (j['preset'] as num?)?.toInt() ?? 0,
+        background: j['background'] as String? ?? '#5F8D6E',
+        hasPhoto: j['has_photo'] as bool? ?? false,
+      );
+}
+
 class GroupDetail {
   const GroupDetail({
     required this.id,
@@ -384,6 +405,7 @@ class GroupDetail {
     required this.totalExpensesMinor,
     required this.isOwner,
     required this.perms,
+    this.avatars = const {},
   });
 
   final int id;
@@ -397,6 +419,7 @@ class GroupDetail {
   final int totalExpensesMinor;
   final bool isOwner;
   final List<String> perms;
+  final Map<int, AvatarInfo> avatars;
 
   Member? memberById(int id) {
     for (final m in members) {
@@ -429,6 +452,11 @@ class GroupDetail {
       perms:
           (j['perms'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           const [],
+      avatars: ((j['avatars'] as Map<String, dynamic>?) ?? const {})
+          .map((k, v) => MapEntry(
+                int.tryParse(k) ?? 0,
+                AvatarInfo.fromJson(v as Map<String, dynamic>),
+              )),
     );
   }
 }

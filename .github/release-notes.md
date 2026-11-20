@@ -1,6 +1,6 @@
-## b-lance 1.8.3 (versionCode 39)
+## b-lance 1.8.4 (versionCode 40)
 
-Aggiornamento in-place dalla 1.8.2: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.8.3: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -120,6 +120,16 @@ disinstallazione necessaria.
   dashboard.
 - Avvio dell'app più robusto: se notifiche o azioni rapide non sono
   disponibili sul dispositivo, l'app parte comunque e l'errore resta nei log.
+
+- **P0 stabilità**: rimosso temporaneamente il plugin OCR/ML Kit dalla build
+  dell'APK. Il codice resta pronto ma disattivato: era il sospetto principale
+  del crash immediato su HyperOS 3 / Android 16.
+- Avatar: 16 **pixel art** di animali al posto delle figure geometriche,
+  colore di sfondo applicabile a disegni e iniziale, salvataggio foto con
+  un solo invio alla volta, avatar ora visibile nei membri del gruppo anche
+  nell'app.
+- Tutto il giallo rimosso da logo e homepage: accenti e sfumature sono ora
+  solo verdi salvia, con bianco e nero come neutri.
 
 ### Verifiche
 
