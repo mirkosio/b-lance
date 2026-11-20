@@ -1,7 +1,7 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="app/static/logo-lockup-dark.svg">
-    <img src="app/static/logo.svg" width="300" alt="b-lance">
+    <source media="(prefers-color-scheme: dark)" srcset="app/static/logo-lockup-dark.svg?v=6">
+    <img src="app/static/logo.svg?v=6" width="300" alt="b-lance">
   </picture>
 </p>
 
