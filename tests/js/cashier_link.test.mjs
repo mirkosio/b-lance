@@ -93,21 +93,18 @@ async function run(payload) {
   context.globalThis = context;
   vm.createContext(context);
   vm.runInContext(readFileSync(SCRIPT, 'utf8'), context);
-  await settle();
+  await settle(elements['cl-balances']);
   return { elements };
 }
 
-// Dà tempo alle promise di risolversi (decodifica + costruzione DOM).
-// Solo microtask non bastano: in CI lo scheduling è più lento e il
-// pipeline (fetch → decompressione → render) non arriva in fondo. Un'attesa
-// con timer reali è affidabile in ogni ambiente.
-async function settle() {
-  for (let i = 0; i < 5; i++) {
+// Aspetta che il DOM sia pronto invece di fidarsi di un timer fisso: in CI
+// la decodifica gzip può finire dopo il timeout. Piccoli passi, limite
+// massimo di 1 secondo per non impalare i test se il render non arriva.
+async function settle(target) {
+  for (let i = 0; i < 100; i++) {
     await new Promise((resolve) => setImmediate(resolve));
-  }
-  await new Promise((resolve) => setTimeout(resolve, 120));
-  for (let i = 0; i < 5; i++) {
-    await new Promise((resolve) => setImmediate(resolve));
+    if (target && target.children.length) return;
+    await new Promise((resolve) => setTimeout(resolve, 10));
   }
 }
 
