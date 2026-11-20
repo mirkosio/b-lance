@@ -62,6 +62,7 @@ from .models import (
     RecurringExpense,
     Share,
     User,
+    UserAvatar,
     UserWallet,
     utcnow,
 )
