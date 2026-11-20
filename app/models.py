@@ -71,6 +71,38 @@ class RecoveryCode(Base):
     )
 
 
+class Friendship(Base):
+    """Amicizia esplicita: richiesta, accettazione, rimozione."""
+
+    __tablename__ = "friendships"
+    __table_args__ = (
+        UniqueConstraint(
+            "requester_id", "addressee_id", name="uq_friend_pair"
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    requester_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    addressee_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
+    status: Mapped[str] = mapped_column(String(10), default="pending")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+
+class FriendCode(Base):
+    """Codice univoco e stabile per farsi trovare dagli amici."""
+
+    __tablename__ = "friend_codes"
+
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id"), primary_key=True
+    )
+    code: Mapped[str] = mapped_column(String(16), unique=True, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class UserAvatar(Base):
     """Avatar scelto dall'utente: foto, disegno geometrico o iniziale."""
 

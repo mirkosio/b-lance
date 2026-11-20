@@ -256,6 +256,16 @@
     <p class="muted small" style="margin:6px 0 0">
       La persona deve avere un username nel profilo. Nessuna rubrica caricata.
     </p>
+    {% if friend_choices %}
+    <form method="post" action="/groups/{{ group.id }}/invite-handle"
+          class="row" style="margin-top:10px">
+      <label class="sr-only" for="friend-invite">Amico da invitare</label>
+      <select id="friend-invite" name="handle" style="flex:1">
+        {% for f in friend_choices %}<option value="{{ f.handle }}">{{ f.name }} · @{{ f.handle }}</option>{% endfor %}
+      </select>
+      <button class="btn ghost" type="submit">Invita amico</button>
+    </form>
+    {% endif %}
   {% endif %}
 </div>
 

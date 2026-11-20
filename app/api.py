@@ -24,7 +24,7 @@ from decimal import Decimal, InvalidOperation
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from .account import anonymize_user
@@ -34,6 +34,12 @@ from .auth import (
     get_user_by_email,
     hash_password,
     verify_password,
+)
+from .friends import (
+    find_user,
+    friend_code,
+    friend_ids,
+    friendship_between,
 )
 from .email_flow import (
     EmailUnavailable,
@@ -62,6 +68,8 @@ from .models import (
     RecurringExpense,
     Share,
     User,
+    Friendship,
+    FriendCode,
     UserAvatar,
     UserWallet,
     utcnow,
@@ -260,6 +268,10 @@ class JoinIn(BaseModel):
     code: str
 
 
+class FriendRequestIn(BaseModel):
+    query: str
+
+
 class WalletIn(BaseModel):
     provider: str
     handle: str = ""
@@ -418,6 +430,83 @@ def api_update_me(
         user.handle = handle
     db.commit()
     return {"user": _user_json(user)}
+
+
+@router.get("/friends")
+def api_friends(
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    rows = db.scalars(
+        select(Friendship).where(
+            or_(
+                Friendship.requester_id == user.id,
+                Friendship.addressee_id == user.id,
+            )
+        )
+    ).all()
+    out = []
+    for row in rows:
+        other_id = (
+            row.addressee_id if row.requester_id == user.id
+            else row.requester_id
+        )
+        other = db.get(User, other_id)
+        if other is None:
+            continue
+        out.append({
+            "id": other.id,
+            "name": other.name,
+            "handle": other.handle or "",
+            "status": row.status,
+            "incoming": row.addressee_id == user.id,
+        })
+    return {"friends": out, "code": friend_code(db, user.id)}
+
+
+@router.post("/friends/request")
+def api_friend_request(
+    data: FriendRequestIn,
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    target = find_user(db, data.query)
+    if target is None:
+        raise HTTPException(404, detail="Nessun utente con quel nome o codice")
+    if target.id == user.id:
+        raise HTTPException(400, detail="Non puoi aggiungere te stesso")
+    if friendship_between(db, user.id, target.id) is None:
+        db.add(Friendship(
+            requester_id=user.id, addressee_id=target.id, status="pending"
+        ))
+        db.commit()
+    return {"ok": True}
+
+
+@router.post("/friends/{other_id}/accept")
+def api_friend_accept(
+    other_id: int,
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    row = friendship_between(db, user.id, other_id)
+    if row is not None and row.addressee_id == user.id:
+        row.status = "accepted"
+        db.commit()
+    return {"ok": True}
+
+
+@router.delete("/friends/{other_id}")
+def api_friend_remove(
+    other_id: int,
+    user: User = Depends(require_api_user),
+    db: Session = Depends(get_db),
+):
+    row = friendship_between(db, user.id, other_id)
+    if row is not None:
+        db.delete(row)
+        db.commit()
+    return {"ok": True}
 
 
 @router.get("/avatar/{user_id}")

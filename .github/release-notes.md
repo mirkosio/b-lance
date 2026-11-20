@@ -1,6 +1,6 @@
-## b-lance 1.8.6 (versionCode 42)
+## b-lance 1.9.0 (versionCode 43)
 
-Aggiornamento in-place dalla 1.8.5: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.8.6: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -130,6 +130,12 @@ disinstallazione necessaria.
   nell'app.
 - Tutto il giallo rimosso da logo e homepage: accenti e sfumature sono ora
   solo verdi salvia, con bianco e nero come neutri.
+
+- **Amici** (`/amici`): aggiungi le persone con `@username` o con un codice
+  personale stabile e condivisibile come link. Richiesta, accettazione,
+  rifiuto e rimozione; la ricerca mostra solo nome e username, mai email.
+  Nella pagina di un gruppo gli amici confermati con username compaiono
+  in un menu "Invita amico". Api dedicate per lista, richiesta e risposta.
 
 ### Verifiche
 

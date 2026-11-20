@@ -52,16 +52,16 @@ def test_about_is_a_hub_with_legacy_anchors(client: TestClient) -> None:
     r = client.get("/about")
     assert r.status_code == 200
     for path in ("/come-funziona", "/faq", "/privacy", "/android",
-                 "/i-tuoi-dati", "/chi-siamo", "/guida-vacanza"):
+                 "/i-tuoi-dati", "/chi-siamo", "/guida-vacanza", "/amici"):
         assert f'href="{path}"' in r.text
-    for anchor in ("come-funziona", "faq", "privacy", "chi-siamo", "guida", "dati", "app"):
+    for anchor in ("come-funziona", "faq", "privacy", "chi-siamo", "guida", "amici", "dati", "app"):
         assert f'id="{anchor}"' in r.text
 
 
 def test_sitemap_lists_info_pages(client: TestClient) -> None:
     r = client.get("/sitemap.xml")
     assert r.status_code == 200
-    for path in ("/come-funziona", "/android", "/faq", "/privacy", "/come-manteniamo", "/chi-siamo", "/guida-vacanza", "/i-tuoi-dati", "/demo"):
+    for path in ("/come-funziona", "/android", "/faq", "/privacy", "/come-manteniamo", "/chi-siamo", "/guida-vacanza", "/amici", "/i-tuoi-dati", "/demo"):
         assert f"{path}</loc>" in r.text
 
 

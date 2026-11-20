@@ -93,6 +93,7 @@ from .email_flow import (
     smtp_configured,
     verification_required,
 )
+from .friends import friend_code, find_user, friend_ids, friendship_between
 from .export import group_csv, group_pdf, summary_pdf
 from .models import (
     Expense,
@@ -102,6 +103,8 @@ from .models import (
     Payment,
     RecoveryCode,
     RecurringExpense,
+    Friendship,
+    FriendCode,
     UserWallet,
     UserAvatar,
     EmailToken,
@@ -143,7 +146,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.8.6"
+APP_VERSION = "1.9.0"
 logger = logging.getLogger("b-lance")
 
 
@@ -535,6 +538,7 @@ def sitemap(request: Request) -> Response:
         "/come-manteniamo",
         "/chi-siamo",
         "/guida-vacanza",
+        "/amici",
         "/i-tuoi-dati",
         "/andamento",
         "/demo",
@@ -982,6 +986,123 @@ def reset_password(
     row.used_at = utcnow()
     db.commit()
     return RedirectResponse("/login?reset=1", status_code=303)
+
+
+# ---------------------------------------------------------------- amici
+def _friends_context(request: Request, user: User, db: Session, **extra) -> dict:
+    rows = db.scalars(
+        select(Friendship).where(
+            or_(
+                Friendship.requester_id == user.id,
+                Friendship.addressee_id == user.id,
+            )
+        ).order_by(Friendship.created_at.desc())
+    ).all()
+    people = []
+    for row in rows:
+        other_id = (
+            row.addressee_id if row.requester_id == user.id
+            else row.requester_id
+        )
+        other = db.get(User, other_id)
+        if other is None:
+            continue
+        people.append({
+            "id": other.id,
+            "name": other.name,
+            "handle": other.handle or "",
+            "status": row.status,
+            "incoming": row.addressee_id == user.id,
+            "avatar": db.get(UserAvatar, other.id),
+        })
+    base = {
+        "request": request,
+        "user": user,
+        "people": people,
+        "my_code": friend_code(db, user.id),
+        "link": str(request.base_url).rstrip("/") + "/amici?add=" + friend_code(db, user.id),
+    }
+    base.update(extra)
+    return base
+
+
+@app.get("/amici")
+def friends_page(
+    request: Request,
+    add: str = Query(""),
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    return templates.TemplateResponse(
+        request,
+        "friends.html",
+        _friends_context(request, user, db, add=add.strip().upper()),
+    )
+
+
+@app.post("/amici/request")
+def friend_request(
+    request: Request,
+    query: str = Form(...),
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    target = find_user(db, query)
+    if target is None:
+        return templates.TemplateResponse(
+            request,
+            "friends.html",
+            _friends_context(
+                request, user, db,
+                error="Nessun utente con quel nome o codice. Controlla e riprova.",
+            ),
+            status_code=404,
+        )
+    if target.id == user.id:
+        return templates.TemplateResponse(
+            request,
+            "friends.html",
+            _friends_context(request, user, db, error="Non puoi aggiungere te stesso."),
+            status_code=400,
+        )
+    existing = friendship_between(db, user.id, target.id)
+    if existing is None:
+        db.add(
+            Friendship(
+                requester_id=user.id,
+                addressee_id=target.id,
+                status="pending",
+            )
+        )
+        db.commit()
+    return RedirectResponse("/amici?ok=1", status_code=303)
+
+
+@app.post("/amici/{other_id}/accept")
+def friend_accept(
+    other_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    row = friendship_between(db, user.id, other_id)
+    if row is not None and row.addressee_id == user.id:
+        row.status = "accepted"
+        row.updated_at = utcnow()
+        db.commit()
+    return RedirectResponse("/amici?ok=1", status_code=303)
+
+
+@app.post("/amici/{other_id}/remove")
+def friend_remove(
+    other_id: int,
+    user: User = Depends(require_user),
+    db: Session = Depends(get_db),
+):
+    row = friendship_between(db, user.id, other_id)
+    if row is not None:
+        db.delete(row)
+        db.commit()
+    return RedirectResponse("/amici?ok=1", status_code=303)
 
 
 # ---------------------------------------------------------------- informazioni
@@ -2593,6 +2714,18 @@ def group_detail(
                 m.user_id: db.get(UserAvatar, m.user_id)
                 for m in view.members
             },
+            "friend_choices": [
+                {
+                    "id": fid,
+                    "name": (db.get(User, fid).name if db.get(User, fid) else "?"),
+                    "handle": (
+                        db.get(User, fid).handle or ""
+                        if db.get(User, fid) else ""
+                    ),
+                }
+                for fid in friend_ids(db, user.id)
+                if db.get(User, fid) is not None and db.get(User, fid).handle
+            ],
         },
     )
 

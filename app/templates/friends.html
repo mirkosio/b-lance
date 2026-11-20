@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Amici — b-lance{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <h1>Amici</h1>
+  <p>Aggiungi le persone con cui dividi le spese, tramite username o codice. Nessuna rubrica caricata.</p>
+</div>
+
+<div class="card">
+  <h2 class="section-title">Il tuo codice amico</h2>
+  <p class="muted small">Condividilo: chi lo inserisce qui ti manda una richiesta. Non cambia mai.</p>
+  <div class="invite-box row" style="justify-content:space-between">
+    <b class="num">{{ my_code }}</b>
+    <button class="btn sm ghost" type="button"
+            onclick="copyText({{ link | tojson }}, this, 'Link amico copiato')">Copia link</button>
+  </div>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2 class="section-title">Trova una persona</h2>
+  {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+  {% if ok %}<div class="alert ok" role="status">Richiesta inviata.</div>{% endif %}
+  <form method="post" action="/amici/request" class="row">
+    <label class="sr-only" for="friend-query">Username o codice</label>
+    <input type="text" id="friend-query" name="query" required
+           placeholder="@username o codice" autocapitalize="none"
+           value="{{ add|default('') }}" style="flex:1">
+    <button class="btn" type="submit">Cerca e aggiungi</button>
+  </form>
+  <p class="muted small" style="margin-top:8px">
+    Non mostriamo email: vedi solo nome e username. Le richieste scadono se le rimuovi.
+  </p>
+</div>
+
+<div class="card" style="margin-top:16px">
+  <h2 class="section-title">Le tue amicizie</h2>
+  {% if not people %}
+  <p class="muted">Nessuna amicizia per ora. Condividi il tuo codice o cerca qualcuno.</p>
+  {% else %}
+  {% for p in people %}
+  <div class="balance-row">
+    <span class="person">
+      {{ avatar_piece(p.id, p.name, p.avatar.background if p.avatar else '#5F8D6E', 30, p.avatar) }}
+      <span>{{ p.name }}{% if p.handle %} <span class="muted small">@{{ p.handle }}</span>{% endif %}</span>
+    </span>
+    <span class="muted small">
+      {% if p.status == 'accepted' %}Amico{% elif p.incoming %}Richiesta ricevuta{% else %}In attesa{% endif %}
+    </span>
+    <span class="row" style="gap:6px;margin:0">
+      {% if p.status == 'pending' and p.incoming %}
+      <form method="post" action="/amici/{{ p.id }}/accept" style="margin:0">
+        <button class="btn sm" type="submit">Accetta</button>
+      </form>
+      {% endif %}
+      <form method="post" action="/amici/{{ p.id }}/remove" style="margin:0"
+            onsubmit="return confirm('Rimuovere {{ p.name }} dagli amici?')">
+        <button class="btn sm ghost" type="submit">Rimuovi</button>
+      </form>
+    </span>
+  </div>
+  {% endfor %}
+  {% endif %}
+</div>
+{% endblock %}
