@@ -1404,7 +1404,17 @@ body.landing footer { margin-left: 0; }
 }
 .expense-item.is-voided .meta { text-decoration: none; }
 
+.invite-qr {
+  display: block;
+  border-radius: 10px;
+  image-rendering: pixelated;
+  flex: 0 0 auto;
+}
 .invite-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 14px;
   border-radius: var(--radius-sm);
   border: 1px dashed rgba(95, 141, 110, 0.55);

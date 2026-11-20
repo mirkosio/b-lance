@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import io
+import re as _re_import
 import binascii
 import json
 import logging
@@ -27,6 +29,7 @@ from fastapi import (
 )
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+import qrcode
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import delete, or_, select
 from sqlalchemy.exc import OperationalError
@@ -146,7 +149,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.9.1"
+APP_VERSION = "1.9.2"
 logger = logging.getLogger("b-lance")
 
 
@@ -3407,6 +3410,24 @@ def add_payment(
     except (MoneyError, ValueError) as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     return RedirectResponse(f"/groups/{group.id}", status_code=303)
+
+
+@app.get("/qr")
+def qr_image(request: Request, path: str = Query("")):
+    """QR di un link interno: inviti e riepiloghi. Niente URL esterni."""
+    if not _re_import.fullmatch(
+        r"/(join|s)/[A-Za-z0-9_-]{4,64}", path.strip()
+    ):
+        raise HTTPException(400, detail="Percorso non valido per il QR")
+    url = str(request.base_url).rstrip("/") + path.strip()
+    image = qrcode.make(url, box_size=8, border=2)
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return Response(
+        content=buffer.getvalue(),
+        media_type="image/png",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
 
 
 @app.post("/api/events")

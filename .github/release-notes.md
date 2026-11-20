@@ -1,6 +1,6 @@
-## b-lance 1.9.1 (versionCode 44)
+## b-lance 1.9.2 (versionCode 45)
 
-Aggiornamento in-place dalla 1.9.0: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.9.1: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -141,6 +141,10 @@ disinstallazione necessaria.
   nero/crema/verde salvia, senza bordo, con la **b** e la **l** nei piatti.
   Rigenerati a partire da esso: mark, versione chiara, lockup con wordmark,
   favicon, icone PWA/maskable, icona Apple, og.png e icone Android.
+
+- **QR code** per invitare al gruppo e per aprire il riepilogo condiviso,
+  generati sul server solo per link interni (`/join/...` e `/s/...`):
+  nessun URL esterno può finire in un QR servito da b-lance.
 
 ### Verifiche
 

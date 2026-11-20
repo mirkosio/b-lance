@@ -235,7 +235,9 @@
   <div class="section-title">Invita nel gruppo</div>
   <p class="muted small">Condividi questo codice o link. Chi lo apre si unisce al gruppo.</p>
   <div class="invite-box">
-    {{ request.url_for('join_by_code', code=group.invite_code) }}
+    <span>{{ request.url_for('join_by_code', code=group.invite_code) }}</span>
+    <img class="invite-qr" src="/qr?path=/join/{{ group.invite_code }}"
+         width="88" height="88" alt="QR code per unirsi al gruppo">
   </div>
   <div class="row" style="margin-top:12px">
     <button class="btn ghost" type="button" onclick="copyInvite(this)">Copia link</button>
@@ -287,6 +289,9 @@
       <input id="share-url" type="text" readonly value="{{ share_url }}" style="flex:1;border:0;background:transparent;font:inherit;color:inherit">
       <button class="btn sm ghost" type="button" onclick="copyText(document.getElementById('share-url').value, this, 'Link del riepilogo copiato')">Copia</button>
     </div>
+    <p class="muted small" style="margin:10px 0 0">Oppure inquadra il QR:</p>
+    <img class="invite-qr" src="/qr?path=/s/{{ share_token }}"
+         width="104" height="104" alt="QR code del riepilogo">
     <div class="row" style="margin-top:12px">
       <a class="btn sm" href="{{ share_url }}" target="_blank" rel="noopener">Apri riepilogo</a>
       <a class="btn sm ghost" href="/s/{{ share_token }}/pdf">PDF</a>
