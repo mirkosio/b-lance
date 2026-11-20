@@ -7,13 +7,43 @@
       <stop offset="1" stop-color="#47684F"/>
     </linearGradient>
   </defs>
-  <g transform="translate(8 8) scale(0.75)">
-    <rect x="0.5" y="0.5" width="63" height="63" rx="15.5" fill="#0A0E0B" stroke="#35473B" stroke-width="1"/>
-    <circle cx="38" cy="38" r="16" fill="url(#blg)"/>
-    <circle cx="38" cy="38" r="8" fill="#0A0E0B"/>
-    <rect x="16" y="10" width="8" height="43" rx="4" fill="#F5F4EF"/>
-    <rect x="10" y="48" width="14" height="5" rx="2.5" fill="#F5F4EF"/>
-  </g>
+  <g transform="translate(8 8) scale(0.75)"><!-- Background: Deep Black rounded square, no border -->
+  <rect width="64" height="64" rx="14" fill="#0A0E0B" />
+
+  <!-- Scale Base & Central Post (Warm Cream #F5F4EF) -->
+  <rect x="23" y="51" width="18" height="3" rx="1.5" fill="#F5F4EF" />
+  <rect x="30.5" y="16" width="3" height="36" fill="#F5F4EF" />
+
+  <!-- Top Finial & Perfectly Horizontal Beam -->
+  <circle cx="32" cy="14" r="2.2" fill="#F5F4EF" />
+  <rect x="13" y="17.5" width="38" height="2.6" rx="1.3" fill="#F5F4EF" />
+
+  <!-- Beam End Pivots -->
+  <circle cx="14.5" cy="18.8" r="1.8" fill="#F5F4EF" />
+  <circle cx="49.5" cy="18.8" r="1.8" fill="#F5F4EF" />
+
+  <!-- Left Chains (Sage Green #5F8D6E) -->
+  <line x1="14.5" y1="18.8" x2="7.5" y2="38" stroke="#5F8D6E" stroke-width="1.2" stroke-linecap="round" />
+  <line x1="14.5" y1="18.8" x2="21.5" y2="38" stroke="#5F8D6E" stroke-width="1.2" stroke-linecap="round" />
+
+  <!-- Right Chains (Sage Green #5F8D6E) -->
+  <line x1="49.5" y1="18.8" x2="42.5" y2="38" stroke="#5F8D6E" stroke-width="1.2" stroke-linecap="round" />
+  <line x1="49.5" y1="18.8" x2="56.5" y2="38" stroke="#5F8D6E" stroke-width="1.2" stroke-linecap="round" />
+
+  <!-- Left Pan (Sage Green #5F8D6E) -->
+  <path d="M 6.5 38 H 22.5 A 8 7.5 0 0 1 6.5 38 Z" fill="#5F8D6E" />
+
+  <!-- Right Pan (Sage Green #5F8D6E) -->
+  <path d="M 41.5 38 H 57.5 A 8 7.5 0 0 1 41.5 38 Z" fill="#5F8D6E" />
+
+  <!-- Smaller lowercase "b" & "l" in a crisp humanist/geometric sans stack (e.g. Atkinson Hyperlegible / IBM Plex Sans / SF Pro / Segoe UI) -->
+  <!-- Note: Using bespoke vector paths modeled after a clean humanist sans (curved tail on 'l', rounded bowl on 'b') so the font renders reliably everywhere without external font loading -->
+  
+  <!-- Left plate: compact lowercase "b" (Warm Cream #F5F4EF) -->
+  <path d="M 12.1 29.2 H 13.5 V 32.3 C 13.9 31.8 14.5 31.5 15.2 31.5 C 16.6 31.5 17.5 32.5 17.5 34.0 C 17.5 35.5 16.6 36.5 15.2 36.5 C 14.5 36.5 13.9 36.2 13.5 35.7 V 36.4 H 12.1 Z M 14.8 32.7 C 14.0 32.7 13.5 33.2 13.5 34.0 C 13.5 34.8 14.0 35.3 14.8 35.3 C 15.6 35.3 16.1 34.8 16.1 34.0 C 16.1 33.2 15.6 32.7 14.8 32.7 Z" fill="#F5F4EF" fill-rule="evenodd" />
+
+  <!-- Right plate: compact lowercase "l" with humanist curved terminal (Warm Cream #F5F4EF) -->
+  <path d="M 48.5 29.2 H 49.9 V 34.5 C 49.9 35.1 50.2 35.3 50.7 35.3 H 51.0 V 36.4 H 50.4 C 49.1 36.4 48.5 35.8 48.5 34.5 Z" fill="#F5F4EF" /></g>
   <g transform="translate(72 44) scale(0.035)">
     <path fill="#242B27" d="M268.0 11Q239.0 11 201.0 7.0Q163.0 3 127.0 -4.5Q91.0 -12 67.0 -24V-646Q67.0 -669 53.0 -682.0Q39.0 -695 6.0 -695V-727Q29.0 -743 61.0 -755.5Q93.0 -768 125.5 -776.0Q158.0 -784 179.0 -784Q203.0 -784 213.0 -773.5Q223.0 -763 223.0 -738V-596L220.0 -501Q240.0 -522 268.0 -531.0Q296.0 -540 330.0 -540Q385.0 -540 433.0 -512.0Q481.0 -484 511.0 -427.5Q541.0 -371 541.0 -283Q541.0 -187 504.0 -121.5Q467.0 -56 405.0 -22.5Q343.0 11 268.0 11ZM271.0 -62Q298.0 -62 320.5 -79.5Q343.0 -97 356.0 -138.0Q369.0 -179 369.0 -249Q369.0 -359 338.0 -407.0Q307.0 -455 261.0 -455Q239.0 -455 223.0 -444V-81Q242.0 -62 271.0 -62Z"/>
     <path fill="#5F8D6E" d="M584.5714285714286 -214Q580.5714285714286 -222 579.0714285714286 -234.0Q577.5714285714286 -246 577.5714285714286 -258Q577.5714285714286 -272 579.0714285714286 -289.5Q580.5714285714286 -307 584.5714285714286 -314H937.5714285714286Q941.5714285714286 -306 943.0714285714286 -288.5Q944.5714285714286 -271 944.5714285714286 -258Q944.5714285714286 -245 943.0714285714286 -233.0Q941.5714285714286 -221 938.5714285714286 -214Z"/>

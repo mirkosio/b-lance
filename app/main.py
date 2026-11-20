@@ -146,7 +146,7 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 SESSION_COOKIE = "bl_session"
 # Una sola fonte per la versione mostrata nelle pagine informative del sito.
 # Il test test_versione_coerente la confronta con ui.dart e con il README.
-APP_VERSION = "1.9.0"
+APP_VERSION = "1.9.1"
 logger = logging.getLogger("b-lance")
 
 

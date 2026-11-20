@@ -1,6 +1,6 @@
-## b-lance 1.9.0 (versionCode 43)
+## b-lance 1.9.1 (versionCode 44)
 
-Aggiornamento in-place dalla 1.8.6: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.9.0: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -136,6 +136,11 @@ disinstallazione necessaria.
   rifiuto e rimozione; la ricerca mostra solo nome e username, mai email.
   Nella pagina di un gruppo gli amici confermati con username compaiono
   in un menu "Invita amico". Api dedicate per lista, richiesta e risposta.
+
+- Nuovo **marchio**: bilancia classica a due piattini con traversa dritta,
+  nero/crema/verde salvia, senza bordo, con la **b** e la **l** nei piatti.
+  Rigenerati a partire da esso: mark, versione chiara, lockup con wordmark,
+  favicon, icone PWA/maskable, icona Apple, og.png e icone Android.
 
 ### Verifiche
 
