@@ -3,13 +3,14 @@
 {% block meta_description %}Prova b-lance senza registrarti: aggiungi una spesa, guarda saldi e bonifici aggiornarsi. I dati restano nel browser.{% endblock %}
 {% block og_title %}Prova la demo — b-lance{% endblock %}
 {% block og_description %}Un conto di gruppo vero, senza account. Aggiungi una spesa e guarda saldi e bonifici.{% endblock %}
-{% block body_class %}demo-page {% if user %}authed{% else %}guest{% endif %}{% endblock %}
+{% block body_class %}demo-page site-v2 {% if user %}authed{% else %}guest{% endif %}{% endblock %}
 {% block content %}
 <article class="demo-shell">
   <header class="demo-hero">
+    <div class="demo-hero-inner">
     <span class="eyebrow">Prova senza registrarti</span>
     <h1>Fai un conto vero,<br><em>senza account.</em></h1>
-    <p>
+    <p class="demo-lede">
       Questa è una demo. Aggiungi una spesa e guarda saldi e bonifici
       aggiornarsi. I dati restano in questa pagina e non vengono salvati.
     </p>
@@ -17,6 +18,7 @@
       <svg width="18" height="18" aria-hidden="true"><use href="#i-info"></use></svg>
       <span>Stai provando la demo. Nessun dato viene inviato.</span>
     </p>
+    </div>
   </header>
 
   <div class="demo-grid">

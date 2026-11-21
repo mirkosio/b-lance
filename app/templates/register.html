@@ -1,39 +1,60 @@
 {% extends "base.html" %}
 {% block title %}Registrati — b-lance{% endblock %}
+{% block body_class %}auth-page site-v2 {% if user %}authed{% else %}guest{% endif %}{% endblock %}
 {% block content %}
-<div class="card" style="max-width:430px;margin:26px auto">
-  <div class="auth-brand">
-    <img class="brand-badge" src="/static/logo-mark.svg?v=6" width="46" height="46" alt="b-lance">
-  </div>
-  <h1 class="section-title" style="justify-content:center">Crea account</h1>
-  {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
-  {% if sent %}
-  <div class="alert ok" role="status">
-    Abbiamo mandato un link di conferma a <b>{{ sent }}</b>. Aprilo per
-    entrare: il link vale 24 ore e si può usare una sola volta.
-    Non hai ricevuto nulla?
-    <form method="post" action="/resend-verification" style="margin:8px 0 0">
-      <input type="hidden" name="email" value="{{ sent }}">
-      <button class="btn sm ghost" type="submit">Invia di nuovo</button>
-    </form>
-  </div>
-  {% endif %}
-  <form method="post" action="/register" data-inline-validation novalidate>
-    <input type="hidden" name="next" value="{{ next|default('') }}">
-    <label for="register-name">Nome</label>
-    <input type="text" id="register-name" name="name" required maxlength="60" autofocus autocomplete="name" placeholder="Come ti chiami?">
-    <label for="register-email">Email</label>
-    <input type="email" id="register-email" name="email" required autocomplete="email" placeholder="tu@email.com">
-    <label for="register-password">Password</label>
-    <input type="password" id="register-password" name="password" required minlength="6" autocomplete="new-password" placeholder="Almeno 6 caratteri">
-    <div style="margin-top:18px">
-      <button class="btn block" type="submit">
-        <svg width="17" height="17"><use href="#i-bolt"></use></svg> Crea account
-      </button>
+<div class="auth-shell">
+  <aside class="auth-aside">
+    <div class="auth-aside-inner">
+      <a class="info-back" href="/" aria-label="Torna alla home">← <span>Home</span></a>
+      <p class="eyebrow">Si comincia qui</p>
+      <h1>Un gruppo,<br><em>un conto.</em></h1>
+      <p class="auth-aside-lede">Crea il primo gruppo in meno di un minuto. Gratis, senza carta di credito.</p>
+      <ul class="auth-facts" aria-label="In breve">
+        <li><b>01</b> Niente pubblicità</li>
+        <li><b>02</b> Niente vendita di dati</li>
+        <li><b>03</b> Codice aperto</li>
+      </ul>
+      <span class="auth-aside-foot">b-lance · conti di gruppo</span>
     </div>
-  </form>
-  <p class="muted small" style="margin-top:16px;text-align:center">
-    Hai già un account? <a href="/login?next={{ next|default('')|urlencode }}">Accedi</a>
-  </p>
+  </aside>
+
+  <section class="auth-panel">
+    <div class="card auth-card">
+      <div class="auth-brand">
+        <img class="brand-badge" src="/static/logo-mark.svg?v=6" width="46" height="46" alt="b-lance">
+      </div>
+      <p class="auth-card-kicker">Nuovo account</p>
+      <h2 class="auth-card-title">Crea account</h2>
+      {% if error %}<div class="alert" role="alert">{{ error }}</div>{% endif %}
+      {% if sent %}
+      <div class="alert ok" role="status">
+        Abbiamo mandato un link di conferma a <b>{{ sent }}</b>. Aprilo per
+        entrare: il link vale 24 ore e si può usare una sola volta.
+        Non hai ricevuto nulla?
+        <form method="post" action="/resend-verification" style="margin:8px 0 0">
+          <input type="hidden" name="email" value="{{ sent }}">
+          <button class="btn sm ghost" type="submit">Invia di nuovo</button>
+        </form>
+      </div>
+      {% endif %}
+      <form method="post" action="/register" data-inline-validation novalidate>
+        <input type="hidden" name="next" value="{{ next|default('') }}">
+        <label for="register-name">Nome</label>
+        <input type="text" id="register-name" name="name" required maxlength="60" autofocus autocomplete="name" placeholder="Come ti chiami?">
+        <label for="register-email">Email</label>
+        <input type="email" id="register-email" name="email" required autocomplete="email" placeholder="tu@email.com">
+        <label for="register-password">Password</label>
+        <input type="password" id="register-password" name="password" required minlength="6" autocomplete="new-password" placeholder="Almeno 6 caratteri">
+        <div style="margin-top:18px">
+          <button class="btn block" type="submit">
+            <svg width="17" height="17" aria-hidden="true"><use href="#i-bolt"></use></svg> Crea account
+          </button>
+        </div>
+      </form>
+      <p class="muted small" style="margin-top:16px;text-align:center">
+        Hai già un account? <a href="/login?next={{ next|default('')|urlencode }}">Accedi</a>
+      </p>
+    </div>
+  </section>
 </div>
 {% endblock %}

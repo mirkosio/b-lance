@@ -3,10 +3,11 @@
 {% block meta_description %}{{ info.intro }}{% endblock %}
 {% block og_title %}{{ info.title }} — b-lance{% endblock %}
 {% block og_description %}{{ info.intro }}{% endblock %}
-{% block body_class %}info-page {% if user %}authed{% else %}guest{% endif %}{% endblock %}
+{% block body_class %}info-page site-v2 {% if user %}authed{% else %}guest{% endif %}{% endblock %}
 {% block content %}
 <article class="info-shell">
   <header class="info-hero">
+    <div class="info-hero-inner">
     <a class="info-back" href="/" aria-label="Torna alla home">← <span>Home</span></a>
     <span class="eyebrow">{{ info.eyebrow }}</span>
     <h1>{{ info.title }}</h1>
@@ -18,10 +19,12 @@
       {% endfor %}
     </ul>
     {% endif %}
+    </div>
   </header>
 
   {% if info.example %}
   <section class="info-example reveal" aria-labelledby="info-example-title" data-reveal>
+   <div class="info-example-inner">
     <div class="info-example-copy">
       <span class="eyebrow">{{ info.example.eyebrow }}</span>
       <h2 id="info-example-title">{{ info.example.title }}</h2>
@@ -50,6 +53,7 @@
         <b class="num">{{ info.example.total }}</b>
       </div>
     </div>
+   </div>
   </section>
   {% endif %}
 

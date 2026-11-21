@@ -1,114 +1,124 @@
 {% extends "base.html" %}
 {% block title %}Informazioni — b-lance{% endblock %}
 {% block meta_description %}Cos'è b-lance, come funziona e dove trovare FAQ, privacy e app Android.{% endblock %}
+{% block body_class %}about-page site-v2 {% if user %}authed{% else %}guest{% endif %}{% endblock %}
 {% block content %}
-<section class="card">
-  <div>
-    <div class="about-brand">
-      <img class="brand-badge" src="/static/logo-mark.svg?v=6" width="52" height="52" alt="b-lance">
-      <div>
-        <h1 class="section-title" style="margin:0">Informazioni</h1>
-        <p class="muted" style="margin:6px 0 0">Dividi le spese, non le amicizie.</p>
-      </div>
-    </div>
+<section class="about-masthead">
+  <div class="about-masthead-inner">
+    <a class="info-back" href="/" aria-label="Torna alla home">← <span>Home</span></a>
+    <p class="eyebrow">Il progetto</p>
+    <h1>Informazioni<span class="about-dot">.</span></h1>
+    <p class="about-lede">Dividi le spese, non le amicizie.</p>
+    <p class="about-body">
+      b-lance è un'app per tenere i conti di gruppo senza fogli Excel e senza
+      discussioni. Vacanze, case condivise, cene, regali: ogni spesa resta
+      tracciata e ogni saldo torna al centesimo.
+    </p>
+    <p class="about-note">
+      Gratis, senza pubblicità e senza vendita di dati. Il codice è aperto su
+      <a href="https://github.com/mirkosio/b-lance" rel="noopener">GitHub</a>.
+    </p>
+    <span class="about-stamp" aria-hidden="true">bl<br>01</span>
   </div>
-  <p style="margin-top:16px">
-    b-lance è un'app per tenere i conti di gruppo senza fogli Excel e senza
-    discussioni. Vacanze, case condivise, cene, regali: ogni spesa resta
-    tracciata e ogni saldo torna al centesimo.
-  </p>
-  <p class="muted small" style="margin-bottom:0">
-    Gratis, senza pubblicità e senza vendita di dati. Il codice è aperto su
-    <a href="https://github.com/mirkosio/b-lance" rel="noopener">GitHub</a>.
-  </p>
 </section>
 
-<div class="grid cols-2">
-  <a class="card info-link-card" id="come-funziona" href="/come-funziona">
-    <div class="section-title">Come funziona</div>
-    <p class="muted small">
-      Crea il gruppo, aggiungi le spese e chiudi i conti. b-lance calcola saldi
-      e bonifici minimi, senza fogli di calcolo.
-    </p>
-    <span class="info-link-more">I quattro passaggi →</span>
-  </a>
+<section class="about-index">
+  <div class="about-index-head">
+    <span class="eyebrow">Indice</span>
+    <span>Otto letture, detto senza marketing</span>
+  </div>
 
-  <a class="card info-link-card" id="faq" href="/faq">
-    <div class="section-title">Domande frequenti</div>
-    <p class="muted small">
-      Gratis? Serve la rubrica? Cosa succede se annullo una spesa? Le risposte
-      rapide su gruppi, pagamenti e dati.
-    </p>
-    <span class="info-link-more">Leggi le FAQ →</span>
-  </a>
+  <div class="grid cols-2">
+    <a class="card info-link-card" id="come-funziona" href="/come-funziona">
+      <span class="info-link-num" aria-hidden="true">01</span>
+      <div class="section-title">Come funziona</div>
+      <p class="muted small">
+        Crea il gruppo, aggiungi le spese e chiudi i conti. b-lance calcola saldi
+        e bonifici minimi, senza fogli di calcolo.
+      </p>
+      <span class="info-link-more">I quattro passaggi →</span>
+    </a>
 
-  <a class="card info-link-card" id="privacy" href="/privacy">
-    <div class="section-title">Privacy</div>
-    <p class="muted small">
-      Niente rubrica caricata, niente pubblicità. I link condivisi scadono dopo
-      30 giorni e il Cassiere resta sul telefono.
-    </p>
-    <span class="info-link-more">Come trattiamo i dati →</span>
-  </a>
+    <a class="card info-link-card" id="faq" href="/faq">
+      <span class="info-link-num" aria-hidden="true">02</span>
+      <div class="section-title">Domande frequenti</div>
+      <p class="muted small">
+        Gratis? Serve la rubrica? Cosa succede se annullo una spesa? Le risposte
+        rapide su gruppi, pagamenti e dati.
+      </p>
+      <span class="info-link-more">Leggi le FAQ →</span>
+    </a>
 
-  <a class="card info-link-card" id="chi-siamo" href="/chi-siamo">
-    <div class="section-title">Chi siamo</div>
-    <p class="muted small">
-      Una persona, codice aperto, nessun investitore. Perché esiste e cosa
-      non è, detto senza marketing.
-    </p>
-    <span class="info-link-more">Leggi la pagina →</span>
-  </a>
+    <a class="card info-link-card" id="privacy" href="/privacy">
+      <span class="info-link-num" aria-hidden="true">03</span>
+      <div class="section-title">Privacy</div>
+      <p class="muted small">
+        Niente rubrica caricata, niente pubblicità. I link condivisi scadono dopo
+        30 giorni e il Cassiere resta sul telefono.
+      </p>
+      <span class="info-link-more">Come trattiamo i dati →</span>
+    </a>
 
-  <a class="card info-link-card" id="guida" href="/guida-vacanza">
-    <div class="section-title">Guida alla vacanza</div>
-    <p class="muted small">
-      Cinque passi per dividere le spese di un viaggio e chiudere i conti
-      senza discussioni.
-    </p>
-    <span class="info-link-more">Leggi la guida →</span>
-  </a>
+    <a class="card info-link-card" id="chi-siamo" href="/chi-siamo">
+      <span class="info-link-num" aria-hidden="true">04</span>
+      <div class="section-title">Chi siamo</div>
+      <p class="muted small">
+        Una persona, codice aperto, nessun investitore. Perché esiste e cosa
+        non è, detto senza marketing.
+      </p>
+      <span class="info-link-more">Leggi la pagina →</span>
+    </a>
 
-  <a class="card info-link-card" id="amici" href="/amici">
-    <div class="section-title">Amici</div>
-    <p class="muted small">
-      Aggiungi le persone con username o codice e invitale nei gruppi senza
-      caricare la rubrica.
-    </p>
-    <span class="info-link-more">Trova gli amici →</span>
-  </a>
+    <a class="card info-link-card" id="guida" href="/guida-vacanza">
+      <span class="info-link-num" aria-hidden="true">05</span>
+      <div class="section-title">Guida alla vacanza</div>
+      <p class="muted small">
+        Cinque passi per dividere le spese di un viaggio e chiudere i conti
+        senza discussioni.
+      </p>
+      <span class="info-link-more">Leggi la guida →</span>
+    </a>
 
-  <a class="card info-link-card" id="dati" href="/i-tuoi-dati">
-    <div class="section-title">I tuoi dati</div>
-    <p class="muted small">
-      Cosa salviamo, cosa puoi scaricare in JSON e cosa succede se elimini
-      l'account. Scritto per chi non vuole leggere un contratto.
-    </p>
-    <span class="info-link-more">Controlla i tuoi dati →</span>
-  </a>
+    <a class="card info-link-card" id="amici" href="/amici">
+      <span class="info-link-num" aria-hidden="true">06</span>
+      <div class="section-title">Amici</div>
+      <p class="muted small">
+        Aggiungi le persone con username o codice e invitale nei gruppi senza
+        caricare la rubrica.
+      </p>
+      <span class="info-link-more">Trova gli amici →</span>
+    </a>
 
-  <a class="card info-link-card" id="app" href="/android">
-    <div class="section-title">App Android</div>
-    <p class="muted small">
-      Flutter nativo, non una scorza web. La versione corrente è
-      <b>{{ app_version }}</b>; il Cassiere funziona anche senza rete.
-    </p>
-    <span class="info-link-more">Scarica l'APK →</span>
-  </a>
+    <a class="card info-link-card" id="dati" href="/i-tuoi-dati">
+      <span class="info-link-num" aria-hidden="true">07</span>
+      <div class="section-title">I tuoi dati</div>
+      <p class="muted small">
+        Cosa salviamo, cosa puoi scaricare in JSON e cosa succede se elimini
+        l'account. Scritto per chi non vuole leggere un contratto.
+      </p>
+      <span class="info-link-more">Controlla i tuoi dati →</span>
+    </a>
+
+    <a class="card info-link-card" id="app" href="/android">
+      <span class="info-link-num" aria-hidden="true">08</span>
+      <div class="section-title">App Android</div>
+      <p class="muted small">
+        Flutter nativo, non una scorza web. La versione corrente è
+        <b>{{ app_version }}</b>; il Cassiere funziona anche senza rete.
+      </p>
+      <span class="info-link-more">Scarica l'APK →</span>
+    </a>
+  </div>
+</section>
+
+<div class="about-cta">
+  <p>Vuoi vedere come funziona senza creare un account?</p>
+  <a class="btn" href="/demo">Prova la demo <span aria-hidden="true">→</span></a>
 </div>
 
-<div class="card" style="text-align:center">
-  <p class="muted small" style="margin:0 0 10px">
-    Vuoi vedere come funziona senza creare un account?
-  </p>
-  <a class="btn ghost" href="/demo">Prova la demo</a>
-</div>
-
-<div class="card" style="text-align:center">
-  <p class="muted small" style="margin:0">
-    Codice e problemi su
-    <a href="https://github.com/mirkosio/b-lance" rel="noopener">github.com/mirkosio/b-lance</a>.
-    Il sito non usa pubblicità e non vende dati.
-  </p>
+<div class="about-source">
+  Codice e problemi su
+  <a href="https://github.com/mirkosio/b-lance" rel="noopener">github.com/mirkosio/b-lance</a>.
+  Il sito non usa pubblicità e non vende dati.
 </div>
 {% endblock %}

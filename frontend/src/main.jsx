@@ -11,6 +11,7 @@ import Particles from './reactbits/Particles.jsx';
 import Aurora from './reactbits/Aurora.jsx';
 import ClickSpark from './reactbits/ClickSpark.jsx';
 import './editorial.css';
+import './public-pages.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -240,22 +241,26 @@ if (!reduce) {
   // arrivano dopo. È l'unico gesto "tipografico" della pagina.
   const titleChars = splitLine(document.getElementById('rb-title'), 'chars');
   const accentWords = splitLine(document.getElementById('rb-accent'), 'words');
-  gsap.from(titleChars, {
-    yPercent: 112,
-    opacity: 0,
-    duration: 0.85,
-    stagger: 0.026,
-    ease: 'power3.out',
-    delay: 0.08,
-  });
-  gsap.from(accentWords, {
-    yPercent: 110,
-    opacity: 0,
-    duration: 0.9,
-    stagger: 0.1,
-    ease: 'power3.out',
-    delay: 0.32,
-  });
+  if (titleChars.length) {
+    gsap.from(titleChars, {
+      yPercent: 112,
+      opacity: 0,
+      duration: 0.85,
+      stagger: 0.026,
+      ease: 'power3.out',
+      delay: 0.08,
+    });
+  }
+  if (accentWords.length) {
+    gsap.from(accentWords, {
+      yPercent: 110,
+      opacity: 0,
+      duration: 0.9,
+      stagger: 0.1,
+      ease: 'power3.out',
+      delay: 0.32,
+    });
+  }
 
   // Ancore interne: scorrimento fluido invece del salto secco.
   document.querySelectorAll('a[href^="#"]').forEach((link) => {
@@ -295,8 +300,11 @@ if (!reduce) {
 
   // Ingressi: il contenuto sale di poco, in ordine di lettura.
   const reveal = (targets, vars = {}) => {
-    if (!targets.length) return;
-    gsap.from(targets, {
+    // Le pagine pubbliche non hanno tutti i nodi della home: i selettori
+    // vuoti non devono mai diventare un bersaglio GSAP nullo.
+    const nodes = targets.filter(Boolean);
+    if (!nodes.length) return;
+    gsap.from(nodes, {
       opacity: 0,
       y: 26,
       duration: 0.7,
@@ -422,6 +430,96 @@ if (!reduce) {
     window.addEventListener('scroll', syncRail, { passive: true });
     window.addEventListener('resize', syncRail);
     syncRail();
+  }
+
+  /* Pagine pubbliche: la testata si compone in sequenza, poi i capitoli
+     entrano leggendo la pagina. Nessun testo resta nascosto senza GSAP. */
+  if (document.body.classList.contains('site-v2') &&
+      !document.body.classList.contains('landing')) {
+    const hero = document.querySelector(
+      '.info-hero-inner, .demo-hero-inner, .about-masthead-inner, .auth-aside-inner',
+    );
+    if (hero) {
+      gsap.from([...hero.children], {
+        opacity: 0,
+        y: 24,
+        duration: 0.7,
+        stagger: 0.07,
+        ease: 'power2.out',
+      });
+    }
+
+    const pubTitle = document.querySelector('.info-hero h1');
+    if (pubTitle) {
+      const words = splitLine(pubTitle, 'words');
+      if (words.length) {
+        gsap.from(words, {
+          yPercent: 105,
+          opacity: 0,
+          duration: 0.85,
+          stagger: 0.055,
+          ease: 'power3.out',
+          delay: 0.12,
+        });
+      }
+    }
+
+    const receipt = document.querySelector('.info-example-card');
+    if (receipt) {
+      gsap.from(receipt, {
+        opacity: 0,
+        y: 40,
+        rotate: 2,
+        duration: 0.85,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: '.info-example', start: 'top 80%', once: true },
+      });
+    }
+
+    // I passaggi e i blocchi di prosa hanno già data-reveal: motion.js li
+    // mostra all'ingresso. GSAP qui tocca solo le FAQ, che non ce l'hanno:
+    // due animazioni sullo stesso nodo lascerebbero il testo a opacity 0.
+    gsap.utils.toArray('.info-faq .faq-item').forEach((block) => {
+      gsap.from(block, {
+        opacity: 0,
+        y: 18,
+        duration: 0.55,
+        ease: 'power2.out',
+        scrollTrigger: { trigger: block, start: 'top 92%', once: true },
+      });
+    });
+
+    gsap.utils.toArray('.about-index .info-link-card').forEach((card, i) => {
+      gsap.from(card, {
+        opacity: 0,
+        y: 20,
+        duration: 0.55,
+        delay: (i % 4) * 0.05,
+        ease: 'power2.out',
+        scrollTrigger: { trigger: card, start: 'top 93%', once: true },
+      });
+    });
+
+    const summary = document.querySelector('.demo-summary');
+    if (summary) {
+      gsap.from(summary, {
+        opacity: 0,
+        y: 30,
+        duration: 0.8,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: '.demo-grid', start: 'top 80%', once: true },
+      });
+    }
+
+    // Ancore dell'indice: scorrimento fluido anche qui.
+    document.querySelectorAll('.info-toc a').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        const target = document.querySelector(link.getAttribute('href'));
+        if (!target) return;
+        event.preventDefault();
+        lenis.scrollTo(target, { offset: -90 });
+      });
+    });
   }
 }
 
