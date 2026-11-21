@@ -17672,7 +17672,8 @@ if (!rx) {
   let s = 0;
   const f = () => {
     ["rb-title", "rb-accent"].forEach((h) => {
-      document.getElementById(h)?.removeAttribute("aria-label");
+      const d = document.getElementById(h);
+      d && d.hasAttribute("aria-label") && d.setAttribute("role", "img");
     }), ++s < 12 && window.setTimeout(f, 250);
   };
   window.setTimeout(f, 300);

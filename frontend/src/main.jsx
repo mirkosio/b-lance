@@ -234,7 +234,11 @@ if (!reduce) {
   let attempts = 0;
   const cleanAria = () => {
     ['rb-title', 'rb-accent'].forEach((id) => {
-      document.getElementById(id)?.removeAttribute('aria-label');
+      const node = document.getElementById(id);
+      if (!node) return;
+      // aria-label è ammesso solo su elementi con ruolo: diamo un ruolo
+      // esplicito invece di rimuoverlo e perdere l'etichetta del testo.
+      if (node.hasAttribute('aria-label')) node.setAttribute('role', 'img');
     });
     if (++attempts < 12) window.setTimeout(cleanAria, 250);
   };
