@@ -1,232 +1,273 @@
 {% extends "base.html" %}
 {% block title %}b-lance — dividi le spese con amici{% endblock %}
-{% block body_class %}landing guest{% endblock %}
+{% block body_class %}landing guest site-v2{% endblock %}
 {% block content %}
 <div id="rb-spark" aria-hidden="true"></div>
-<div id="rb-particles" aria-hidden="true"></div>
-<section class="hero landing-hero">
-  <div class="landing-inner hero-grid">
-    <div class="hero-copy stagger">
-      <span class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>Spese condivise, fatte bene</span>
-      <h1><span id="rb-title">Dividi le spese.</span><br>
-        <span class="hero-accent"><span id="rb-accent"><em>Tutto torna.</em></span>
-          <svg class="hand-underline" viewBox="0 0 240 14" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-            <path pathLength="1" d="M3 9.2C46 4.4 108 3.2 170 6c24 .9 47 2.1 67 4.2"/>
-          </svg>
-        </span>
+
+<aside class="s-rail" aria-label="Capitoli della pagina">
+  <span class="s-rail-line"></span>
+  <a href="#come-funziona" data-rail="come-funziona"><b>01</b> Come funziona</a>
+  <a href="#funzioni" data-rail="funzioni"><b>02</b> Funzioni</a>
+  <a href="#app" data-rail="app"><b>03</b> App</a>
+  <a href="#faq" data-rail="faq"><b>04</b> Domande</a>
+</aside>
+
+<!-- ==================================================================== COPERTINA -->
+<section class="s-cover" id="top">
+  <div id="rb-aurora" class="s-cover-aurora" aria-hidden="true"></div>
+  <div id="rb-particles" class="s-cover-particles" aria-hidden="true"></div>
+  <span class="s-cover-rule" aria-hidden="true"></span>
+
+  <div class="s-wrap s-cover-grid">
+    <div class="s-cover-copy">
+      <p class="s-kicker"><span class="s-kicker-dot" aria-hidden="true"></span>Spese condivise, fatte bene</p>
+      <h1 class="s-display">
+        <span class="s-display-line" id="rb-title">Dividi le spese.</span>
+        <span class="s-display-line s-display-accent" id="rb-accent">Tutto torna.</span>
       </h1>
-      <p>Weekend, gite, cene e case condivise. Aggiungi chi ha pagato, dividi
-         come vuoi e vedi subito chi deve cosa. Senza fogli Excel e senza
-         discussioni.</p>
-      <div class="btnrow">
-        <span id="rb-magnet-1"><a href="/register" class="btn">
-          <svg width="18" height="18"><use href="#i-bolt"></use></svg> Inizia gratis
+      <p class="s-lede">Weekend, gite, cene e case condivise. Aggiungi chi ha pagato,
+        dividi come vuoi e vedi subito chi deve cosa. Senza fogli Excel e senza
+        discussioni.</p>
+      <div class="s-cta">
+        <span id="rb-magnet-1"><a href="/register" class="s-btn">
+          <svg width="17" height="17" aria-hidden="true"><use href="#i-bolt"></use></svg> Inizia gratis
         </a></span>
-        <span id="rb-magnet-2"><a href="/demo" class="btn ghost">Prova la demo</a></span>
+        <span id="rb-magnet-2"><a href="/demo" class="s-btn s-btn-ghost">Prova la demo</a></span>
       </div>
-      <form class="quick-split" id="quick-split" aria-label="Calcola la quota a testa">
-        <div>
-          <label for="qs-total">Totale</label>
-          <input type="text" id="qs-total" inputmode="decimal" value="120,00" autocomplete="off">
-        </div>
-        <div>
-          <label for="qs-people">Persone</label>
-          <input type="number" id="qs-people" inputmode="numeric" min="2" max="50" value="4">
-        </div>
-        <output id="qs-result" for="qs-total qs-people">30,00 € a testa</output>
-      </form>
-      <ul class="hero-points" aria-label="In breve">
-        <li><svg width="17" height="17"><use href="#i-check"></use></svg> Preciso al centesimo</li>
-        <li><svg width="17" height="17"><use href="#i-check"></use></svg> Nessuna rubrica caricata</li>
-        <li><svg width="17" height="17"><use href="#i-check"></use></svg> App Android nativa</li>
-      </ul>
-      <p class="hero-note">
-        Codice aperto su <a href="https://github.com/mirkosio/b-lance" rel="noopener">GitHub</a>.
-        Nessuna pubblicità, nessuna vendita di dati.
-      </p>
+      <p class="s-note">Codice aperto su <a href="https://github.com/mirkosio/b-lance" rel="noopener">GitHub</a>.
+        Nessuna pubblicità, nessuna vendita di dati.</p>
     </div>
 
-    <!-- Scontrino d'esempio: il totale e la quota seguono il calcolatore. -->
-    <div class="art" aria-hidden="true">
-      <span class="receipt-eyebrow">esempio</span>
-      <div class="receipt">
-        <div class="receipt-head">
-          <span class="receipt-brand">b-lance</span>
-          <span class="receipt-meta">conto di gruppo</span>
+    <div class="s-cover-art">
+      <div class="s-tilt" id="rb-tilt">
+        <span class="s-tilt-tag">esempio</span>
+        <div class="s-receipt">
+          <div class="s-receipt-head">
+            <span class="s-receipt-brand">b-lance</span>
+            <span class="s-receipt-meta">conto di gruppo</span>
+          </div>
+          <p class="s-receipt-title">Cena da Mario</p>
+          <p class="s-receipt-sub">sabato sera · 4 persone</p>
+          <dl class="s-receipt-rows">
+            <div><dt>Totale</dt><dd id="receipt-total">120,00 €</dd></div>
+            <div><dt>Persone</dt><dd id="receipt-people">4</dd></div>
+          </dl>
+          <div class="s-receipt-rule" aria-hidden="true"></div>
+          <div class="s-receipt-share" id="receipt-share-row">
+            <span>A testa</span>
+            <strong id="receipt-share">30,00 €</strong>
+          </div>
+          <div class="s-receipt-foot">
+            <span>Nessun centesimo perso</span>
+            <span class="s-barcode" aria-hidden="true"></span>
+          </div>
         </div>
-        <p class="receipt-title">Cena da Mario</p>
-        <p class="receipt-sub">sabato sera</p>
-        <dl class="receipt-rows">
-          <div><dt>Totale</dt><dd id="receipt-total">120,00 €</dd></div>
-          <div><dt>Persone</dt><dd id="receipt-people">4</dd></div>
-        </dl>
-        <div class="receipt-rule dashed"></div>
-        <div class="receipt-share" id="receipt-share-row">
-          <span>A testa</span>
-          <strong id="receipt-share">30,00 €</strong>
-        </div>
-        <div class="receipt-foot">
-          <span>Nessun centesimo perso</span>
-          <span class="receipt-barcode"></span>
-        </div>
+        <p class="s-tilt-note">Il totale e la quota seguono il calcolatore qui sotto.</p>
       </div>
     </div>
   </div>
+
+  <div class="s-wrap">
+    <form class="s-calculator" id="quick-split" aria-label="Calcola la quota a testa">
+      <div class="s-calc-intro">
+        <span class="s-calc-kicker">Provalo adesso</span>
+        <p>Quanto viene a testa?</p>
+      </div>
+      <label class="s-field">
+        <span>Totale</span>
+        <input type="text" id="qs-total" inputmode="decimal" value="120,00" autocomplete="off">
+      </label>
+      <span class="s-field-op" aria-hidden="true">÷</span>
+      <label class="s-field">
+        <span>Persone</span>
+        <input type="number" id="qs-people" inputmode="numeric" min="2" max="50" value="4">
+      </label>
+      <output id="qs-result" for="qs-total qs-people">30,00 € a testa</output>
+      <a class="s-calc-link" href="/register">Crea il gruppo <span aria-hidden="true">→</span></a>
+    </form>
+  </div>
+
+  <div class="s-wrap s-facts">
+    <div class="s-fact"><b>125</b><span>valute gestite, ognuna nella sua unità</span></div>
+    <div class="s-fact"><b>0</b><span>pubblicità, cookie di tracciamento o dati venduti</span></div>
+    <div class="s-fact"><b>1</b><span>codice aperto, sito e app Android</span></div>
+  </div>
 </section>
 
-<section id="come-funziona" class="landing-section">
-  <div class="landing-inner">
-    <header class="section-head reveal" data-reveal>
-      <span class="eyebrow"><span class="eyebrow-index">01</span>Come funziona</span>
-      <h2>Tre passaggi, poi il conto torna.</h2>
-      <p>Pensato per gruppi veri: chi paga, chi partecipa, chi salda a rate.
-         Ogni passaggio resta tracciato.</p>
-    </header>
-    <div id="rb-steps" class="steps-grid reveal" data-reveal>
-      <article class="step">
-        <span class="step-num">01</span>
+<!-- ==================================================================== CAPITOLO 01 -->
+<section class="s-steps" id="come-funziona" aria-labelledby="s-steps-title">
+  <div class="s-hpin">
+    <div class="s-track" id="rb-track">
+      <article class="s-panel s-panel-intro">
+        <p class="s-index"><b>01</b><span>Come funziona</span></p>
+        <h2 class="s-h2" id="s-steps-title">Tre passaggi,<br>poi il conto torna.</h2>
+        <p class="s-body">Pensato per gruppi veri: chi paga, chi partecipa, chi
+          salda a rate. Ogni passaggio resta tracciato, anche quello che
+          sembrava dimenticato.</p>
+        <a class="s-textlink" href="/demo">Prova la demo senza registrarti <span aria-hidden="true">→</span></a>
+        <div class="s-pin-progress" aria-hidden="true"><span id="rb-progress"></span></div>
+        <p class="s-pin-hint" aria-hidden="true">Scorri per i tre passaggi</p>
+      </article>
+
+      <article class="s-panel">
+        <span class="s-panel-num" aria-hidden="true">01</span>
         <h3>Crea il gruppo</h3>
-        <p>Dai un nome al viaggio o alla casa. Invita le persone con un link,
-           un QR o il loro username.</p>
+        <p class="s-body">Dai un nome al viaggio o alla casa. Invita le persone
+          con un link, un codice o il loro username.</p>
+        <ul class="s-panel-list">
+          <li>Link e QR senza scadenza</li>
+          <li>Ruoli: amministra, inserisce, legge</li>
+          <li>La rubrica non viene mai letta</li>
+        </ul>
       </article>
-      <article class="step">
-        <span class="step-num">02</span>
+
+      <article class="s-panel">
+        <span class="s-panel-num" aria-hidden="true">02</span>
         <h3>Aggiungi le spese</h3>
-        <p>Segna importo, categoria e chi ha pagato. Dividi in parti uguali,
-           per quote o con importi esatti.</p>
+        <p class="s-body">Segna importo, categoria e chi ha pagato. Dividi in
+          parti uguali, per quote o con importi esatti.</p>
+        <ul class="s-panel-list">
+          <li>Importo nella valuta originale</li>
+          <li>Quote diverse per persona</li>
+          <li>Spese ricorrenti già pronte</li>
+        </ul>
       </article>
-      <article class="step">
-        <span class="step-num">03</span>
+
+      <article class="s-panel">
+        <span class="s-panel-num" aria-hidden="true">03</span>
         <h3>Chiudi i conti</h3>
-        <p>Registra anche i pagamenti parziali. b-lance calcola il numero
-           minimo di bonifici per saldare tutto.</p>
+        <p class="s-body">Registra anche i pagamenti parziali. b-lance calcola il
+          numero minimo di bonifici per saldare tutto.</p>
+        <ul class="s-panel-list">
+          <li>“Ha saldato 20 su 47,50”</li>
+          <li>Giroconto con pochi trasferimenti</li>
+          <li>Storico con le spese annullate</li>
+        </ul>
       </article>
     </div>
-    <p class="section-foot">
-      <a class="btn ghost" href="/demo">Prova la demo senza registrarti</a>
-    </p>
   </div>
 </section>
 
-<section id="funzioni" class="landing-section alt">
-  <div class="landing-inner">
-    <header class="section-head reveal" data-reveal>
-      <span class="eyebrow"><span class="eyebrow-index">02</span>Funzioni</span>
-      <h2>Quello che serve davvero.</h2>
-      <p>Niente dashboard complicate. Solo gli strumenti che usi mentre dividi
-         una cena, un viaggio o l'affitto.</p>
+<!-- ==================================================================== CAPITOLO 02 -->
+<section class="s-features" id="funzioni" aria-labelledby="s-features-title">
+  <div class="s-wrap">
+    <header class="s-sec-head">
+      <p class="s-index"><b>02</b><span>Funzioni</span></p>
+      <h2 class="s-h2" id="s-features-title">Quello che serve davvero.</h2>
+      <p class="s-body s-sec-lede">Niente dashboard complicate. Solo gli strumenti
+        che usi mentre dividi una cena, un viaggio o l'affitto.</p>
     </header>
-    <div id="rb-features" class="feature-grid reveal" data-reveal>
-      <article class="card feature">
-        <span class="ficon"><svg width="22" height="22"><use href="#i-globe"></use></svg></span>
-        <div>
-          <h3><span class="count-up" data-count="125" data-count-exp="0" data-count-final="125">125</span> valute</h3>
-          <p class="muted">Ogni spesa resta nella sua valuta. I saldi del gruppo
-             usano la valuta che scegli tu.</p>
-        </div>
+
+    <div class="s-bento" id="rb-features">
+      <article class="s-card s-card-wide">
+        <span class="s-card-icon"><svg width="24" height="24" aria-hidden="true"><use href="#i-globe"></use></svg></span>
+        <span class="s-card-tag">Valute</span>
+        <h3>125 valute, nessuna conversione forzata</h3>
+        <p>Ogni spesa resta nella sua unità. I saldi del gruppo usano la valuta
+          che scegli tu, con il cambio che decide chi amministra.</p>
+        <span class="s-card-index" aria-hidden="true">02.1</span>
       </article>
-      <article class="card feature green">
-        <span class="ficon"><svg width="22" height="22"><use href="#i-wallet"></use></svg></span>
-        <div>
-          <h3>Pagamenti parziali</h3>
-          <p class="muted">“Ha saldato 20 su 47,50”. Registra le rate senza
-             aspettare di chiudere tutto in un colpo.</p>
-        </div>
+      <article class="s-card">
+        <span class="s-card-icon"><svg width="24" height="24" aria-hidden="true"><use href="#i-wallet"></use></svg></span>
+        <span class="s-card-tag">Pagamenti</span>
+        <h3>Anche a rate</h3>
+        <p>“Ha saldato 20 su 47,50”. Registri la parte e il resto resta visibile.</p>
+        <span class="s-card-index" aria-hidden="true">02.2</span>
       </article>
-      <article class="card feature gold">
-        <span class="ficon"><svg width="22" height="22"><use href="#i-swap"></use></svg></span>
-        <div>
-          <h3>Pochi bonifici</h3>
-          <p class="muted">Ti diciamo chi paga chi con il numero più basso di
-             trasferimenti possibile.</p>
-        </div>
+      <article class="s-card">
+        <span class="s-card-icon"><svg width="24" height="24" aria-hidden="true"><use href="#i-swap"></use></svg></span>
+        <span class="s-card-tag">Giroconti</span>
+        <h3>Meno bonifici</h3>
+        <p>Ti diciamo chi paga chi con il numero più basso di trasferimenti possibile.</p>
+        <span class="s-card-index" aria-hidden="true">02.3</span>
       </article>
-      <article class="card feature">
-        <span class="ficon"><svg width="22" height="22"><use href="#i-calendar"></use></svg></span>
-        <div>
-          <h3>Spese ricorrenti</h3>
-          <p class="muted">Affitto, bollette, abbonamenti: imposta la cadenza e
-             ritrovi la spesa pronta ogni mese.</p>
-        </div>
+      <article class="s-card">
+        <span class="s-card-icon"><svg width="24" height="24" aria-hidden="true"><use href="#i-calendar"></use></svg></span>
+        <span class="s-card-tag">Ricorrenze</span>
+        <h3>Affitto e bollette</h3>
+        <p>Imposta la cadenza e ritrovi la spesa pronta ogni mese.</p>
+        <span class="s-card-index" aria-hidden="true">02.4</span>
       </article>
-      <article class="card feature green">
-        <span class="ficon"><svg width="22" height="22"><use href="#i-users"></use></svg></span>
-        <div>
-          <h3>Ruoli chiari</h3>
-          <p class="muted">Chi amministra, chi inserisce spese, chi legge soltanto.
-             I permessi si gestiscono dal gruppo.</p>
-        </div>
+      <article class="s-card">
+        <span class="s-card-icon"><svg width="24" height="24" aria-hidden="true"><use href="#i-users"></use></svg></span>
+        <span class="s-card-tag">Persone</span>
+        <h3>Ruoli chiari</h3>
+        <p>Chi amministra, chi inserisce spese, chi legge soltanto. Si decide dal gruppo.</p>
+        <span class="s-card-index" aria-hidden="true">02.5</span>
       </article>
-      <article class="card feature gold">
-        <span class="ficon"><svg width="22" height="22"><use href="#i-check"></use></svg></span>
-        <div>
-          <h3>Storico trasparente</h3>
-          <p class="muted">Le spese annullate restano visibili in grigio: non
-             spariscono e nessuno riscrive la storia.</p>
-        </div>
+      <article class="s-card s-card-wide">
+        <span class="s-card-icon"><svg width="24" height="24" aria-hidden="true"><use href="#i-check"></use></svg></span>
+        <span class="s-card-tag">Storico</span>
+        <h3>Le spese annullate restano</h3>
+        <p>Visibili in grigio e barrate: non contano più nei saldi, ma nessuno
+          riscrive la storia del gruppo. Anche i pagamenti hanno la loro traccia.</p>
+        <span class="s-card-index" aria-hidden="true">02.6</span>
       </article>
     </div>
   </div>
 </section>
 
-<section id="app" class="landing-section">
-  <div class="landing-inner app-panel reveal" data-reveal>
-    <div class="app-copy">
-      <span class="eyebrow"><span class="eyebrow-index">03</span>App Android</span>
-      <h2>Sul telefono, senza browser.</h2>
-      <p>Un'app nativa, veloce e leggera. Stesse funzioni del sito, pensata per
-         essere usata con una mano mentre sei in giro.</p>
-      <div class="btnrow">
-        <a class="btn" href="https://github.com/mirkosio/b-lance/releases/latest">
-          <svg width="18" height="18"><use href="#i-bolt"></use></svg> Scarica l'APK
-        </a>
-        <a class="btn ghost" href="/register">Prova dal web</a>
+<!-- ==================================================================== CAPITOLO 03 -->
+<section class="s-app" id="app" aria-labelledby="s-app-title">
+  <div class="s-wrap s-app-grid">
+    <div class="s-app-copy">
+      <p class="s-index s-index-light"><b>03</b><span>App Android</span></p>
+      <h2 class="s-h2" id="s-app-title">Sul telefono,<br>senza browser.</h2>
+      <p class="s-body">Un'app nativa, veloce e leggera. Stesse funzioni del sito,
+        pensata per essere usata con una mano mentre sei in giro.</p>
+      <div class="s-cta">
+        <span id="rb-magnet-3"><a class="s-btn s-btn-light" href="https://github.com/mirkosio/b-lance/releases/latest">
+          <svg width="17" height="17" aria-hidden="true"><use href="#i-bolt"></use></svg> Scarica l'APK
+        </a></span>
+        <a class="s-btn s-btn-outline" href="/register">Prova dal web</a>
       </div>
-      <p class="app-note">Android. Aggiornamenti pubblicati su GitHub Releases.</p>
+      <p class="s-app-note">Android. Aggiornamenti pubblicati su GitHub Releases.</p>
     </div>
-    <div class="phone" id="phone-demo" role="group" aria-label="Esempio interattivo: saldi di un gruppo">
-      <div class="phone-bar" aria-hidden="true"><span></span><span></span><span></span></div>
-      <div class="phone-screen">
-        <span class="phone-kicker">Weekend a Bologna</span>
-        <strong class="phone-total" id="phone-total">148,20 €</strong>
-        <span class="phone-label">Totale speso</span>
-        <div class="phone-row"><span class="dot sage" aria-hidden="true">M</span><span>Marco</span><b class="pos" data-net="23,50">+23,50</b></div>
-        <div class="phone-row"><span class="dot gold" aria-hidden="true">L</span><span>Luca</span><b class="neg" data-net="−12,40">−12,40</b></div>
-        <div class="phone-row"><span class="dot sage" aria-hidden="true">S</span><span>Sara</span><b class="neg" data-net="−11,10">−11,10</b></div>
-        <button class="phone-cta" id="phone-settle" type="button" aria-pressed="false">
+
+    <div class="s-phone" id="phone-demo" role="group" aria-label="Esempio interattivo: saldi di un gruppo">
+      <div class="s-phone-bar" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="s-phone-screen">
+        <span class="s-phone-kicker">Weekend a Bologna</span>
+        <strong class="s-phone-total" id="phone-total">148,20 €</strong>
+        <span class="s-phone-label">Totale speso</span>
+        <div class="s-phone-row"><span class="s-dot" aria-hidden="true">M</span><span>Marco</span><b class="pos" data-net="+23,50">+23,50</b></div>
+        <div class="s-phone-row"><span class="s-dot" aria-hidden="true">L</span><span>Luca</span><b class="neg" data-net="−12,40">−12,40</b></div>
+        <div class="s-phone-row"><span class="s-dot" aria-hidden="true">S</span><span>Sara</span><b class="neg" data-net="−11,10">−11,10</b></div>
+        <button class="s-phone-cta" id="phone-settle" type="button" aria-pressed="false">
           Salda con 2 bonifici
         </button>
-        <p class="phone-hint" id="phone-hint">Tocca per vedere i conti in pari.</p>
+        <p class="s-phone-hint" id="phone-hint">Tocca per vedere i conti in pari.</p>
         <p class="sr-only" id="phone-live" role="status" aria-live="polite"></p>
       </div>
     </div>
   </div>
 </section>
 
-<section id="faq" class="landing-section alt">
-  <div class="landing-inner faq-layout">
-    <header class="section-head faq-head reveal" data-reveal>
-      <span class="eyebrow"><span class="eyebrow-index">04</span>Domande frequenti</span>
-      <h2>Le cose che chiedono tutti.</h2>
-      <p>Quattro risposte rapide. <a href="/faq">Leggi tutte le FAQ</a>.</p>
+<!-- ==================================================================== CAPITOLO 04 -->
+<section class="s-faq" id="faq" aria-labelledby="s-faq-title">
+  <div class="s-wrap s-faq-grid">
+    <header class="s-faq-head">
+      <p class="s-index"><b>04</b><span>Domande frequenti</span></p>
+      <h2 class="s-h2" id="s-faq-title">Le cose che<br>chiedono tutti.</h2>
+      <p class="s-body">Quattro risposte rapide. <a class="s-textlink" href="/faq">Leggi tutte le FAQ <span aria-hidden="true">→</span></a></p>
     </header>
-    <div class="faq-list reveal" data-reveal>
-      <details class="faq-item">
+    <div class="s-faq-list">
+      <details class="s-faq-item">
         <summary>b-lance è gratis?</summary>
         <p>Sì. Non ci sono piani a pagamento, pubblicità o vendita di dati.
            Crei un account e usi tutte le funzioni.</p>
       </details>
-      <details class="faq-item">
+      <details class="s-faq-item">
         <summary>Devo caricare la rubrica?</summary>
         <p>No. Inviti le persone con un link, un QR o il loro username.
            La rubrica del telefono non viene mai letta.</p>
       </details>
-      <details class="faq-item">
+      <details class="s-faq-item">
         <summary>Posso annullare una spesa o un pagamento?</summary>
         <p>Sì. Resta nello storico in grigio e barrato, ma non conta più nei
            saldi. Nessuno cancella la storia del gruppo.</p>
       </details>
-      <details class="faq-item">
+      <details class="s-faq-item">
         <summary>Funziona su iPhone?</summary>
         <p>Dal browser sì, su qualsiasi telefono. L'app nativa è disponibile
            per Android; il sito resta completo anche su iPhone.</p>
@@ -235,16 +276,18 @@
   </div>
 </section>
 
-<section class="landing-section">
-  <div class="landing-inner final-cta reveal" data-reveal>
-    <div>
-      <span class="eyebrow">Pronto quando vuoi</span>
-      <h2>Il prossimo conto dividilo bene.</h2>
-      <p>Crea un gruppo in meno di un minuto. Gratis, senza carta di credito.</p>
-    </div>
-    <div class="btnrow">
-      <a href="/register" class="btn">Crea il primo gruppo</a>
-      <a href="/demo" class="btn ghost">Prova la demo</a>
+<!-- ==================================================================== CHIUSURA -->
+<section class="s-final">
+  <div class="s-wrap">
+    <p class="s-index"><b>05</b><span>Pronto quando vuoi</span></p>
+    <h2 class="s-final-title" id="rb-final">Il prossimo conto<br>dividilo bene.</h2>
+    <div class="s-final-row">
+      <p class="s-body">Crea un gruppo in meno di un minuto. Gratis, senza carta
+        di credito.</p>
+      <div class="s-cta">
+        <a href="/register" class="s-btn">Crea il primo gruppo</a>
+        <a href="/demo" class="s-btn s-btn-ghost">Prova la demo</a>
+      </div>
     </div>
   </div>
 </section>
@@ -285,7 +328,6 @@
     }) + ' €';
   }
 
-  // Un lampo breve sul valore cambiato: si capisce cosa ha reagito.
   function flash() {
     if (reduce || !shareRow) return;
     shareRow.classList.remove('is-updated');
@@ -330,7 +372,7 @@
   var hint = document.getElementById('phone-hint');
   var live = document.getElementById('phone-live');
   if (!phone || !button) return;
-  var rows = phone.querySelectorAll('.phone-row b');
+  var rows = phone.querySelectorAll('.s-phone-row b');
   var settled = false;
 
   function render() {
@@ -359,4 +401,3 @@
 })();
 </script>
 {% endblock %}
-

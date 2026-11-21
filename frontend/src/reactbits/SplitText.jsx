@@ -92,11 +92,17 @@ const SplitText = ({
   useEffect(() => {
     if (fontsLoaded) return undefined;
     let active = true;
+    // b-lance: i font esterni non possono tenere nascosto il testo. Dopo un
+    // secondo si parte comunque, con le metriche di ripiego.
+    const force = setTimeout(() => {
+      if (active) setFontsLoaded(true);
+    }, 1000);
     document.fonts.ready.then(() => {
       if (active) setFontsLoaded(true);
     });
     return () => {
       active = false;
+      clearTimeout(force);
     };
   }, [fontsLoaded]);
 
@@ -105,10 +111,7 @@ const SplitText = ({
       const el = ref.current;
       if (!el || !text || !fontsLoaded) return;
       el.getBoundingClientRect();
-      if (!fontsAreLoaded()) {
-        setFontsLoaded(false);
-        return;
-      }
+      // Il controllo sui font è già stato fatto dallo stato: qui si procede.
 
       const finish = () => {
         if (completedTextRef.current === text) return;
@@ -418,8 +421,7 @@ const SplitText = ({
         whiteSpace: 'normal',
         wordWrap: 'break-word',
         color,
-        cursor: trigger === 'click' ? 'pointer' : undefined,
-        visibility: ready ? undefined : 'hidden'
+        cursor: trigger === 'click' ? 'pointer' : undefined
       }}
     >
       {text}
