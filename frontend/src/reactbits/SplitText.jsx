@@ -322,6 +322,8 @@ const SplitText = ({
         wordsClass: 'split-word',
         charsClass: 'split-char',
         reduceWhiteSpace: false,
+        // b-lance: il testo resta nei figli, nessun aria-label su span generico.
+        aria: 'none',
         onSplit: self => {
           pieces = [self[unit], self.chars, self.words, self.lines].find(list => list.length) || [];
           movers = mask && self.masks?.length === pieces.length ? self.masks : pieces;

@@ -16172,6 +16172,8 @@ const ES = { opacity: 0, y: 40 }, xS = { opacity: 1, y: 0 }, b3 = 180, T3 = 19, 
         wordsClass: "split-word",
         charsClass: "split-char",
         reduceWhiteSpace: !1,
+        // b-lance: il testo resta nei figli, nessun aria-label su span generico.
+        aria: "none",
         onSplit: (Jt) => {
           if (wt = [Jt[E], Jt.chars, Jt.words, Jt.lines].find((ee) => ee.length) || [], ut = b && Jt.masks?.length === wt.length ? Jt.masks : wt, St = Ie.utils.distribute({ each: u / 1e3, from: S }), Gt = null, Ut.length = 0, At.length = 0, mt && mt !== N && (mt.kill(), mt = null), !xt)
             return N = te(!0, {
