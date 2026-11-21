@@ -7,12 +7,13 @@
    ========================================================================== */
 
 body.site-v2 {
-  --s-ink: #0d1512;
-  --s-ink-2: #131d18;
-  --s-paper: #f6f1e4;
-  --s-paper-2: #fbf8f0;
-  --s-cream: #f3eee1;
+  --s-ink: #14211b;
+  --s-ink-2: #1b2c23;
+  --s-paper: #dde2d8;
+  --s-paper-2: #e6eae0;
+  --s-cream: #e2e7dc;
   --s-sage: #5f8d6e;
+  --s-sage-strong: #4d7a5c;
   --s-sage-light: #9dc3aa;
   --s-rule: rgba(13, 21, 18, 0.14);
   --s-rule-light: rgba(243, 238, 225, 0.16);
@@ -60,9 +61,9 @@ body.site-v2 .public-links a.active {
 body.site-v2 .topbar .icon-btn { color: var(--s-cream); }
 body.site-v2 .topbar .icon-btn:hover { background: rgba(243, 238, 225, 0.1); }
 body.site-v2 .topbar.publicnav .btn.sm {
-  background: var(--s-cream);
-  border-color: var(--s-cream);
-  color: var(--s-ink);
+  background: var(--s-sage-strong);
+  border-color: var(--s-sage-strong);
+  color: var(--s-cream);
   border-radius: 3px;
 }
 body.site-v2 .topbar.publicnav .btn.sm.ghost {
@@ -269,10 +270,10 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   gap: 9px;
   min-height: 48px;
   padding: 0 22px;
-  border: 1px solid var(--s-cream);
+  border: 1px solid var(--s-sage-strong);
   border-radius: 3px;
-  background: var(--s-cream);
-  color: var(--s-ink);
+  background: var(--s-sage-strong);
+  color: #f5f8f2;
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.005em;
@@ -281,7 +282,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   transition: background 160ms ease, color 160ms ease, transform 160ms ease, border-color 160ms ease;
   will-change: transform;
 }
-.s-btn:hover { background: #fff; border-color: #fff; }
+.s-btn:hover { background: var(--s-sage); border-color: var(--s-sage); }
 .s-btn:active { transform: translateY(1px); }
 .s-btn-ghost {
   background: transparent;
@@ -451,8 +452,8 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   gap: clamp(12px, 2.4vw, 30px);
   margin-top: clamp(36px, 5vw, 60px);
   padding: 20px clamp(18px, 2.6vw, 28px);
-  background: var(--s-paper);
-  border: 1px solid rgba(13, 21, 18, 0.18);
+  background: var(--s-paper-2);
+  border: 1px solid rgba(20, 33, 27, 0.18);
   border-radius: 3px;
   color: var(--s-ink);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
@@ -580,6 +581,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   border-radius: 3px;
   overflow: hidden;
 }
+.s-panel:nth-child(even) { background: #dde6d8; }
 .s-panel-intro {
   width: min(82vw, 540px);
   background: transparent;
@@ -716,7 +718,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 .s-features {
   padding: clamp(64px, 8vw, 110px) 0;
   background:
-    linear-gradient(180deg, rgba(13, 21, 18, 0.035), transparent 180px),
+    linear-gradient(180deg, rgba(95, 141, 110, 0.16), transparent 220px),
     var(--s-paper-2);
 }
 .s-sec-head { max-width: 720px; }
@@ -734,13 +736,14 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   flex-direction: column;
   min-height: 230px;
   padding: clamp(22px, 2.4vw, 30px);
-  background: #fff;
+  background: var(--s-paper-2);
   border: 1px solid var(--s-rule);
   border-radius: 3px;
   overflow: hidden;
   transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }
 .s-card-wide { grid-column: span 6; }
+.s-bento .spotlight-card.s-card:nth-child(even) { background-color: #dfe7da; }
 .s-bento > .s-card:nth-child(1) { grid-column: span 7; }
 .s-bento > .s-card:nth-child(2) { grid-column: span 5; }
 .s-bento > .s-card:nth-child(6) { grid-column: span 12; min-height: 200px; }
@@ -1107,9 +1110,13 @@ html:not(.js-anim) .s-pin-hint { display: none; }
 #rb-magnet-1, #rb-magnet-2, #rb-magnet-3 { display: inline-block; }
 #rb-magnet-1 a, #rb-magnet-2 a, #rb-magnet-3 a { cursor: pointer; }
 
+/* Scintilla al clic: livescela su tutta la pagina senza rubare eventi. */
+#rb-spark { position: fixed; inset: 0; z-index: 9999; pointer-events: none; }
+#rb-spark > * { pointer-events: none; }
+
 /* Componenti React Bits montati sopra il markup server. */
 .spotlight-card.s-card {
-  background-color: #fff;
+  background-color: var(--s-paper-2);
   border-radius: 3px;
   box-shadow: none;
   padding: clamp(22px, 2.4vw, 30px);

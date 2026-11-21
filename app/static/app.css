@@ -9,63 +9,63 @@
 
 :root {
   color-scheme: light;
-  --bg: #f8f5ec;
-  --bg-soft: #f1ebdf;
-  --card: #fffdf8;
-  --card-2: #faf6ea;
-  --border: #e2d9c6;
-  --line: #ebe2d1;
-  --chrome: #fcfaf4;
-  --text: #232a26;
-  --muted: #5c6b60;
-  --primary: #5f8d6e;
-  --primary-deep: #47684f;
-  --primary-soft: #eef2ec;
+  --bg: #dde2d8;
+  --bg-soft: #d5dbd0;
+  --card: #e6eae0;
+  --card-2: #dfe5da;
+  --border: #c2ccc0;
+  --line: #d0d8cc;
+  --chrome: #e3e8de;
+  --text: #1b2a22;
+  --muted: #55655a;
+  --primary: #4d7a5c;
+  --primary-deep: #3b6349;
+  --primary-soft: #d8e4d6;
   --link: #3f6a52;
-  --accent: #5f8d6e;
+  --accent: #4d7a5c;
   --pos: #3b7a52;
   --neg: #a84a34;
   --danger: #a0432f;
-  --gold: #5f8d6e;
-  --gold-ink: #47684f;
-  --rule: #ddd2bc;
-  --ink: #1e2a23;
-  --radius: 20px;
-  --radius-sm: 12px;
-  --radius-lg: 30px;
+  --gold: #4d7a5c;
+  --gold-ink: #3b6349;
+  --rule: #bcc7ba;
+  --ink: #14211b;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 16px;
   --shadow: 0 2px 4px rgba(31, 41, 35, 0.04), 0 16px 40px rgba(31, 41, 35, 0.08);
   --shadow-soft: 0 1px 2px rgba(31, 41, 35, 0.03), 0 6px 18px rgba(31, 41, 35, 0.05);
   --shadow-lift: 0 4px 8px rgba(31, 41, 35, 0.05), 0 24px 56px rgba(31, 41, 35, 0.12);
   --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: "Fraunces", Georgia, "Iowan Old Style", serif;
-  --grad-brand: linear-gradient(135deg, #6b9b7c 0%, #47684f 100%);
-  --grad-btn: linear-gradient(180deg, #547f61 0%, #47684f 100%);
+  --grad-brand: linear-gradient(135deg, #6f9f80 0%, #3b6349 100%);
+  --grad-btn: linear-gradient(180deg, #558564 0%, #3b6349 100%);
 }
 
 /* Tema scuro: inchiostro verde-caldo, non nero puro, non neon */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #141816;
-  --bg-soft: #1c221e;
-  --card: #1b211d;
-  --card-2: #212823;
-  --border: #2d352f;
-  --line: #29312b;
-  --chrome: #191f1b;
-  --text: #e9ece7;
-  --muted: #98a39b;
-  --primary: #85b395;
-  --primary-deep: #5c8a6b;
-  --primary-soft: #232d26;
-  --link: #9ec6ac;
-  --accent: #85b395;
+  --bg: #111a15;
+  --bg-soft: #17231c;
+  --card: #19261e;
+  --card-2: #203027;
+  --border: #2a3b30;
+  --line: #25342a;
+  --chrome: #16211b;
+  --text: #e8ece2;
+  --muted: #93a79a;
+  --primary: #9dc3aa;
+  --primary-deep: #6f9f80;
+  --primary-soft: #1e2d24;
+  --link: #a9d0b7;
+  --accent: #9dc3aa;
   --pos: #6fbf90;
   --neg: #dd8b70;
   --danger: #dd8b70;
-  --gold: #85b395;
-  --gold-ink: #85b395;
-  --rule: #333b34;
-  --ink: #eef1eb;
+  --gold: #9dc3aa;
+  --gold-ink: #9dc3aa;
+  --rule: #2f4034;
+  --ink: #eef3e9;
   --shadow: 0 2px 4px rgba(0, 0, 0, 0.35), 0 16px 40px rgba(0, 0, 0, 0.4);
   --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.35);
   --shadow-lift: 0 4px 8px rgba(0, 0, 0, 0.35), 0 24px 56px rgba(0, 0, 0, 0.5);
@@ -85,8 +85,8 @@ body {
   color: var(--text);
   background-color: var(--bg);
   background-image:
-    radial-gradient(1100px 520px at 85% -10%, rgba(95, 141, 110, 0.07), transparent 62%),
-    radial-gradient(820px 480px at -10% 8%, rgba(95, 141, 110, 0.06), transparent 62%),
+    radial-gradient(1100px 520px at 85% -10%, rgba(95, 141, 110, 0.11), transparent 62%),
+    radial-gradient(820px 480px at -10% 8%, rgba(95, 141, 110, 0.09), transparent 62%),
     /* Texture carta: rumore SVG leggerissimo, una sola richiesta inline */
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
   background-repeat: no-repeat, no-repeat, repeat;
@@ -3061,3 +3061,36 @@ html.js-reveal .reveal.in {
 .info-prose-block,
 .info-step,
 .info-faq .faq-item { scroll-margin-top: 92px; }
+
+/* ---------------------------------------------------------------------------
+   Uniformità: gradienti semplici e interazioni su tutte le superfici dell'app.
+   I colori vengono dalle variabili qui sopra, quindi seguono anche il tema
+   scuro. Nessuna texture nuova, nessuna dipendenza dal bundle React.
+   ------------------------------------------------------------------------- */
+.card {
+  background-image: linear-gradient(155deg, rgba(95, 141, 110, 0.10), transparent 55%);
+}
+.topbar {
+  background-image: linear-gradient(180deg, rgba(95, 141, 110, 0.08), transparent);
+}
+.sidebar {
+  background-image: linear-gradient(180deg, rgba(95, 141, 110, 0.10), transparent 42%);
+}
+.stat {
+  background-image: linear-gradient(150deg, rgba(95, 141, 110, 0.11), transparent 62%);
+}
+.btn { box-shadow: 0 4px 14px rgba(59, 99, 73, 0.20); }
+.btn.ghost:hover {
+  background-image: linear-gradient(120deg, rgba(95, 141, 110, 0.14), transparent);
+}
+.netchip { border-radius: var(--radius-sm); }
+input, select, textarea {
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+input:focus, select:focus, textarea:focus {
+  box-shadow: 0 0 0 3px rgba(95, 141, 110, 0.16);
+}
+a { transition: color 160ms ease, border-color 160ms ease; }
+@media (prefers-reduced-motion: reduce) {
+  .card, .btn, a, input, select, textarea { transition: none !important; }
+}
