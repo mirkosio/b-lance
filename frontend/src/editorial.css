@@ -1,0 +1,178 @@
+/* Livello editoriale sopra il design system: carta stampata, non landing AI.
+   Regole: stessi colori, nessun emoji, nessun gradiente viola, reduced motion. */
+
+:root {
+  --ed-rule: color-mix(in srgb, var(--border) 80%, transparent);
+  --ed-ink-soft: color-mix(in srgb, var(--text) 62%, transparent);
+}
+
+/* ---------------------------------------------------------------- hero */
+.landing-hero {
+  position: relative;
+  background-image:
+    radial-gradient(760px 340px at 92% 4%, rgba(95, 141, 110, 0.07), transparent 70%),
+    radial-gradient(520px 260px at -5% 100%, rgba(95, 141, 110, 0.05), transparent 70%);
+}
+.landing-hero .hero-copy h1 {
+  font-family: var(--font-display, "Fraunces", Georgia, serif);
+  font-size: clamp(2.6rem, 6vw, 4.6rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  font-variation-settings: "SOFT" 30, "WONK" 1;
+  margin: 0 0 22px;
+}
+.landing-hero .hero-copy > p {
+  max-width: 44ch;
+  font-size: 0.98rem;
+  line-height: 1.65;
+  color: var(--ed-ink-soft);
+}
+.landing-hero .eyebrow::after {
+  content: "";
+  display: inline-block;
+  width: 46px;
+  height: 1px;
+  margin-left: 12px;
+  vertical-align: middle;
+  background: var(--ed-rule);
+}
+
+.rb-accent {
+  display: inline-block;
+  color: #5f8d6e;
+  font-family: var(--font-display, "Fraunces", Georgia, serif);
+  font-style: italic;
+  font-variation-settings: "SOFT" 30, "WONK" 1;
+  letter-spacing: -0.02em;
+}
+.rb-accent .split-word { text-align: left !important; }
+
+/* ------------------------------------------------------- sezioni editoriali */
+.landing-section .section-head h2 {
+  font-family: var(--font-display, "Fraunces", Georgia, serif);
+  font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  font-variation-settings: "SOFT" 30, "WONK" 1;
+}
+.landing-section .section-head > p {
+  max-width: 56ch;
+  color: var(--ed-ink-soft);
+  line-height: 1.65;
+}
+.eyebrow-index {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--primary);
+}
+.landing-section .section-head {
+  border-top: 1px solid var(--ed-rule);
+  padding-top: 20px;
+}
+
+/* ------------------------------------------------------------------- card */
+.card.feature,
+.rb-feature {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: none;
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+.card.feature:hover,
+.rb-feature:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--primary) 45%, var(--border));
+}
+.rb-feature {
+  position: relative;
+  min-height: 190px;
+}
+.rb-feature-num {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+.rb-feature h3 { font-size: 1.05rem; margin: 0 0 6px; }
+.rb-feature p { margin: 0; font-size: 0.86rem; line-height: 1.55; }
+
+/* ----------------------------------------------------------------- passi */
+#rb-steps, #rb-features { display: block !important; }
+.step-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.step-card {
+  padding: 18px 16px 22px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--card);
+  position: relative;
+}
+.step-card::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 0;
+  height: 2px;
+  background: var(--primary);
+  opacity: 0.65;
+}
+.step-card h3 { margin: 4px 0 6px; font-size: 1rem; }
+.step-card p { margin: 0; font-size: 0.85rem; line-height: 1.55; }
+.step-num {
+  color: var(--primary);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+}
+
+/* --------------------------------------------------------------- scontrino */
+.receipt {
+  box-shadow: 12px 14px 0 -6px rgba(95, 141, 110, 0.12);
+}
+.receipt-head {
+  border-bottom: 1px solid var(--ed-rule);
+  padding-bottom: 10px;
+}
+.receipt-share {
+  border-top: 1px dashed var(--border);
+}
+
+/* ----------------------------------------------------------------- scintilla */
+#rb-particles {
+  position: absolute !important;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  pointer-events: none !important;
+  opacity: 0.28;
+  z-index: 0;
+}
+.landing-hero .landing-inner { position: relative; z-index: 1; }
+.rb-title { display: inline-block; color: var(--text); }
+
+.rb-spark {
+  position: fixed !important;
+  inset: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  pointer-events: none !important;
+  z-index: 90;
+}
+
+@media (max-width: 760px) {
+  .step-grid { grid-template-columns: 1fr; }
+  .landing-hero .hero-copy h1 { font-size: clamp(2.4rem, 11vw, 3.4rem); }
+}
+
+/* Accessibilità: nessuna transizione o movimento quando richiesto. */
+@media (prefers-reduced-motion: reduce) {
+  .card.feature, .rb-feature { transition: none !important; }
+  .card.feature:hover, .rb-feature:hover { transform: none !important; }
+}

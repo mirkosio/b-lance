@@ -1,6 +1,6 @@
-## b-lance 1.9.2 (versionCode 45)
+## b-lance 1.9.4 (versionCode 47)
 
-Aggiornamento in-place dalla 1.9.1: stessa chiave di firma, nessuna
+Aggiornamento in-place dalla 1.9.3: stessa chiave di firma, nessuna
 disinstallazione necessaria.
 
 ### App
@@ -145,6 +145,13 @@ disinstallazione necessaria.
 - **QR code** per invitare al gruppo e per aprire il riepilogo condiviso,
   generati sul server solo per link interni (`/join/...` e `/s/...`):
   nessun URL esterno può finire in un QR servito da b-lance.
+
+- **Redesign del sito** con GSAP, Lenis e React Bits: hero a carattere
+  editoriale con testo animato, scorrimento fluido, card con luce che segue
+  il puntatore, ingresso a scomparsa dei passaggi e scintilla discreta al
+  clic. Il layout resta server-rendered: le animazioni sono isole React,
+  non una riscrittura in SPA. Con `prefers-reduced-motion` tutto è disattivo
+  e il contenuto resta leggibile senza JavaScript.
 
 ### Verifiche
 
