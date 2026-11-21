@@ -393,6 +393,7 @@ if (!reduce) {
       .map((sel) => document.querySelector(sel))
       .filter(Boolean);
     const steps = document.querySelector('.s-steps');
+    const footer = document.querySelector('footer');
     const syncRail = () => {
       const mid = window.innerHeight * 0.5;
       const overDark = inkSections.some((section) => {
@@ -406,7 +407,10 @@ if (!reduce) {
       const box = steps && (steps.closest('.pin-spacer') || steps);
       const s = box && box.getBoundingClientRect();
       const overSteps = !!s && s.bottom > 0 && s.top < window.innerHeight;
-      rail.classList.toggle('is-hidden', overSteps);
+      // Sopra il piè di pagina l'indice ha finito il suo lavoro.
+      const f = footer && footer.getBoundingClientRect();
+      const overFooter = !!f && f.top < window.innerHeight;
+      rail.classList.toggle('is-hidden', overSteps || overFooter);
 
       links.forEach((link) => {
         const target = document.querySelector(link.getAttribute('href'));
