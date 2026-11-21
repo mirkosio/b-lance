@@ -1068,7 +1068,7 @@ html:not(.js-anim) .s-hpin {
 }
 html:not(.js-anim) .s-track {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   width: auto;
   padding: clamp(48px, 7vw, 72px) max(20px, 5vw);
   gap: 16px;
@@ -1082,7 +1082,7 @@ html:not(.js-anim) .s-pin-hint { display: none; }
   .s-hpin { display: block; min-height: 0; overflow: visible; }
   .s-track {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
     width: auto;
     padding: clamp(48px, 7vw, 72px) max(20px, 5vw);
     gap: 16px;
