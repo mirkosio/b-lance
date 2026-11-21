@@ -1075,6 +1075,8 @@ html:not(.js-anim) .s-track {
 }
 html:not(.js-anim) .s-panel,
 html:not(.js-anim) .s-panel-intro { width: auto; }
+html:not(.js-anim) .s-panel-intro { grid-column: 1 / -1; }
+html:not(.js-anim) .s-pin-hint { display: none; }
 html:not(.js-anim) .s-pin-progress,
 html:not(.js-anim) .s-pin-hint { display: none; }
 
@@ -1118,3 +1120,8 @@ html:not(.js-anim) .s-pin-hint { display: none; }
 .s-display-split-italic { font-style: italic; }
 #rb-features { display: grid; }
 
+/* Senza JavaScript il capitolo resta in griglia: l'indice laterale non deve
+   finire sopra i pannelli, quindi il testo parte dopo la colonna dell'indice. */
+@media (min-width: 1420px) {
+  html:not(.js-anim) .s-track { padding-left: 168px; }
+}
