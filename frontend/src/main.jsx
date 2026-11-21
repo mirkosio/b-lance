@@ -228,4 +228,15 @@ if (!reduce) {
     );
   }
   mount('rb-spark', <SparkLayer />);
+
+  // SplitText mette aria-label su uno span generico: non è valido e fa
+  // perdere un punto di accessibilità. Il testo resta leggibile nei figli.
+  let attempts = 0;
+  const cleanAria = () => {
+    ['rb-title', 'rb-accent'].forEach((id) => {
+      document.getElementById(id)?.removeAttribute('aria-label');
+    });
+    if (++attempts < 12) window.setTimeout(cleanAria, 250);
+  };
+  window.setTimeout(cleanAria, 300);
 }

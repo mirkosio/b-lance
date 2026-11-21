@@ -17503,14 +17503,14 @@ function Oa(c, l) {
 }
 if (!rx) {
   let c = function() {
-    const s = Kt.useRef(null);
+    const h = Kt.useRef(null);
     return Kt.useEffect(() => {
-      const f = (h) => s.current?.spark(h.clientX, h.clientY);
-      return document.addEventListener("pointerdown", f), () => document.removeEventListener("pointerdown", f);
+      const d = (g) => h.current?.spark(g.clientX, g.clientY);
+      return document.addEventListener("pointerdown", d), () => document.removeEventListener("pointerdown", d);
     }, []), /* @__PURE__ */ ie.jsx(
       MS,
       {
-        ref: s,
+        ref: h,
         className: "rb-spark",
         sparkColor: "#5F8D6E",
         sparkSize: 7,
@@ -17523,21 +17523,21 @@ if (!rx) {
     );
   };
   const l = new CT({ duration: 1.05, smoothWheel: !0, touchMultiplier: 1.4 });
-  l.on("scroll", $t.update), Ie.ticker.add((s) => l.raf(s * 1e3)), Ie.ticker.lagSmoothing(0), document.querySelectorAll('a[href^="#"]').forEach((s) => {
-    s.addEventListener("click", (f) => {
-      const h = document.querySelector(s.getAttribute("href"));
-      h && (f.preventDefault(), l.scrollTo(h, { offset: -76 }));
+  l.on("scroll", $t.update), Ie.ticker.add((h) => l.raf(h * 1e3)), Ie.ticker.lagSmoothing(0), document.querySelectorAll('a[href^="#"]').forEach((h) => {
+    h.addEventListener("click", (d) => {
+      const g = document.querySelector(h.getAttribute("href"));
+      g && (d.preventDefault(), l.scrollTo(g, { offset: -76 }));
     });
-  }), Ie.utils.toArray("[data-reveal]").forEach((s) => {
+  }), Ie.utils.toArray("[data-reveal]").forEach((h) => {
     Ie.fromTo(
-      s,
+      h,
       { opacity: 0, y: 22 },
       {
         opacity: 1,
         y: 0,
         duration: 0.65,
         ease: "power2.out",
-        scrollTrigger: { trigger: s, start: "top 90%", once: !0 }
+        scrollTrigger: { trigger: h, start: "top 90%", once: !0 }
       }
     );
   });
@@ -17553,8 +17553,8 @@ if (!rx) {
       scrub: 0.8
     }
   }), u) {
-    const s = u.querySelectorAll(".receipt-head, .receipt-title, .receipt-sub, .receipt-rows > div, .receipt-share, .receipt-foot");
-    Ie.fromTo(s, { opacity: 0, y: 10 }, {
+    const h = u.querySelectorAll(".receipt-head, .receipt-title, .receipt-sub, .receipt-rows > div, .receipt-share, .receipt-foot");
+    Ie.fromTo(h, { opacity: 0, y: 10 }, {
       opacity: 1,
       y: 0,
       duration: 0.45,
@@ -17636,7 +17636,7 @@ if (!rx) {
   ];
   Oa(
     "rb-features",
-    /* @__PURE__ */ ie.jsx("div", { className: "feature-grid", children: a.map((s, f) => /* @__PURE__ */ ie.jsxs(
+    /* @__PURE__ */ ie.jsx("div", { className: "feature-grid", children: a.map((h, d) => /* @__PURE__ */ ie.jsxs(
       R3,
       {
         className: "card feature rb-feature",
@@ -17647,15 +17647,15 @@ if (!rx) {
         flare: !1,
         grain: 0.03,
         children: [
-          /* @__PURE__ */ ie.jsx("span", { className: "ficon", children: /* @__PURE__ */ ie.jsx("svg", { width: "22", height: "22", children: /* @__PURE__ */ ie.jsx("use", { href: `#${s.icon}` }) }) }),
+          /* @__PURE__ */ ie.jsx("span", { className: "ficon", children: /* @__PURE__ */ ie.jsx("svg", { width: "22", height: "22", children: /* @__PURE__ */ ie.jsx("use", { href: `#${h.icon}` }) }) }),
           /* @__PURE__ */ ie.jsxs("div", { children: [
-            /* @__PURE__ */ ie.jsx("span", { className: "rb-feature-num", children: String(f + 1).padStart(2, "0") }),
-            /* @__PURE__ */ ie.jsx("h3", { children: s.title }),
-            /* @__PURE__ */ ie.jsx("p", { className: "muted", children: s.text })
+            /* @__PURE__ */ ie.jsx("span", { className: "rb-feature-num", children: String(d + 1).padStart(2, "0") }),
+            /* @__PURE__ */ ie.jsx("h3", { children: h.title }),
+            /* @__PURE__ */ ie.jsx("p", { className: "muted", children: h.text })
           ] })
         ]
       },
-      s.title
+      h.title
     )) })
   ), Oa(
     "rb-steps",
@@ -17663,10 +17663,17 @@ if (!rx) {
       ["01", "Crea il gruppo", "Dai un nome e scegli la valuta dei saldi."],
       ["02", "Invita gli altri", "Link, QR o username. Nessuna rubrica caricata."],
       ["03", "Chiudi i conti", "Bonifici minimi e storico sempre visibile."]
-    ].map(([s, f, h]) => /* @__PURE__ */ ie.jsxs("div", { className: "step-card", children: [
-      /* @__PURE__ */ ie.jsx("span", { className: "step-num", children: s }),
-      /* @__PURE__ */ ie.jsx("h3", { children: f }),
-      /* @__PURE__ */ ie.jsx("p", { className: "muted", children: h })
-    ] }, s)) }) })
+    ].map(([h, d, g]) => /* @__PURE__ */ ie.jsxs("div", { className: "step-card", children: [
+      /* @__PURE__ */ ie.jsx("span", { className: "step-num", children: h }),
+      /* @__PURE__ */ ie.jsx("h3", { children: d }),
+      /* @__PURE__ */ ie.jsx("p", { className: "muted", children: g })
+    ] }, h)) }) })
   ), Oa("rb-spark", /* @__PURE__ */ ie.jsx(c, {}));
+  let s = 0;
+  const f = () => {
+    ["rb-title", "rb-accent"].forEach((h) => {
+      document.getElementById(h)?.removeAttribute("aria-label");
+    }), ++s < 12 && window.setTimeout(f, 250);
+  };
+  window.setTimeout(f, 300);
 }
