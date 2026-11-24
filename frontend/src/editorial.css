@@ -7,22 +7,23 @@
    ========================================================================== */
 
 body.site-v2 {
-  --s-ink: #14211b;
-  --s-ink-2: #1b2c23;
-  --s-paper: #dde2d8;
-  --s-paper-2: #e6eae0;
-  --s-cream: #e2e7dc;
+  --s-ink: #15231b;
+  --s-ink-2: #20342a;
+  --s-paper: #e3e3da;
+  --s-paper-2: #edf0e7;
+  --s-cream: #e7eade;
   --s-sage: #5f8d6e;
   --s-sage-strong: #4d7a5c;
   --s-warm: #a8634a;
-  --s-amber: #b06a2c;
-  --s-amber-light: #d39a5a;
-  --s-dark-grad: linear-gradient(135deg, var(--s-ink) 0%, var(--s-ink-2) 52%, var(--s-ink) 100%);
-  --s-sage-light: #9dc3aa;
+  --s-amber: #b87835;
+  --s-amber-light: #d9a86b;
+  --s-dark-grad: linear-gradient(135deg, var(--s-ink) 0%, var(--s-ink-2) 55%, var(--s-ink) 100%);
+  --s-paper-grad: linear-gradient(160deg, var(--s-paper) 0%, var(--s-paper-2) 50%, var(--s-paper) 100%);
+  --s-sage-light: #a8c9b1;
   --s-rule: rgba(13, 21, 18, 0.14);
   --s-rule-light: rgba(243, 238, 225, 0.16);
   --s-muted: #5b665e;
-  background: linear-gradient(180deg, var(--s-paper) 0%, var(--s-paper-2) 50%, var(--s-paper) 100%);
+  background: var(--s-paper-grad);
   color: var(--s-ink);
 }
 
@@ -65,7 +66,7 @@ body.site-v2 .public-links a.active {
 body.site-v2 .topbar .icon-btn { color: var(--s-cream); }
 body.site-v2 .topbar .icon-btn:hover { background: rgba(243, 238, 225, 0.1); }
 body.site-v2 .topbar.publicnav .btn.sm {
-  background: var(--s-sage-strong);
+  background: linear-gradient(135deg, var(--s-sage-strong), var(--s-sage));
   border-color: var(--s-sage-strong);
   color: var(--s-cream);
   border-radius: 3px;
@@ -339,7 +340,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   z-index: 2;
   padding: 4px 10px;
   border: 1px solid rgba(13, 21, 18, 0.2);
-  background: linear-gradient(180deg, var(--s-paper) 0%, var(--s-paper-2) 50%, var(--s-paper) 100%);
+  background: var(--s-paper-grad);
   color: var(--s-ink);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 10px;
@@ -567,7 +568,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 
 /* ============================================================ CAPITOLO 01 */
 .s-steps {
-  background: linear-gradient(180deg, var(--s-paper) 0%, var(--s-paper-2) 50%, var(--s-paper) 100%);
+  background: var(--s-paper-grad);
   color: var(--s-ink);
   position: relative;
 }
@@ -1219,3 +1220,15 @@ body.site-v2 .consent-bar a { color: var(--s-cream); }
   .public-menu nav a.active { color: var(--s-sage-light); }
 }
 body.site-v2 .public-menu summary { color: var(--s-cream); }
+
+/* Link inline dentro il testo: area touch da 44px senza spostare la riga. */
+body.site-v2 .s-note a,
+body.site-v2 .about-note a,
+body.site-v2 .about-source a,
+body.site-v2 .demo-footnote a,
+body.site-v2 .auth-card .muted.small a,
+.onboarding p a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}

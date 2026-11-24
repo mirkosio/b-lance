@@ -10,7 +10,7 @@ body.site-v2.info-page,
 body.site-v2.demo-page,
 body.site-v2.about-page,
 body.site-v2.auth-page {
-  background: var(--s-paper);
+  background: var(--s-paper-grad);
   color: var(--s-ink);
 }
 
@@ -180,7 +180,7 @@ body.site-v2 .info-facts svg { color: var(--s-sage-light); }
 body.site-v2 .info-example {
   margin: 0;
   padding: clamp(48px, 6vw, 84px) max(20px, 4.6vw);
-  background: linear-gradient(120deg, rgba(95, 141, 110, 0.12), transparent 55%), var(--s-paper);
+  background: linear-gradient(120deg, rgba(95, 141, 110, 0.10), transparent 60%), var(--s-paper-grad);
   border-bottom: 1px solid var(--s-rule);
 }
 body.site-v2 .info-example-inner {
@@ -718,7 +718,7 @@ body.site-v2 .info-link-card .section-title {
   display: block;
   margin: 0 0 10px;
   font-family: var(--font-display, "Fraunces", Georgia, serif);
-  font-size: 1.32rem;
+  font-size: 1.5rem;
   font-weight: 400;
   letter-spacing: -0.025em;
   line-height: 1.15;
@@ -749,7 +749,7 @@ body.site-v2 .about-cta {
   margin: 0 auto;
   padding: clamp(30px, 4vw, 48px) max(20px, 4.6vw);
   border-top: 1px solid var(--s-rule);
-  background: linear-gradient(120deg, rgba(95, 141, 110, 0.18), rgba(95, 141, 110, 0.05));
+  background: var(--s-paper-grad);
 }
 body.site-v2 .about-cta p {
   margin: 0;
@@ -992,8 +992,7 @@ body.site-v2 .demo-transfer-box h3 {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 9px;
   font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
+  letter-spacing: 0.12em;
 }
 body.site-v2 .demo-transfers { margin: 0; padding: 0; list-style: none; }
 body.site-v2 .demo-transfer {
@@ -1091,8 +1090,7 @@ body.site-v2 .auth-facts li {
   color: rgba(243, 238, 225, 0.72);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 10px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 body.site-v2 .auth-facts b { color: var(--s-sage-light); font-weight: 500; }
 body.site-v2 .auth-aside-foot {
@@ -1214,3 +1212,14 @@ body.site-v2 .demo-hero h1 { text-wrap: balance; }
 body.site-v2 .about-index .info-link-card:nth-child(1) { transform: rotate(-0.35deg); }
 body.site-v2 .about-index .info-link-card:nth-child(8) { transform: rotate(0.2deg); }
 body.site-v2 .about-index .info-link-card:hover { transform: translateY(-3px) rotate(0); }
+
+/* Il footer chiude con lo stesso inchiostro delle testate. */
+body.site-v2 .site-footer {
+  background: var(--s-dark-grad);
+  color: var(--s-cream);
+  border-top-color: var(--s-rule-light);
+}
+body.site-v2 .site-footer a { color: var(--s-cream); }
+body.site-v2 .footer-tag,
+body.site-v2 .footer-note { color: rgba(231, 234, 222, 0.62); }
+body.site-v2 .footer-col a { border-bottom-color: var(--s-rule-light); }
