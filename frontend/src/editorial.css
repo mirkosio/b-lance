@@ -1171,6 +1171,17 @@ body.site-v2 .consent-bar {
   border-color: var(--s-rule-light);
 }
 body.site-v2 .consent-bar a { color: var(--s-cream); }
+/* La barra è scura: il ghost button generico delle pagine chiare qui
+   renderebbe "No, grazie" quasi invisibile. */
+body.site-v2 .consent-bar .btn.ghost,
+body.site-v2 .consent-bar .btn.sm.ghost {
+  color: var(--s-cream);
+  border-color: var(--s-rule-light);
+}
+body.site-v2 .consent-bar .btn.ghost:hover {
+  background: rgba(231, 234, 222, 0.12);
+  color: #ffffff;
+}
 
 /* Menu compatto per la navigazione pubblica su telefono. */
 .public-menu { position: relative; display: none; }

@@ -8,6 +8,7 @@ non spariscano in un refactor.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -506,3 +507,29 @@ def test_get_gruppo_non_dichiara_un_corpo_json(client: TestClient) -> None:
     get_group = schema["paths"]["/groups/{group_id}"]["get"]
     assert "requestBody" not in get_group
     assert all(p["in"] != "body" for p in get_group.get("parameters", []))
+
+
+def _relative_luminance(hex_color: str) -> float:
+    """Luminanza WCAG di un colore #RRGGBB."""
+    channels = [int(hex_color[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+    linear = [
+        c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+        for c in channels
+    ]
+    return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+
+
+def test_consent_bar_ghost_button_is_readable() -> None:
+    """Il rifiuto dei cookie deve restare leggibile sulla barra scura."""
+    css = (Path(__file__).resolve().parents[1] /
+           "frontend/src/editorial.css").read_text()
+    cream = re.search(r"--s-cream:\s*(#[0-9a-fA-F]{6})", css).group(1)
+    ink = re.search(r"--s-ink:\s*(#[0-9a-fA-F]{6})", css).group(1)
+    a, b = _relative_luminance(cream), _relative_luminance(ink)
+    ratio = (max(a, b) + 0.05) / (min(a, b) + 0.05)
+    assert ratio >= 4.5, (cream, ink, ratio)
+    assert re.search(
+        r"\.consent-bar \.btn\.sm\.ghost\s*\{[^}]*color:\s*var\(--s-cream\)",
+        css,
+        re.S,
+    )
