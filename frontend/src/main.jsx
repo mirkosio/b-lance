@@ -7,9 +7,9 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import SpotlightCard from './reactbits/SpotlightCard.jsx';
 import Magnet from './reactbits/Magnet.jsx';
-import Particles from './reactbits/Particles.jsx';
 import Aurora from './reactbits/Aurora.jsx';
 import ClickSpark from './reactbits/ClickSpark.jsx';
+import './tokens.css';
 import './editorial.css';
 import './public-pages.css';
 
@@ -134,24 +134,6 @@ mount(
   />,
 );
 
-mount(
-  'rb-particles',
-  <Particles
-    particleCount={42}
-    particleSpread={9}
-    speed={0.06}
-    particleColors={['#9dc3aa', '#5f8d6e']}
-    particleBaseSize={26}
-    sizeRandomness={0.5}
-    cameraDistance={24}
-    moveParticlesOnHover={false}
-    alphaParticles={false}
-    glow={0}
-    twinkle={0}
-    opacity={0.34}
-  />,
-);
-
 /* ------------------------------------------------------------- pulsanti */
 mount(
   'rb-magnet-1',
@@ -187,8 +169,8 @@ mount(
         key={f.title}
         className={`s-card${f.wide ? ' s-card-wide' : ''}`}
         spotlightColor="rgba(95, 141, 110, 0.2)"
-        intensity={0.9}
-        spotlightSize={300}
+        intensity={0}
+        spotlightSize={0}
         theme="light"
         flare={false}
         grain={0}

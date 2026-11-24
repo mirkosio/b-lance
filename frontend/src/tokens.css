@@ -1,0 +1,29 @@
+/* Design token condivisi: una sola scala, un solo container, un'ombra.
+   Prefisso bl- per non sovrascrivere i token dell'app (app.css). */
+:root {
+  --bl-space-1: 8px;
+  --bl-space-2: 12px;
+  --bl-space-3: 16px;
+  --bl-space-4: 24px;
+  --bl-space-5: 32px;
+  --bl-space-6: 48px;
+  --bl-space-7: 72px;
+  --bl-space-8: 104px;
+
+  --bl-radius-sm: 4px;
+  --bl-radius-md: 8px;
+
+  --bl-container: 1180px;
+
+  --bl-shadow-card: 0 1px 2px rgba(21, 35, 27, 0.05),
+    0 10px 30px rgba(21, 35, 27, 0.08);
+
+  --bl-focus-dark: #a8c9b1;
+
+  /* Scala tipografica: 11 / 16 / 24 / 40 / 64 */
+  --bl-text-label: 11px;
+  --bl-text-body: 16px;
+  --bl-text-subhead: 24px;
+  --bl-text-h2: 40px;
+  --bl-text-h1: 64px;
+}

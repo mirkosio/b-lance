@@ -9,15 +9,13 @@
 body.site-v2 {
   --s-ink: #15231b;
   --s-ink-2: #20342a;
-  --s-paper: #e3e3da;
-  --s-paper-2: #edf0e7;
+  --s-paper: #e8e5da;
+  --s-paper-2: #f0f0e7;
   --s-cream: #e7eade;
   --s-sage: #5f8d6e;
   --s-sage-strong: #4d7a5c;
-  --s-warm: #a8634a;
-  --s-amber: #b87835;
-  --s-amber-light: #d9a86b;
   --s-dark-grad: linear-gradient(135deg, var(--s-ink) 0%, var(--s-ink-2) 55%, var(--s-ink) 100%);
+  --s-dark-grad-2: linear-gradient(205deg, var(--s-ink) 0%, var(--s-ink-2) 48%, var(--s-ink) 100%);
   --s-paper-grad: linear-gradient(160deg, var(--s-paper) 0%, var(--s-paper-2) 50%, var(--s-paper) 100%);
   --s-sage-light: #a8c9b1;
   --s-rule: rgba(13, 21, 18, 0.14);
@@ -38,7 +36,7 @@ body.site-v2 footer { margin-left: 0; }
 
 .s-wrap {
   width: 100%;
-  max-width: 1240px;
+  max-width: var(--bl-container);
   margin: 0 auto;
   padding-left: clamp(20px, 4.6vw, 56px);
   padding-right: clamp(20px, 4.6vw, 56px);
@@ -270,8 +268,8 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 }
 /* Un solo gesto a pennello per sezione: evidenzia una frase, non tutto. */
 .s-highlight {
-  background: rgba(211, 154, 90, 0.26);
-  box-shadow: 0 0 0 3px rgba(211, 154, 90, 0.26);
+  background: rgba(168, 201, 177, 0.26);
+  box-shadow: 0 0 0 3px rgba(168, 201, 177, 0.26);
   color: inherit;
 }
 
@@ -640,7 +638,6 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   line-height: 1.02;
   letter-spacing: -0.035em;
   text-wrap: balance;
-  font-variation-settings: "SOFT" 40, "WONK" 1;
 }
 .s-body {
   max-width: 46ch;
@@ -665,12 +662,10 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 .s-panel-num {
   display: block;
   margin-bottom: 26px;
-  color: transparent;
-  font-family: var(--font-display, "Fraunces", Georgia, serif);
-  font-size: clamp(4.4rem, 8vw, 6.4rem);
-  line-height: 0.8;
-  letter-spacing: -0.04em;
-  -webkit-text-stroke: 1px rgba(95, 141, 110, 0.55);
+  color: var(--s-sage);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
 }
 .s-panel h3 {
   margin: 0 0 10px;
@@ -895,7 +890,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   font-variant-numeric: tabular-nums;
 }
 .s-phone-row .pos { color: #8fc7a2; }
-.s-phone-row .neg { color: var(--s-warm); }
+.s-phone-row .neg { color: rgba(231, 234, 222, 0.74); }
 .s-dot {
   width: 26px;
   height: 26px;
@@ -1005,7 +1000,6 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   font-weight: 400;
   line-height: 0.94;
   letter-spacing: -0.045em;
-  font-variation-settings: "SOFT" 40, "WONK" 1;
 }
 .s-final-row {
   display: flex;
@@ -1243,3 +1237,104 @@ body.site-v2 .auth-card .muted.small a,
   align-items: center;
   min-height: 44px;
 }
+
+/* -------------------------------------------------- nota e diagramma home */
+.s-skip-chapter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 8px;
+  color: rgba(232, 234, 222, 0.7);
+  font-size: 0.78rem;
+  border-bottom: 1px solid var(--s-sage-light);
+}
+.s-skip-chapter:hover { color: var(--s-cream); }
+
+.s-letter {
+  padding: clamp(64px, 8vw, 110px) 0;
+  background: var(--s-paper-grad);
+  border-top: 2px dotted rgba(95, 141, 110, 0.35);
+}
+.s-letter-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+  gap: clamp(30px, 6vw, 90px);
+  align-items: start;
+}
+.s-letter h2 {
+  margin: 0;
+  font-family: var(--font-display, "Fraunces", Georgia, serif);
+  font-size: clamp(2.2rem, 4vw, 3.4rem);
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+}
+.s-letter-body p {
+  max-width: 62ch;
+  margin: 0 0 18px;
+  color: var(--s-muted);
+  font-size: 1.02rem;
+  line-height: 1.7;
+}
+.s-letter-body .s-sign {
+  margin: 26px 0 0;
+  color: var(--s-sage);
+  font-family: var(--font-display, "Fraunces", Georgia, serif);
+  font-size: 1.1rem;
+  font-style: italic;
+}
+.s-howcalc {
+  padding: clamp(50px, 6vw, 84px) 0 clamp(64px, 8vw, 100px);
+  background: var(--s-paper-2);
+  border-top: 1px solid var(--s-rule);
+}
+.s-howcalc h2 {
+  margin: 0 0 clamp(24px, 4vw, 40px);
+  font-family: var(--font-display, "Fraunces", Georgia, serif);
+  font-size: clamp(1.9rem, 3.4vw, 2.8rem);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+}
+.s-calc-flow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(14px, 2vw, 24px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.s-calc-flow li {
+  padding-top: 14px;
+  border-top: 2px solid var(--s-sage);
+}
+.s-calc-flow b {
+  display: block;
+  margin-bottom: 18px;
+  color: var(--s-sage);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+}
+.s-calc-flow strong {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-display, "Fraunces", Georgia, serif);
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+.s-calc-flow span { color: var(--s-muted); font-size: 0.88rem; line-height: 1.6; }
+
+@media (max-width: 900px) {
+  .s-letter-grid { grid-template-columns: 1fr; }
+  .s-calc-flow { grid-template-columns: 1fr; }
+}
+
+/* Stati dei pulsanti e focus sulle superfici scure. */
+.s-cover :focus-visible,
+.s-app :focus-visible,
+.s-final :focus-visible,
+body.site-v2 .consent-bar :focus-visible { outline-color: var(--bl-focus-dark); }
+.s-btn[aria-busy="true"], .s-btn:disabled { opacity: 0.6; pointer-events: none; }
+.s-btn.is-success { background: var(--s-sage); border-color: var(--s-sage); }
