@@ -55,12 +55,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,400..600,0..100,0..1&family=Inter:wght@400;500;600;700;800&display=swap">
-  <link rel="stylesheet" href="/static/app.css?v=43">
+  <link rel="stylesheet" href="/static/app.css?v=44">
   <link rel="stylesheet" href="/static/motion.css?v=4">
 </head>
 <body class="{% block body_class %}{% if user %}authed{% else %}guest{% endif %}{% endblock %}">
 <a class="skip-link" href="#main">Salta al contenuto</a>
-<div id="rb-spark" aria-hidden="true"></div>
 <div class="read-progress" aria-hidden="true"><span id="read-progress-bar"></span></div>
 
 <!-- Sprite di icone: disegnate a mano, stile outline, nessuna emoji -->
@@ -216,6 +215,17 @@
     <img class="brand-badge" src="/static/logo-mark.svg?v=6" alt="">
   </a>
   {% set p = request.url.path %}
+  <details class="public-menu">
+    <summary>Menu <svg width="14" height="14" aria-hidden="true"><use href="#i-chevron"></use></svg></summary>
+    <nav aria-label="Sezioni del sito">
+      <a href="/come-funziona">Come funziona</a>
+      <a href="/demo">Demo</a>
+      <a href="/#funzioni">Funzioni</a>
+      <a href="/android">App Android</a>
+      <a href="/faq">FAQ</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </details>
   <nav class="public-links" aria-label="Sezioni del sito">
     <a href="/come-funziona" {% if p == '/come-funziona' %}class="active" aria-current="page"{% endif %}>Come funziona</a>
     <a data-analytics="demo_start" href="/demo" {% if p == '/demo' %}class="active" aria-current="page"{% endif %}>Demo</a>
@@ -686,8 +696,8 @@
 })();
 </script>
 <script src="/static/motion.js?v=4" defer></script>
-<link rel="stylesheet" href="/static/build/blance.css?v=33">
-<script type="module" src="/static/build/blance.js?v=33"></script>
+<link rel="stylesheet" href="/static/build/blance.css?v=37">
+<script type="module" src="/static/build/blance.js?v=37"></script>
 {% if request.url.path not in ('/demo', '/cashier-link') %}
 <div class="consent-bar" id="consent-bar" hidden role="region" aria-label="Preferenze statistiche">
   <p>Puoi accettare statistiche d'uso anonime: contiamo solo quante persone usano il sito. Nessun cookie di tracciamento, nessun dato personale.</p>

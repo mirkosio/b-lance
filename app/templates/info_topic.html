@@ -221,7 +221,7 @@
       // Una domanda della FAQ si apre: l'indice non deve portarti su una
       // riga chiusa che non spiega nulla.
       if (el && el.tagName === 'DETAILS') el.open = true;
-      var target = el ? topOf(el, scrollY) - 92 : scrollY;
+      var target = el ? topOf(el, scrollY) - 90 : scrollY;
       pinY = Math.max(0, Math.min(Math.round(target), max));
       pinned = i;
       pinAt = Date.now();

@@ -166,11 +166,10 @@ body.site-v2 .info-facts li {
   background: rgba(95, 141, 110, 0.16);
   border: 1px solid rgba(157, 195, 170, 0.26);
   border-radius: 2px;
-  border-radius: 0;
   box-shadow: none;
   font-size: 0.82rem;
 }
-body.site-v2 .info-facts li:last-child { border-right: 0; margin-right: 0; }
+body.site-v2 .info-facts li:last-child { margin-right: 0; }
 body.site-v2 .info-facts li::before {
   content: "0" counter(fact);
   color: var(--s-sage-light);
@@ -184,7 +183,7 @@ body.site-v2 .info-facts svg { color: var(--s-sage-light); }
 body.site-v2 .info-example {
   margin: 0;
   padding: clamp(48px, 6vw, 84px) max(20px, 4.6vw);
-  background: linear-gradient(120deg, rgba(95, 141, 110, 0.14), transparent 55%), var(--s-paper-2);
+  background: linear-gradient(120deg, rgba(95, 141, 110, 0.12), transparent 55%), var(--s-paper);
   border-bottom: 1px solid var(--s-rule);
 }
 body.site-v2 .info-example-inner {
@@ -603,6 +602,13 @@ body.site-v2 .about-lede {
   font-style: italic;
   letter-spacing: -0.02em;
 }
+body.site-v2 .about-meta {
+  margin: 0 0 22px;
+  color: rgba(232, 236, 226, 0.42);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+}
 body.site-v2 .about-body {
   max-width: 62ch;
   margin: 0 0 12px;
@@ -654,12 +660,27 @@ body.site-v2 .about-index-head > span:last-child {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-body.site-v2 .info-link-card:nth-child(even) { background: #dde6d8; }
+/* Griglia non ripetitiva: due aperture larghe, quattro schede, poi una
+   nota finale scura. Niente righe zebrate a ogni pari. */
 body.site-v2 .about-index .grid.cols-2 {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 14px;
 }
+body.site-v2 .about-index .info-link-card:nth-child(1) { grid-column: span 7; }
+body.site-v2 .about-index .info-link-card:nth-child(2) { grid-column: span 5; }
+body.site-v2 .about-index .info-link-card:nth-child(n+3):nth-child(-n+6) { grid-column: span 4; }
+body.site-v2 .about-index .info-link-card:nth-child(6) { grid-column: span 5; }
+body.site-v2 .about-index .info-link-card:nth-child(7) { grid-column: span 7; background: #dde6d8; }
+body.site-v2 .about-index .info-link-card:nth-child(8) {
+  grid-column: span 12;
+  background: var(--s-ink);
+  color: var(--s-cream);
+  border-color: transparent;
+}
+body.site-v2 .about-index .info-link-card:nth-child(8) p { color: rgba(232, 236, 226, 0.66); }
+body.site-v2 .about-index .info-link-card:nth-child(8) .info-link-num { -webkit-text-stroke-color: var(--s-sage-light); }
+body.site-v2 .about-index .info-link-card:nth-child(8) .info-link-more { color: var(--s-cream); border-top-color: var(--s-rule-light); }
 body.site-v2 .info-link-card {
   position: relative;
   display: flex;
@@ -953,7 +974,7 @@ body.site-v2 .demo-balance .num {
   font-variant-numeric: tabular-nums;
 }
 body.site-v2 .demo-balance .pos { color: #8fc7a2; }
-body.site-v2 .demo-balance .neg { color: #dda08a; }
+body.site-v2 .demo-balance .neg { color: var(--s-warm); }
 body.site-v2 .demo-transfer-box {
   margin-top: 18px;
   padding: 18px;
@@ -1126,6 +1147,7 @@ body.site-v2 .auth-card .muted.small a { color: var(--s-ink); border-bottom: 1px
 
 @media (max-width: 1060px) {
   body.site-v2 .about-index .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  body.site-v2 .about-index .info-link-card { grid-column: auto; }
   body.site-v2 .info-content { grid-template-columns: minmax(0, 1fr) 220px; gap: 34px; }
 }
 
@@ -1165,3 +1187,26 @@ body.site-v2 .auth-card .muted.small a { color: var(--s-ink); border-bottom: 1px
   body.site-v2 .info-faq .faq-item summary::after { transition: none !important; }
   body.site-v2 .info-link-card:hover { transform: none !important; }
 }
+
+/* ------------------------------------------------- respiro tipografico */
+/* Le etichette in stampa hanno dimensione leggibile e non gridano. */
+body.site-v2 .eyebrow,
+body.site-v2 .info-toc-title,
+body.site-v2 .about-index-head > span:last-child,
+body.site-v2 .demo-transfer-box h3,
+body.site-v2 .auth-aside-foot,
+body.site-v2 .info-aside-note { font-size: 11px; letter-spacing: 0.12em; }
+
+/* Quattro testate, quattro voci diverse: non tutte a 6rem. */
+body.site-v2 .info-hero h1 { font-size: clamp(2.7rem, 6.4vw, 5.2rem); }
+body.site-v2 .demo-hero h1 { font-size: clamp(2.6rem, 6vw, 4.8rem); line-height: 1; }
+body.site-v2 .about-masthead h1 { font-size: clamp(3rem, 7vw, 5.8rem); }
+body.site-v2 .auth-aside h1 { font-size: clamp(2.6rem, 5vw, 4.4rem); }
+body.site-v2 .auth-aside h1,
+body.site-v2 .info-hero h1,
+body.site-v2 .demo-hero h1 { text-wrap: balance; }
+
+/* Imperfezioni minime: due schede appena storte, come fogli posati a mano. */
+body.site-v2 .about-index .info-link-card:nth-child(1) { transform: rotate(-0.35deg); }
+body.site-v2 .about-index .info-link-card:nth-child(8) { transform: rotate(0.2deg); }
+body.site-v2 .about-index .info-link-card:hover { transform: translateY(-3px) rotate(0); }

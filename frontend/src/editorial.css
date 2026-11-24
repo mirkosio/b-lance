@@ -14,6 +14,7 @@ body.site-v2 {
   --s-cream: #e2e7dc;
   --s-sage: #5f8d6e;
   --s-sage-strong: #4d7a5c;
+  --s-warm: #a8634a;
   --s-sage-light: #9dc3aa;
   --s-rule: rgba(13, 21, 18, 0.14);
   --s-rule-light: rgba(243, 238, 225, 0.16);
@@ -282,7 +283,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   transition: background 160ms ease, color 160ms ease, transform 160ms ease, border-color 160ms ease;
   will-change: transform;
 }
-.s-btn:hover { background: var(--s-sage); border-color: var(--s-sage); }
+.s-btn:hover { background: #6f9f80; border-color: #6f9f80; transform: translateY(-1px); }
 .s-btn:active { transform: translateY(1px); }
 .s-btn-ghost {
   background: transparent;
@@ -581,7 +582,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   border-radius: 3px;
   overflow: hidden;
 }
-.s-panel:nth-child(even) { background: #dde6d8; }
+.s-panel:nth-child(2) { background: #dde6d8; }
 .s-panel-intro {
   width: min(82vw, 540px);
   background: transparent;
@@ -743,7 +744,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }
 .s-card-wide { grid-column: span 6; }
-.s-bento .spotlight-card.s-card:nth-child(even) { background-color: #dfe7da; }
+.s-bento .spotlight-card.s-card:nth-child(2) { background-color: #dfe7da; }
 .s-bento > .s-card:nth-child(1) { grid-column: span 7; }
 .s-bento > .s-card:nth-child(2) { grid-column: span 5; }
 .s-bento > .s-card:nth-child(6) { grid-column: span 12; min-height: 200px; }
@@ -881,7 +882,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   font-variant-numeric: tabular-nums;
 }
 .s-phone-row .pos { color: #8fc7a2; }
-.s-phone-row .neg { color: #dda08a; }
+.s-phone-row .neg { color: var(--s-warm); }
 .s-dot {
   width: 26px;
   height: 26px;
@@ -1111,7 +1112,7 @@ html:not(.js-anim) .s-pin-hint { display: none; }
 #rb-magnet-1 a, #rb-magnet-2 a, #rb-magnet-3 a { cursor: pointer; }
 
 /* Scintilla al clic: livescela su tutta la pagina senza rubare eventi. */
-#rb-spark { position: fixed; inset: 0; z-index: 9999; pointer-events: none; }
+#rb-spark { position: fixed; inset: 0; z-index: 50; pointer-events: none; }
 #rb-spark > * { pointer-events: none; }
 
 /* Componenti React Bits montati sopra il markup server. */
@@ -1132,3 +1133,77 @@ html:not(.js-anim) .s-pin-hint { display: none; }
 @media (min-width: 1420px) {
   html:not(.js-anim) .s-track { padding-left: 168px; }
 }
+
+/* --------------------------------------------------------- correzioni globali */
+/* Lenis gestisce lo scroll: il smooth nativo crea attrito e salti. */
+html.lenis, html.lenis body { scroll-behavior: auto !important; }
+
+/* Le pagine editoriali restano leggibili anche con il tema scuro di sistema:
+   il toggle non cambia la carta, quindi non deve essere visibile qui. */
+body.site-v2 [data-theme-toggle] { display: none; }
+body.site-v2 .btn.ghost,
+body.site-v2 .btn.sm.ghost {
+  background: transparent;
+  border-color: var(--s-rule);
+  color: var(--s-ink);
+}
+body.site-v2 .alert {
+  background: var(--s-paper-2);
+  color: var(--s-ink);
+  border-color: var(--s-rule);
+}
+body.site-v2 .consent-bar {
+  background: var(--s-ink);
+  color: var(--s-cream);
+  border-color: var(--s-rule-light);
+}
+body.site-v2 .consent-bar a { color: var(--s-cream); }
+
+/* Menu compatto per la navigazione pubblica su telefono. */
+.public-menu { position: relative; display: none; }
+@media (max-width: 959px) {
+  .topbar.publicnav .public-menu { display: block; margin-right: auto; }
+  .public-menu summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 10px;
+    list-style: none;
+    cursor: pointer;
+    color: var(--s-cream);
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .public-menu summary::-webkit-details-marker { display: none; }
+  .public-menu summary svg { transition: transform 160ms ease; }
+  .public-menu[open] summary svg { transform: rotate(180deg); }
+  .public-menu nav {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    min-width: 190px;
+    padding: 8px;
+    background: var(--s-ink);
+    border: 1px solid var(--s-rule-light);
+    border-radius: 3px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  }
+  .public-menu nav a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 10px;
+    color: rgba(243, 238, 225, 0.78);
+    font-size: 0.88rem;
+    text-decoration: none;
+  }
+  .public-menu nav a:hover,
+  .public-menu nav a.active { color: var(--s-sage-light); }
+}
+body.site-v2 .public-menu summary { color: var(--s-cream); }

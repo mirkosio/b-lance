@@ -119,17 +119,17 @@ mount(
   'rb-aurora',
   <Aurora
     colorStops={['#0d1512', '#3f6a52', '#9dc3aa']}
-    amplitude={1.15}
-    blend={0.62}
-    speed={0.45}
+    amplitude={0.8}
+    blend={0.42}
+    speed={0.35}
     height={0.5}
-    scale={1.1}
-    glow={0.55}
-    brightness={0.85}
-    layers={2}
+    scale={1.05}
+    glow={0.28}
+    brightness={0.7}
+    layers={1}
     direction="top"
-    intro
-    opacity={0.85}
+    intro={false}
+    opacity={0.6}
     lightMode={false}
   />,
 );
@@ -137,18 +137,18 @@ mount(
 mount(
   'rb-particles',
   <Particles
-    particleCount={70}
+    particleCount={42}
     particleSpread={9}
-    speed={0.09}
+    speed={0.06}
     particleColors={['#9dc3aa', '#5f8d6e']}
-    particleBaseSize={34}
-    sizeRandomness={0.7}
+    particleBaseSize={26}
+    sizeRandomness={0.5}
     cameraDistance={24}
     moveParticlesOnHover={false}
-    alphaParticles
-    glow={0.2}
-    twinkle={0.25}
-    opacity={0.62}
+    alphaParticles={false}
+    glow={0}
+    twinkle={0}
+    opacity={0.34}
   />,
 );
 
@@ -209,7 +209,13 @@ mount(
 function SparkLayer() {
   const api = useRef(null);
   useEffect(() => {
-    const onDown = (event) => api.current?.spark(event.clientX, event.clientY);
+    // Solo clic sinistro del mouse: niente scintille su touch, penna,
+    // tasto destro o mentre si compila un modulo.
+    const onDown = (event) => {
+      if (event.pointerType !== 'mouse' || event.button !== 0) return;
+      if (event.target.closest('input, textarea, select, button, form')) return;
+      api.current?.spark(event.clientX, event.clientY);
+    };
     document.addEventListener('pointerdown', onDown);
     return () => document.removeEventListener('pointerdown', onDown);
   }, []);
@@ -227,7 +233,11 @@ function SparkLayer() {
     />
   );
 }
-mount('rb-spark', <SparkLayer />);
+// La scintilla vive solo in home e solo con il movimento attivo: sulle
+// pagine di lavoro è rumore visivo, e con reduce-motion non deve esserci.
+if (!reduce && document.body.classList.contains('landing')) {
+  mount('rb-spark', <SparkLayer />);
+}
 
 /* ============================================================ movimento */
 if (!reduce) {
@@ -264,6 +274,9 @@ if (!reduce) {
 
   // Ancore interne: scorrimento fluido invece del salto secco.
   document.querySelectorAll('a[href^="#"]').forEach((link) => {
+    // Il TOC ha un suo handler con offset diverso; lo skip-link deve
+    // conservare il salto nativo che porta il focus su #main.
+    if (link.classList.contains('skip-link') || link.closest('.info-toc')) return;
     link.addEventListener('click', (event) => {
       const target = document.querySelector(link.getAttribute('href'));
       if (!target) return;
@@ -439,8 +452,12 @@ if (!reduce) {
     const hero = document.querySelector(
       '.info-hero-inner, .demo-hero-inner, .about-masthead-inner, .auth-aside-inner',
     );
+    const pubTitle = document.querySelector('.info-hero h1');
     if (hero) {
-      gsap.from([...hero.children], {
+      // Il titolo dell'indice ha già la sua animazione lettera per parola:
+      // animarlo anche qui lascerebbe due tween sovrapposti sullo stesso nodo.
+      const parts = [...hero.children].filter((node) => node !== pubTitle);
+      gsap.from(parts, {
         opacity: 0,
         y: 24,
         duration: 0.7,
@@ -449,7 +466,6 @@ if (!reduce) {
       });
     }
 
-    const pubTitle = document.querySelector('.info-hero h1');
     if (pubTitle) {
       const words = splitLine(pubTitle, 'words');
       if (words.length) {

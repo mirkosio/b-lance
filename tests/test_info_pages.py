@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -34,7 +36,8 @@ def test_info_pages_are_public_and_have_metadata(client: TestClient, path: str, 
     assert r.status_code == 200, r.text
     assert title in r.text
     assert '<meta name="description"' in r.text
-    assert 'app.css?v=43' in r.text
+    # Il numero di cache-bust può cambiare: conta che ci sia e sia un numero.
+    assert re.search(r'app\.css\?v=\d+', r.text)
     assert 'info-hero' in r.text
 
 
