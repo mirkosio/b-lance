@@ -17,11 +17,12 @@ body.site-v2 {
   --s-warm: #a8634a;
   --s-amber: #b06a2c;
   --s-amber-light: #d39a5a;
+  --s-dark-grad: linear-gradient(135deg, var(--s-ink) 0%, var(--s-ink-2) 52%, var(--s-ink) 100%);
   --s-sage-light: #9dc3aa;
   --s-rule: rgba(13, 21, 18, 0.14);
   --s-rule-light: rgba(243, 238, 225, 0.16);
   --s-muted: #5b665e;
-  background: var(--s-paper);
+  background: linear-gradient(180deg, var(--s-paper) 0%, var(--s-paper-2) 50%, var(--s-paper) 100%);
   color: var(--s-ink);
 }
 
@@ -44,7 +45,7 @@ body.site-v2 footer { margin-left: 0; }
 
 /* ------------------------------------------------------------- testata */
 body.site-v2 .topbar.publicnav {
-  background: var(--s-ink);
+  background: var(--s-dark-grad);
   border-bottom: 1px solid var(--s-rule-light);
   color: var(--s-cream);
   transition: background 220ms ease, border-color 220ms ease;
@@ -146,7 +147,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   background:
     radial-gradient(900px 520px at 82% -6%, rgba(95, 141, 110, 0.3), transparent 68%),
     radial-gradient(620px 420px at -8% 106%, rgba(95, 141, 110, 0.16), transparent 70%),
-    var(--s-ink);
+    var(--s-dark-grad);
   isolation: isolate;
 }
 .s-cover::before {
@@ -224,7 +225,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   width: 18px;
   height: 2px;
   margin-right: 2px;
-  background: var(--s-amber-light);
+  background: var(--s-sage-light);
 }
 .s-kicker::after {
   content: "";
@@ -262,9 +263,15 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 .s-lede {
   max-width: 46ch;
   margin: 0 0 28px;
-  color: rgba(243, 238, 225, 0.72);
-  font-size: 1rem;
-  line-height: 1.7;
+  color: rgba(243, 238, 225, 0.74);
+  font-size: 1.05rem;
+  line-height: 1.65;
+}
+/* Un solo gesto a pennello per sezione: evidenzia una frase, non tutto. */
+.s-highlight {
+  background: rgba(211, 154, 90, 0.26);
+  box-shadow: 0 0 0 3px rgba(211, 154, 90, 0.26);
+  color: inherit;
 }
 
 .s-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
@@ -332,7 +339,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   z-index: 2;
   padding: 4px 10px;
   border: 1px solid rgba(13, 21, 18, 0.2);
-  background: var(--s-paper);
+  background: linear-gradient(180deg, var(--s-paper) 0%, var(--s-paper-2) 50%, var(--s-paper) 100%);
   color: var(--s-ink);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 10px;
@@ -560,7 +567,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 
 /* ============================================================ CAPITOLO 01 */
 .s-steps {
-  background: var(--s-paper);
+  background: linear-gradient(180deg, var(--s-paper) 0%, var(--s-paper-2) 50%, var(--s-paper) 100%);
   color: var(--s-ink);
   position: relative;
 }
@@ -811,7 +818,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   color: var(--s-cream);
   background:
     radial-gradient(700px 420px at 88% 10%, rgba(95, 141, 110, 0.26), transparent 68%),
-    var(--s-ink);
+    var(--s-dark-grad);
   border-top: 1px solid rgba(243, 238, 225, 0.1);
 }
 .s-app-grid {
@@ -987,7 +994,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   color: var(--s-cream);
   background:
     radial-gradient(680px 380px at 12% 0%, rgba(95, 141, 110, 0.22), transparent 70%),
-    var(--s-ink);
+    var(--s-dark-grad);
 }
 .s-final .s-index { margin-bottom: 26px; }
 .s-final-title {
@@ -1158,7 +1165,7 @@ body.site-v2 .alert {
   border-color: var(--s-rule);
 }
 body.site-v2 .consent-bar {
-  background: var(--s-ink);
+  background: var(--s-dark-grad);
   color: var(--s-cream);
   border-color: var(--s-rule-light);
 }
@@ -1194,7 +1201,7 @@ body.site-v2 .consent-bar a { color: var(--s-cream); }
     flex-direction: column;
     min-width: 190px;
     padding: 8px;
-    background: var(--s-ink);
+    background: var(--s-dark-grad);
     border: 1px solid var(--s-rule-light);
     border-radius: 3px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);

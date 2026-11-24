@@ -85,10 +85,11 @@ body {
   color: var(--text);
   background-color: var(--bg);
   background-image:
+    linear-gradient(155deg, var(--bg) 0%, var(--bg-soft) 52%, var(--bg) 100%),
     radial-gradient(1100px 520px at 85% -10%, rgba(95, 141, 110, 0.06), transparent 62%),
     /* Texture carta: rumore SVG leggerissimo, una sola richiesta inline */
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
-  background-repeat: no-repeat, repeat;
+  background-repeat: no-repeat, no-repeat, repeat;
   background-attachment: scroll;
   min-height: 100vh;
   transition: background-color 300ms ease, color 300ms ease;

@@ -34,12 +34,11 @@ body.site-v2 .eyebrow {
   align-items: center;
   gap: 10px;
   margin: 0 0 18px;
-  color: var(--s-amber-light);
+  color: var(--s-sage-light);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 body.site-v2 .eyebrow::before {
   content: "";
@@ -99,7 +98,7 @@ body.site-v2 .info-hero {
   padding: clamp(48px, 7vw, 100px) max(20px, 4.6vw) clamp(44px, 6vw, 82px);
   background:
     radial-gradient(760px 460px at 88% -10%, rgba(95, 141, 110, 0.3), transparent 68%),
-    var(--s-ink);
+    var(--s-dark-grad);
   color: var(--s-cream);
   border: 0;
   border-bottom: 1px solid var(--s-rule-light);
@@ -136,9 +135,9 @@ body.site-v2 .info-hero h1 {
 body.site-v2 .info-hero-inner > p:not(.eyebrow) {
   max-width: 60ch;
   margin: 0;
-  color: rgba(243, 238, 225, 0.72);
-  font-size: clamp(0.95rem, 1.4vw, 1.08rem);
-  line-height: 1.7;
+  color: rgba(243, 238, 225, 0.76);
+  font-size: clamp(1rem, 1.5vw, 1.12rem);
+  line-height: 1.65;
 }
 body.site-v2 .info-facts {
   counter-reset: fact;
@@ -302,8 +301,8 @@ body.site-v2 .info-main h2 {
 body.site-v2 .info-main p,
 body.site-v2 .info-main li {
   color: var(--s-muted);
-  font-size: 0.96rem;
-  line-height: 1.75;
+  font-size: 1.02rem;
+  line-height: 1.68;
 }
 
 /* Passaggi numerati */
@@ -515,13 +514,13 @@ body.site-v2 .info-toc a::before {
 body.site-v2 .info-toc a:hover { color: var(--s-ink); border-left-color: var(--s-sage); }
 body.site-v2 .info-toc a.active {
   color: var(--s-ink);
-  background: rgba(176, 106, 44, 0.10);
-  border-left-color: var(--s-amber);
+  background: rgba(95, 141, 110, 0.12);
+  border-left-color: var(--s-sage);
   border-radius: 0;
   box-shadow: none;
   font-weight: 600;
 }
-body.site-v2 .info-toc a.active::before { color: var(--s-amber); }
+body.site-v2 .info-toc a.active::before { color: var(--s-sage); }
 body.site-v2 .info-aside .btn {
   display: flex;
   align-items: center;
@@ -561,7 +560,7 @@ body.site-v2 .about-masthead {
   padding: clamp(50px, 7vw, 104px) max(20px, 4.6vw) clamp(48px, 6vw, 84px);
   background:
     radial-gradient(720px 440px at 90% -8%, rgba(95, 141, 110, 0.32), transparent 68%),
-    var(--s-ink);
+    var(--s-dark-grad);
   color: var(--s-cream);
   border-bottom: 1px solid var(--s-rule-light);
 }
@@ -613,6 +612,13 @@ body.site-v2 .about-body {
   color: rgba(243, 238, 225, 0.72);
   font-size: 1rem;
   line-height: 1.7;
+}
+body.site-v2 .about-sign {
+  margin: 10px 0 0;
+  color: var(--s-amber-light);
+  font-family: var(--font-display, "Fraunces", Georgia, serif);
+  font-size: 1rem;
+  font-style: italic;
 }
 body.site-v2 .about-note {
   max-width: 60ch;
@@ -672,7 +678,7 @@ body.site-v2 .about-index .info-link-card:nth-child(6) { grid-column: span 5; }
 body.site-v2 .about-index .info-link-card:nth-child(7) { grid-column: span 7; background: #dde6d8; }
 body.site-v2 .about-index .info-link-card:nth-child(8) {
   grid-column: span 12;
-  background: var(--s-ink);
+  background: var(--s-dark-grad);
   color: var(--s-cream);
   border-color: transparent;
 }
@@ -780,7 +786,7 @@ body.site-v2 .demo-hero {
   padding: clamp(54px, 7vw, 104px) max(20px, 4.6vw) clamp(44px, 6vw, 72px);
   background:
     radial-gradient(760px 420px at 92% -12%, rgba(95, 141, 110, 0.3), transparent 68%),
-    var(--s-ink);
+    var(--s-dark-grad);
   color: var(--s-cream);
   border: 0;
   border-bottom: 1px solid var(--s-rule-light);
@@ -943,7 +949,7 @@ body.site-v2 .demo-form .btn:hover { background: var(--s-sage); border-color: va
 body.site-v2 .demo-summary {
   position: sticky;
   top: 78px;
-  background: var(--s-ink);
+  background: var(--s-dark-grad);
   border: 1px solid rgba(243, 238, 225, 0.12);
   color: var(--s-cream);
   box-shadow: 10px 12px 0 -1px rgba(13, 21, 18, 0.12);
@@ -1043,7 +1049,7 @@ body.site-v2 .auth-aside {
   padding: clamp(50px, 7vw, 96px) max(24px, 6vw);
   background:
     radial-gradient(700px 440px at 82% 4%, rgba(95, 141, 110, 0.3), transparent 68%),
-    var(--s-ink);
+    var(--s-dark-grad);
   color: var(--s-cream);
   border-right: 1px solid var(--s-rule-light);
 }
