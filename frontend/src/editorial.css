@@ -286,7 +286,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   border-radius: 3px;
   background: var(--s-sage-strong);
   color: #f5f8f2;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.005em;
   text-decoration: none;
@@ -317,7 +317,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 .s-note {
   margin: 22px 0 0;
   color: rgba(243, 238, 225, 0.48);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   line-height: 1.6;
 }
 .s-note a { color: rgba(243, 238, 225, 0.8); text-underline-offset: 3px; }
@@ -400,7 +400,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   align-items: baseline;
   justify-content: space-between;
   padding: 7px 0;
-  font-size: 0.84rem;
+  font-size: 0.75rem;
 }
 .s-receipt-rows dt { color: var(--s-muted); }
 .s-receipt-rows dd {
@@ -415,7 +415,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   justify-content: space-between;
   padding: 14px 0 12px;
   border-bottom: 1px solid var(--s-rule);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
 .s-receipt-share strong {
   font-family: var(--font-display, "Fraunces", Georgia, serif);
@@ -450,7 +450,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 .s-tilt-note {
   margin: 16px 0 0;
   color: rgba(243, 238, 225, 0.4);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.5;
   text-align: right;
 }
@@ -523,7 +523,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 .s-calculator output.is-invalid {
   color: #a0432f;
   font-family: var(--font);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   white-space: normal;
 }
 .s-calc-link {
@@ -533,7 +533,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   min-height: 44px;
   padding: 0 2px;
   color: var(--s-ink);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-decoration: none;
   border-bottom: 1px solid var(--s-sage);
@@ -560,7 +560,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 }
 .s-fact span {
   color: rgba(243, 238, 225, 0.56);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   line-height: 1.5;
 }
 
@@ -643,7 +643,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   max-width: 46ch;
   margin: 0 0 18px;
   color: var(--s-muted);
-  font-size: 0.96rem;
+  font-size: 0.75rem;
   line-height: 1.7;
 }
 .s-textlink {
@@ -652,7 +652,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   gap: 6px;
   min-height: 44px;
   color: var(--s-ink);
-  font-size: 0.86rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-decoration: none;
   border-bottom: 1px solid var(--s-sage);
@@ -674,7 +674,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   font-weight: 400;
   letter-spacing: -0.025em;
 }
-.s-panel .s-body { margin-bottom: 16px; font-size: 0.9rem; }
+.s-panel .s-body { margin-bottom: 16px; font-size: 0.75rem; }
 .s-panel-list {
   margin: 0;
   padding: 0;
@@ -685,7 +685,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   padding: 11px 0 11px 18px;
   border-bottom: 1px solid var(--s-rule);
   color: var(--s-muted);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   line-height: 1.5;
   position: relative;
 }
@@ -794,7 +794,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 .s-card p {
   margin: 0;
   color: var(--s-muted);
-  font-size: 0.86rem;
+  font-size: 0.75rem;
   line-height: 1.6;
   max-width: 42ch;
 }
@@ -827,7 +827,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 .s-app-note {
   margin: 18px 0 0;
   color: rgba(243, 238, 225, 0.4);
-  font-size: 0.76rem;
+  font-size: 0.75rem;
 }
 .s-phone {
   width: min(300px, 100%);
@@ -874,7 +874,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   display: block;
   margin-bottom: 18px;
   color: rgba(243, 238, 225, 0.45);
-  font-size: 0.7rem;
+  font-size: 0.75rem;
 }
 .s-phone-row {
   display: flex;
@@ -882,11 +882,11 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   gap: 9px;
   padding: 10px 0;
   border-top: 1px solid rgba(243, 238, 225, 0.1);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
 .s-phone-row b {
   margin-left: auto;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-variant-numeric: tabular-nums;
 }
 .s-phone-row .pos { color: #8fc7a2; }
@@ -899,7 +899,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   border-radius: 99px;
   background: rgba(95, 141, 110, 0.85);
   color: #fff;
-  font-size: 0.64rem;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 .s-phone-cta {
@@ -911,7 +911,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   border-radius: 3px;
   color: var(--s-sage-light);
   background: rgba(95, 141, 110, 0.12);
-  font-size: 0.74rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
 }
@@ -919,7 +919,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 .s-phone-hint {
   margin: 10px 0 0;
   color: rgba(243, 238, 225, 0.4);
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   text-align: center;
 }
 .s-phone.is-settled .s-phone-cta {
@@ -978,7 +978,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   margin: 0;
   padding: 0 44px 18px 0;
   color: var(--s-muted);
-  font-size: 0.92rem;
+  font-size: 0.75rem;
   line-height: 1.7;
   max-width: 62ch;
 }
@@ -1218,7 +1218,7 @@ body.site-v2 .consent-bar .btn.ghost:hover {
     min-height: 44px;
     padding: 0 10px;
     color: rgba(243, 238, 225, 0.78);
-    font-size: 0.88rem;
+    font-size: 0.75rem;
     text-decoration: none;
   }
   .public-menu nav a:hover,
@@ -1246,7 +1246,7 @@ body.site-v2 .auth-card .muted.small a,
   min-height: 44px;
   margin-top: 8px;
   color: rgba(232, 234, 222, 0.7);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   border-bottom: 1px solid var(--s-sage-light);
 }
 .s-skip-chapter:hover { color: var(--s-cream); }
@@ -1324,7 +1324,7 @@ body.site-v2 .auth-card .muted.small a,
   font-weight: 400;
   letter-spacing: -0.025em;
 }
-.s-calc-flow span { color: var(--s-muted); font-size: 0.88rem; line-height: 1.6; }
+.s-calc-flow span { color: var(--s-muted); font-size: 0.75rem; line-height: 1.6; }
 
 @media (max-width: 900px) {
   .s-letter-grid { grid-template-columns: 1fr; }
