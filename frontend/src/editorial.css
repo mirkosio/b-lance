@@ -15,6 +15,8 @@ body.site-v2 {
   --s-sage: #5f8d6e;
   --s-sage-strong: #4d7a5c;
   --s-warm: #a8634a;
+  --s-amber: #b06a2c;
+  --s-amber-light: #d39a5a;
   --s-sage-light: #9dc3aa;
   --s-rule: rgba(13, 21, 18, 0.14);
   --s-rule-light: rgba(243, 238, 225, 0.16);
@@ -214,18 +216,21 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
-.s-kicker-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 99px;
-  background: var(--s-sage-light);
-  box-shadow: 0 0 0 4px rgba(157, 195, 170, 0.14);
+/* Segno di stampa, non pallino luminoso: una barra d'inchiostro. */
+.s-kicker-dot { display: none; }
+.s-kicker::before {
+  content: "";
+  display: inline-block;
+  width: 18px;
+  height: 2px;
+  margin-right: 2px;
+  background: var(--s-amber-light);
 }
 .s-kicker::after {
   content: "";
-  width: 48px;
+  width: 28px;
   height: 1px;
-  margin-left: 4px;
+  margin-left: 2px;
   background: rgba(243, 238, 225, 0.22);
 }
 

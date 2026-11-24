@@ -2460,13 +2460,11 @@ html.js-reveal .reveal.in {
 }
 :root[data-theme="dark"] .hand-underline path { stroke: #85b395; opacity: 0.7; }
 
-/* Occhiello: punto statico, nessun battito. */
+/* Occhiello: barra d'inchiostro, non punto luminoso. */
 .eyebrow-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+  width: 18px;
+  height: 2px;
   background: var(--primary);
-  box-shadow: 0 0 0 4px rgba(95, 141, 110, 0.14);
 }
 
 /* ------------------------------------------------------- testate sezione */

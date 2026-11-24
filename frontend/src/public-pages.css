@@ -34,27 +34,25 @@ body.site-v2 .eyebrow {
   align-items: center;
   gap: 10px;
   margin: 0 0 18px;
-  color: var(--s-sage-light);
+  color: var(--s-amber-light);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 body.site-v2 .eyebrow::before {
   content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 99px;
+  width: 18px;
+  height: 2px;
   background: currentColor;
-  box-shadow: 0 0 0 4px rgba(157, 195, 170, 0.14);
 }
 body.site-v2 .eyebrow::after {
   content: "";
-  width: 52px;
+  width: 28px;
   height: 1px;
   background: currentColor;
-  opacity: 0.35;
+  opacity: 0.3;
 }
 
 body.site-v2 .info-back {
@@ -172,7 +170,7 @@ body.site-v2 .info-facts li {
 body.site-v2 .info-facts li:last-child { margin-right: 0; }
 body.site-v2 .info-facts li::before {
   content: "0" counter(fact);
-  color: var(--s-sage-light);
+  color: var(--s-amber-light);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 9px;
   letter-spacing: 0.08em;
@@ -517,13 +515,13 @@ body.site-v2 .info-toc a::before {
 body.site-v2 .info-toc a:hover { color: var(--s-ink); border-left-color: var(--s-sage); }
 body.site-v2 .info-toc a.active {
   color: var(--s-ink);
-  background: rgba(95, 141, 110, 0.12);
-  border-left-color: var(--s-sage);
+  background: rgba(176, 106, 44, 0.10);
+  border-left-color: var(--s-amber);
   border-radius: 0;
   box-shadow: none;
   font-weight: 600;
 }
-body.site-v2 .info-toc a.active::before { color: var(--s-sage); }
+body.site-v2 .info-toc a.active::before { color: var(--s-amber); }
 body.site-v2 .info-aside .btn {
   display: flex;
   align-items: center;
@@ -593,7 +591,7 @@ body.site-v2 .about-masthead h1 {
   line-height: 0.94;
   letter-spacing: -0.05em;
 }
-body.site-v2 .about-dot { color: var(--s-sage-light); font-style: italic; }
+body.site-v2 .about-dot { color: var(--s-amber-light); font-style: italic; }
 body.site-v2 .about-lede {
   margin: 0 0 24px;
   color: var(--s-sage-light);
@@ -679,7 +677,7 @@ body.site-v2 .about-index .info-link-card:nth-child(8) {
   border-color: transparent;
 }
 body.site-v2 .about-index .info-link-card:nth-child(8) p { color: rgba(232, 236, 226, 0.66); }
-body.site-v2 .about-index .info-link-card:nth-child(8) .info-link-num { -webkit-text-stroke-color: var(--s-sage-light); }
+body.site-v2 .about-index .info-link-card:nth-child(8) .info-link-num { -webkit-text-stroke-color: var(--s-amber-light); }
 body.site-v2 .about-index .info-link-card:nth-child(8) .info-link-more { color: var(--s-cream); border-top-color: var(--s-rule-light); }
 body.site-v2 .info-link-card {
   position: relative;
@@ -797,7 +795,7 @@ body.site-v2 .demo-hero h1 {
   line-height: 0.95;
   letter-spacing: -0.045em;
 }
-body.site-v2 .demo-hero h1 em { color: var(--s-sage-light); font-style: italic; }
+body.site-v2 .demo-hero h1 em { color: var(--s-amber-light); font-style: italic; }
 body.site-v2 .demo-lede {
   max-width: 58ch;
   margin: 0 0 24px;
@@ -1065,7 +1063,7 @@ body.site-v2 .auth-aside h1 {
   line-height: 0.94;
   letter-spacing: -0.05em;
 }
-body.site-v2 .auth-aside h1 em { color: var(--s-sage-light); font-style: italic; }
+body.site-v2 .auth-aside h1 em { color: var(--s-amber-light); font-style: italic; }
 body.site-v2 .auth-aside-lede {
   max-width: 42ch;
   margin: 0;
