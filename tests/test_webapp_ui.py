@@ -127,7 +127,7 @@ def test_motion_assets_are_served_and_respect_reduced_motion(
     client: TestClient,
 ) -> None:
     page = client.get("/").text
-    assert 'href="/static/motion.css?v=4"' in page
+    assert re.search(r'href="/static/motion\.css\?v=\d+"', page)
     assert 'src="/static/motion.js?v=4"' in page
     # Il movimento parte solo se l'utente non l'ha disattivato.
     assert "prefers-reduced-motion: reduce" in page

@@ -24,8 +24,8 @@
   --link: #3f6a52;
   --accent: #4d7a5c;
   --pos: #3b7a52;
-  --neg: #a84a34;
-  --danger: #a0432f;
+  --neg: #8a9a8e;
+  --danger: #7a8a7e;
   --gold: #4d7a5c;
   --gold-ink: #3b6349;
   --rule: #bcc7ba;
@@ -60,8 +60,8 @@
   --link: #a9d0b7;
   --accent: #9dc3aa;
   --pos: #6fbf90;
-  --neg: #dd8b70;
-  --danger: #dd8b70;
+  --neg: #a9b9ad;
+  --danger: #9fb0a4;
   --gold: #9dc3aa;
   --gold-ink: #9dc3aa;
   --rule: #2f4034;
@@ -853,7 +853,7 @@ body.landing footer { margin-left: 0; }
   color: var(--primary-deep);
   font-size: 0.75rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   line-height: 1.2;
   text-transform: uppercase;
 }
@@ -1015,7 +1015,7 @@ body.landing footer { margin-left: 0; }
 .phone-row { display: flex; align-items: center; gap: 9px; padding: 9px 0; border-top: 1px solid #29312b; font-size: 0.82rem; }
 .phone-row b { margin-left: auto; font-size: 0.78rem; }
 .phone-row .pos { color: #6fbf90; }
-.phone-row .neg { color: #dd8b70; }
+.phone-row .neg { color: var(--neg); }
 .dot { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; color: #fff; font-size: 0.66rem; font-weight: 800; }
 .dot.sage { background: #5f8d6e; }
 .dot.gold { background: #5f8d6e; }
@@ -1208,7 +1208,7 @@ body.landing footer { margin-left: 0; }
 }
 .donut { width: 132px; height: 132px; flex: 0 0 auto; }
 .donut-total { fill: var(--text); font-size: 13px; font-weight: 800; }
-.donut-label { fill: var(--muted); font-size: 9px; font-weight: 700; }
+.donut-label { fill: var(--muted); font-size: 12px; font-weight: 700; }
 .chart-legend { list-style: none; margin: 0; padding: 0; flex: 1 1 160px; }
 .chart-legend li {
   display: flex;
@@ -1221,7 +1221,7 @@ body.landing footer { margin-left: 0; }
 }
 .swatch { width: 11px; height: 11px; border-radius: 3px; flex: 0 0 auto; }
 .linechart { display: block; width: 100%; height: auto; margin-bottom: 18px; }
-.chart-x { fill: var(--muted); font-size: 11px; font-weight: 600; }
+.chart-x { fill: var(--muted); font-size: 12px; font-weight: 600; }
 
 /* Import CSV: mappatura e anteprima, tabella leggibile anche su mobile. */
 .import-map {
@@ -2497,7 +2497,7 @@ html.js-reveal .reveal.in {
   color: var(--muted);
   font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   text-align: right;
 }
@@ -2548,7 +2548,7 @@ html.js-reveal .reveal.in {
   color: var(--muted);
   font-size: 0.62rem;
   font-weight: 800;
-  letter-spacing: 0.16em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 .receipt-title {
@@ -2848,7 +2848,7 @@ html.js-reveal .reveal.in {
   color: var(--text);
   font-size: 0.72rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 .footer-col a {

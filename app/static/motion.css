@@ -164,7 +164,7 @@
 }
 
 @keyframes bl-receipt-flash {
-  from { background-color: rgba(168, 130, 60, 0.18); }
+  from { background-color: rgba(95, 141, 110, 0.18); }
   to { background-color: transparent; }
 }
 
@@ -324,7 +324,7 @@
   width: 100%;
   transform: scaleX(0);
   transform-origin: 0 50%;
-  background: linear-gradient(90deg, var(--primary), var(--gold, #d8b56a));
+  background: linear-gradient(90deg, var(--primary), var(--gold, #9dc3aa));
 }
 
 /* --------------------------------------------------- transizione pagina */
