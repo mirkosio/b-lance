@@ -9,20 +9,20 @@
 body.site-v2 {
   --s-ink: #15231b;
   --s-ink-2: #20342a;
-  --s-paper: #e8e5da;
-  --s-paper-2: #f0f0e7;
-  --s-cream: #e7eade;
+  --s-paper: #111a15;
+  --s-paper-2: #17231c;
+  --s-cream: #e9ede3;
   --s-sage: #5f8d6e;
   --s-sage-strong: #4d7a5c;
-  --s-dark-grad: linear-gradient(135deg, var(--s-ink) 0%, var(--s-ink-2) 55%, var(--s-ink) 100%);
-  --s-dark-grad-2: linear-gradient(205deg, var(--s-ink) 0%, var(--s-ink-2) 48%, var(--s-ink) 100%);
-  --s-paper-grad: linear-gradient(160deg, var(--s-paper) 0%, var(--s-paper-2) 50%, var(--s-paper) 100%);
+  --s-dark-grad: linear-gradient(155deg, #111a15 0%, #17231c 55%, #111a15 100%);
+  --s-dark-grad-2: linear-gradient(205deg, #111a15 0%, #17231c 48%, #111a15 100%);
+  --s-paper-grad: var(--s-dark-grad);
   --s-sage-light: #a8c9b1;
-  --s-rule: rgba(13, 21, 18, 0.14);
+  --s-rule: rgba(233, 237, 227, 0.16);
   --s-rule-light: rgba(243, 238, 225, 0.16);
-  --s-muted: #5b665e;
+  --s-muted: #a9b9ad;
   background: var(--s-paper-grad);
-  color: var(--s-ink);
+  color: var(--s-cream);
 }
 
 body.site-v2 main.wrap {
@@ -339,7 +339,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   padding: 4px 10px;
   border: 1px solid rgba(13, 21, 18, 0.2);
   background: var(--s-paper-grad);
-  color: var(--s-ink);
+  color: var(--s-cream);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 12px;
   letter-spacing: 0.1em;
@@ -349,7 +349,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   position: relative;
   padding: 26px 26px 22px;
   background: var(--s-paper-grad);
-  color: var(--s-ink);
+  color: var(--s-cream);
   border: 1px solid rgba(13, 21, 18, 0.14);
   box-shadow: 14px 16px 0 -1px rgba(5, 10, 7, 0.55), 0 30px 70px rgba(0, 0, 0, 0.35);
   transform: rotate(-1.6deg);
@@ -427,7 +427,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 .s-receipt-share.is-updated strong { animation: s-flash 420ms ease; }
 @keyframes s-flash {
   0% { color: var(--s-sage); }
-  100% { color: var(--s-ink); }
+  100% { color: var(--s-cream); }
 }
 .s-receipt-foot {
   display: flex;
@@ -467,7 +467,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   background: var(--s-paper-grad);
   border: 1px solid rgba(20, 33, 27, 0.18);
   border-radius: 3px;
-  color: var(--s-ink);
+  color: var(--s-cream);
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
 }
 .s-calc-intro p {
@@ -496,7 +496,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   border-bottom: 1px solid rgba(13, 21, 18, 0.28);
   border-radius: 0;
   background: transparent;
-  color: var(--s-ink);
+  color: var(--s-cream);
   font-family: var(--font-display, "Fraunces", Georgia, serif);
   font-size: 1.4rem;
   font-variant-numeric: tabular-nums;
@@ -532,7 +532,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   gap: 6px;
   min-height: 44px;
   padding: 0 2px;
-  color: var(--s-ink);
+  color: var(--s-cream);
   font-size: 0.75rem;
   font-weight: 600;
   text-decoration: none;
@@ -567,7 +567,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 /* ============================================================ CAPITOLO 01 */
 .s-steps {
   background: var(--s-paper-grad);
-  color: var(--s-ink);
+  color: var(--s-cream);
   position: relative;
 }
 .s-hpin {
@@ -651,7 +651,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   align-items: center;
   gap: 6px;
   min-height: 44px;
-  color: var(--s-ink);
+  color: var(--s-cream);
   font-size: 0.75rem;
   font-weight: 600;
   text-decoration: none;
@@ -923,7 +923,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   text-align: center;
 }
 .s-phone.is-settled .s-phone-cta {
-  color: var(--s-ink);
+  color: var(--s-cream);
   background: var(--s-sage-light);
   border-color: var(--s-sage-light);
 }
@@ -1152,11 +1152,11 @@ body.site-v2 .btn.ghost,
 body.site-v2 .btn.sm.ghost {
   background: transparent;
   border-color: var(--s-rule);
-  color: var(--s-ink);
+  color: var(--s-cream);
 }
 body.site-v2 .alert {
   background: var(--s-paper-grad);
-  color: var(--s-ink);
+  color: var(--s-cream);
   border-color: var(--s-rule);
 }
 body.site-v2 .consent-bar {

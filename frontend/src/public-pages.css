@@ -11,7 +11,7 @@ body.site-v2.demo-page,
 body.site-v2.about-page,
 body.site-v2.auth-page {
   background: var(--s-paper-grad);
-  color: var(--s-ink);
+  color: var(--s-cream);
 }
 
 /* Il main delle pagine pubbliche è a tutta larghezza: le singole sezioni
@@ -213,7 +213,7 @@ body.site-v2 .info-example-result {
   gap: 10px;
   padding: 14px 0 0;
   border-top: 1px solid var(--s-rule);
-  color: var(--s-ink) !important;
+  color: var(--s-cream) !important;
   font-family: var(--font-display, "Fraunces", Georgia, serif);
   font-size: 1.05rem !important;
   line-height: 1.45 !important;
@@ -226,7 +226,7 @@ body.site-v2 .info-example-card {
   border-radius: 3px;
   box-shadow: 12px 14px 0 -1px rgba(13, 21, 18, 0.12);
   transform: rotate(-1deg);
-  color: var(--s-ink);
+  color: var(--s-cream);
 }
 body.site-v2 .info-example-head {
   display: flex;
@@ -338,7 +338,7 @@ body.site-v2 .info-prose-block {
   border-top: 1px solid var(--s-rule);
   border-radius: 0;
   box-shadow: none;
-  color: var(--s-ink);
+  color: var(--s-cream);
 }
 body.site-v2 .info-prose-block:last-child { border-bottom: 1px solid var(--s-rule); }
 body.site-v2 .info-prose-block::before {
@@ -439,7 +439,7 @@ body.site-v2 .info-closing {
   margin: 34px 0 0;
   padding: 6px 0 6px 22px;
   border-left: 2px solid var(--s-sage);
-  color: var(--s-ink) !important;
+  color: var(--s-cream) !important;
   font-family: var(--font-display, "Fraunces", Georgia, serif);
   font-size: 1.1rem;
   font-style: italic;
@@ -510,9 +510,9 @@ body.site-v2 .info-toc a::before {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 12px;
 }
-body.site-v2 .info-toc a:hover { color: var(--s-ink); border-left-color: var(--s-sage); }
+body.site-v2 .info-toc a:hover { color: var(--s-cream); border-left-color: var(--s-sage); }
 body.site-v2 .info-toc a.active {
-  color: var(--s-ink);
+  color: var(--s-cream);
   background: rgba(95, 141, 110, 0.12);
   border-left-color: var(--s-sage);
   border-radius: 0;
@@ -536,7 +536,7 @@ body.site-v2 .info-secondary {
   align-items: center;
   min-height: 44px;
   margin-top: 10px;
-  color: var(--s-ink);
+  color: var(--s-cream);
   font-size: 0.75rem;
   border-bottom: 1px solid var(--s-sage);
   text-decoration: none;
@@ -694,7 +694,7 @@ body.site-v2 .info-link-card {
   border: 1px solid var(--s-rule);
   border-radius: 3px;
   box-shadow: none;
-  color: var(--s-ink);
+  color: var(--s-cream);
   text-decoration: none;
   transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
 }
@@ -730,7 +730,7 @@ body.site-v2 .info-link-more {
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid var(--s-rule);
-  color: var(--s-ink);
+  color: var(--s-cream);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -768,7 +768,7 @@ body.site-v2 .about-source {
   font-size: 0.75rem;
   line-height: 1.6;
 }
-body.site-v2 .about-source a { color: var(--s-ink); text-underline-offset: 3px; }
+body.site-v2 .about-source a { color: var(--s-cream); text-underline-offset: 3px; }
 
 /* ================================================================ DEMO */
 
@@ -842,7 +842,7 @@ body.site-v2 .demo-summary {
 body.site-v2 .demo-card {
   background: var(--s-paper-grad);
   border: 1px solid var(--s-rule);
-  color: var(--s-ink);
+  color: var(--s-cream);
 }
 body.site-v2 .demo-card-head {
   display: flex;
@@ -866,7 +866,7 @@ body.site-v2 .demo-card-head .btn {
   border: 1px solid var(--s-rule);
   border-radius: 3px;
   background: transparent;
-  color: var(--s-ink);
+  color: var(--s-cream);
 }
 body.site-v2 .demo-card-head .btn:hover { background: rgba(95, 141, 110, 0.09); }
 body.site-v2 .demo-list { margin: 0; padding: 0; list-style: none; }
@@ -918,7 +918,7 @@ body.site-v2 .auth-card input {
   border-bottom: 1px solid rgba(13, 21, 18, 0.28);
   border-radius: 0;
   background: transparent;
-  color: var(--s-ink);
+  color: var(--s-cream);
   font-family: var(--font-display, "Fraunces", Georgia, serif);
   font-size: 1.02rem;
   box-shadow: none;
@@ -1031,7 +1031,7 @@ body.site-v2 .demo-footnote {
   font-size: 0.75rem;
   line-height: 1.6;
 }
-body.site-v2 .demo-footnote a { color: var(--s-ink); border-bottom: 1px solid var(--s-sage); text-decoration: none; }
+body.site-v2 .demo-footnote a { color: var(--s-cream); border-bottom: 1px solid var(--s-sage); text-decoration: none; }
 
 /* ======================================================== ACCESSO / REGISTRAZIONE */
 
@@ -1141,7 +1141,7 @@ body.site-v2 .auth-card .btn {
 body.site-v2 .auth-card .btn:hover { background: var(--s-sage); border-color: var(--s-sage); }
 body.site-v2 .auth-card .alert { border-radius: 2px; }
 body.site-v2 .auth-card .field-error { color: #a0432f; }
-body.site-v2 .auth-card .muted.small a { color: var(--s-ink); border-bottom: 1px solid var(--s-sage); text-decoration: none; }
+body.site-v2 .auth-card .muted.small a { color: var(--s-cream); border-bottom: 1px solid var(--s-sage); text-decoration: none; }
 
 /* ------------------------------------------------------------ adattamenti */
 
