@@ -50,7 +50,7 @@ body.site-v2 .topbar.publicnav {
   transition: background 220ms ease, border-color 220ms ease;
 }
 body.site-v2 .topbar.publicnav.is-scrolled {
-  background: rgba(13, 21, 18, 0.94);
+  background: rgba(233, 237, 227, 0.94);
   border-bottom-color: var(--s-rule-light);
   backdrop-filter: blur(10px);
 }
@@ -91,7 +91,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   flex-direction: column;
   gap: 14px;
   width: 112px;
-  color: rgba(13, 21, 18, 0.5);
+  color: rgba(233, 237, 227, 0.5);
   transition: color 300ms ease;
 }
 .s-rail-brand {
@@ -337,7 +337,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   right: 8px;
   z-index: 2;
   padding: 4px 10px;
-  border: 1px solid rgba(13, 21, 18, 0.2);
+  border: 1px solid rgba(233, 237, 227, 0.2);
   background: var(--s-paper-grad);
   color: var(--s-cream);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
@@ -350,7 +350,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   padding: 26px 26px 22px;
   background: var(--s-paper-grad);
   color: var(--s-cream);
-  border: 1px solid rgba(13, 21, 18, 0.14);
+  border: 1px solid rgba(233, 237, 227, 0.14);
   box-shadow: 14px 16px 0 -1px rgba(5, 10, 7, 0.55), 0 30px 70px rgba(0, 0, 0, 0.35);
   transform: rotate(-1.6deg);
   transform-style: preserve-3d;
@@ -493,7 +493,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   margin-top: 4px;
   padding: 0 2px;
   border: 0;
-  border-bottom: 1px solid rgba(13, 21, 18, 0.28);
+  border-bottom: 1px solid rgba(233, 237, 227, 0.28);
   border-radius: 0;
   background: transparent;
   color: var(--s-cream);
@@ -801,7 +801,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
 .s-card-index {
   margin-top: auto;
   padding-top: 18px;
-  color: rgba(13, 21, 18, 0.28);
+  color: rgba(233, 237, 227, 0.28);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 12px;
   letter-spacing: 0.12em;

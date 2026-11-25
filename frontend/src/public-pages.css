@@ -222,9 +222,9 @@ body.site-v2 .info-example-result svg { flex: none; margin-top: 5px; color: var(
 body.site-v2 .info-example-card {
   padding: 26px clamp(20px, 2.6vw, 32px) 22px;
   background: var(--s-paper-grad);
-  border: 1px solid rgba(13, 21, 18, 0.16);
+  border: 1px solid rgba(233, 237, 227, 0.16);
   border-radius: 3px;
-  box-shadow: 12px 14px 0 -1px rgba(13, 21, 18, 0.12);
+  box-shadow: 12px 14px 0 -1px rgba(233, 237, 227, 0.12);
   transform: rotate(-1deg);
   color: var(--s-cream);
 }
@@ -494,7 +494,7 @@ body.site-v2 .info-toc a {
   display: flex;
   align-items: baseline;
   gap: 10px;
-  min-height: 38px;
+  min-height: 44px;
   padding: 6px 0 6px 14px;
   border-left: 1px solid var(--s-rule);
   color: var(--s-muted);
@@ -506,7 +506,7 @@ body.site-v2 .info-toc a {
 body.site-v2 .info-toc a::before {
   content: "0" counter(toc);
   flex: none;
-  color: rgba(13, 21, 18, 0.35);
+  color: rgba(233, 237, 227, 0.35);
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 12px;
 }
@@ -915,7 +915,7 @@ body.site-v2 .auth-card input {
   min-height: 46px;
   padding: 8px 2px;
   border: 0;
-  border-bottom: 1px solid rgba(13, 21, 18, 0.28);
+  border-bottom: 1px solid rgba(233, 237, 227, 0.28);
   border-radius: 0;
   background: transparent;
   color: var(--s-cream);
@@ -931,7 +931,7 @@ body.site-v2 .auth-card input:focus {
   border-bottom-color: transparent;
 }
 body.site-v2 .demo-form input::placeholder,
-body.site-v2 .auth-card input::placeholder { color: rgba(13, 21, 18, 0.38); }
+body.site-v2 .auth-card input::placeholder { color: rgba(233, 237, 227, 0.38); }
 body.site-v2 .demo-hint {
   margin: 14px 0 16px;
   color: var(--s-muted);
@@ -950,7 +950,7 @@ body.site-v2 .demo-summary {
   background: var(--s-dark-grad);
   border: 1px solid rgba(243, 238, 225, 0.12);
   color: var(--s-cream);
-  box-shadow: 10px 12px 0 -1px rgba(13, 21, 18, 0.12);
+  box-shadow: 10px 12px 0 -1px rgba(233, 237, 227, 0.12);
 }
 body.site-v2 .demo-summary .eyebrow { margin-bottom: 8px; }
 body.site-v2 .demo-summary h2 {
@@ -1114,7 +1114,7 @@ body.site-v2 .auth-card {
   background: var(--s-paper-grad);
   border: 1px solid var(--s-rule);
   border-radius: 3px;
-  box-shadow: 12px 14px 0 -1px rgba(13, 21, 18, 0.1);
+  box-shadow: 12px 14px 0 -1px rgba(233, 237, 227, 0.1);
 }
 body.site-v2 .auth-card .auth-brand { display: flex; justify-content: flex-start; margin-bottom: 24px; }
 body.site-v2 .auth-card-kicker {
