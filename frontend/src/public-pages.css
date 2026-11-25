@@ -674,7 +674,7 @@ body.site-v2 .about-index .info-link-card:nth-child(1) { grid-column: span 7; }
 body.site-v2 .about-index .info-link-card:nth-child(2) { grid-column: span 5; }
 body.site-v2 .about-index .info-link-card:nth-child(n+3):nth-child(-n+6) { grid-column: span 4; }
 body.site-v2 .about-index .info-link-card:nth-child(6) { grid-column: span 5; }
-body.site-v2 .about-index .info-link-card:nth-child(7) { grid-column: span 7; background: #dde6d8; }
+body.site-v2 .about-index .info-link-card:nth-child(7) { grid-column: span 7; background: var(--s-ink-2); }
 body.site-v2 .about-index .info-link-card:nth-child(8) {
   grid-column: span 12;
   background: var(--s-dark-grad);

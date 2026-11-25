@@ -50,7 +50,7 @@ body.site-v2 .topbar.publicnav {
   transition: background 220ms ease, border-color 220ms ease;
 }
 body.site-v2 .topbar.publicnav.is-scrolled {
-  background: rgba(233, 237, 227, 0.94);
+  background: rgba(17, 26, 21, 0.94);
   border-bottom-color: var(--s-rule-light);
   backdrop-filter: blur(10px);
 }
@@ -593,7 +593,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   border-radius: 3px;
   overflow: hidden;
 }
-.s-panel:nth-child(2) { background: #dde6d8; }
+.s-panel:nth-child(2) { background: var(--s-ink-2); }
 .s-panel-intro {
   width: min(82vw, 540px);
   background: transparent;
@@ -752,7 +752,7 @@ body.site-v2 .topbar.publicnav .btn.sm.ghost:hover {
   transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }
 .s-card-wide { grid-column: span 6; }
-.s-bento .spotlight-card.s-card:nth-child(2) { background-color: #dfe7da; }
+.s-bento .spotlight-card.s-card:nth-child(2) { background-color: var(--s-ink-2); }
 .s-bento > .s-card:nth-child(1) { grid-column: span 7; }
 .s-bento > .s-card:nth-child(2) { grid-column: span 5; }
 .s-bento > .s-card:nth-child(6) { grid-column: span 12; min-height: 200px; }
