@@ -533,3 +533,14 @@ def test_consent_bar_ghost_button_is_readable() -> None:
         css,
         re.S,
     )
+
+
+def test_public_mobile_nav_and_consent_spacing(client: TestClient) -> None:
+    """Menu pubblico mobile e spazio riservato al banner consenso."""
+    page = client.get("/faq").text
+    assert 'class="public-menu"' in page
+    assert 'aria-label="Altre pagine del sito"' in page
+    for href in ('/#funzioni', '/android', '/faq', '/privacy'):
+        assert f'href="{href}"' in page
+    assert '--consent-h' in page
+    assert 'syncSpacing()' in page

@@ -1197,12 +1197,13 @@ body.site-v2 .consent-bar .btn.ghost:hover {
   }
   .public-menu summary::-webkit-details-marker { display: none; }
   .public-menu summary svg { transition: transform 160ms ease; }
+  .public-menu summary:focus-visible { outline: 2px solid var(--s-cream); outline-offset: -4px; }
   .public-menu[open] summary svg { transform: rotate(180deg); }
   .public-menu nav {
     position: absolute;
+    z-index: 55;
     top: calc(100% + 8px);
     left: 0;
-    z-index: 60;
     display: flex;
     flex-direction: column;
     min-width: 190px;

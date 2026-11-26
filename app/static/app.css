@@ -3077,3 +3077,15 @@ a { transition: color 160ms ease, border-color 160ms ease; }
 @media (prefers-reduced-motion: reduce) {
   .card, .btn, a, input, select, textarea { transition: none !important; }
 }
+
+/* Consenso e navigazione mobile convivono: il banner sta sopra la bottom nav
+   e il contenuto riserva lo spazio finché il consenso è visibile. */
+@media (max-width: 959px) {
+  .consent-bar { bottom: calc(77px + env(safe-area-inset-bottom)); }
+  html.has-consent main.wrap {
+    padding-bottom: calc(96px + var(--consent-h, 124px) + 80px + env(safe-area-inset-bottom));
+  }
+  html.has-consent footer {
+    padding-bottom: calc(90px + var(--consent-h, 124px) + 80px + env(safe-area-inset-bottom));
+  }
+}

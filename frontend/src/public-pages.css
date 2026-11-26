@@ -1043,7 +1043,7 @@ body.site-v2 .auth-shell {
 body.site-v2 .auth-aside {
   display: flex;
   align-items: center;
-  padding: clamp(50px, 7vw, 96px) max(24px, 6vw);
+  padding: calc(96px + env(safe-area-inset-top)) max(24px, 6vw) clamp(50px, 7vw, 96px);
   background:
     radial-gradient(700px 440px at 82% 4%, rgba(95, 141, 110, 0.3), transparent 68%),
     var(--s-dark-grad);
@@ -1165,7 +1165,7 @@ body.site-v2 .auth-card .muted.small a { color: var(--s-cream); border-bottom: 1
 @media (max-width: 620px) {
   /* Su telefono la testata d'accesso si compatta: il modulo deve essere
      raggiungibile senza scorrere mezza pagina. */
-  body.site-v2 .auth-aside { min-height: 0; padding: 40px max(20px, 5vw); }
+  body.site-v2 .auth-aside { min-height: 0; padding: calc(96px + env(safe-area-inset-top)) max(20px, 5vw) 40px; }
   body.site-v2 .auth-aside h1 { font-size: clamp(2.6rem, 12vw, 3.4rem); }
   body.site-v2 .auth-facts { margin-top: 24px; padding-top: 14px; }
   body.site-v2 .auth-facts li { min-height: 34px; }
